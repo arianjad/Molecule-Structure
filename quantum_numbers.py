@@ -115,6 +115,88 @@ def q_numbers_bBJ_new(N_range,Lambda,S=1/2,I_list=[0,1/2],M_values='all'):
     return q_numbers
 
 
+def q_numbers_bBJ_MNH2(N_range,l_mag,S=1/2,I_list=[0,1/2,1/2],M_values='all',K_range=[],M_range=[]):
+    '''
+    This function generates a basis for metal amide molecules (ie M-NH2) in Hund's case (b)_BetaJ.
+    The arguments are:
+        N_range: Range of rotational states to consider
+        l_mag: magnitude of the vibrational angular momentum projection
+        S: electron spin
+        I_list: List of nuclear spins, [IM, iN, iH], where IM = metal spin, iN = nitrogen spin, iH = hydrogen spin
+        M_values: choice of M sublevel values to generate. Options are 'all', 'pos','none', and 'custom'. For custom, see M_range.
+        K_range: list of K states to generates
+        M_range: if M_values is 'custom', this list selects which M sublevels should be generated
+    '''
+    IM=I_list[0]
+    iN=I_list[1]
+    iH = I_list[-1]
+    Nmin,Nmax=N_range[0],N_range[-1]
+    q_str = ['l','K','N','J','F1','iHT','F','M'] #quantum numbers, iHT = total combined H spins
+    for N in np.arange(Nmin,Nmax+1,1,dtype=np.float64):
+        if K_range==[]:
+            K_iter = np.arange(0,N+1,dtype=np.float64)
+        else:
+            K_iter = K_range
+        for K in K_iter:
+            if abs(N)<abs(K):
+                continue
+            else:
+                for J in np.arange(abs(N-S),abs(N+S)+1,1, dtype=np.float64):
+
+
+
+    if K_values == []:
+        K_values = [l+L for l in [-l_mag,l_mag] for L in [-L_mag,L_mag]]
+    K_values = np.unique(K_values)
+    K_min = abs(K_values).min()
+    if Nmin<K_min:
+        print('Nmin must be >= |Kmin|')
+        Nmin=K_min
+    q_str = ['l','L','K','N','J','F','M']
+    I = max(IM,iH)
+    q_numbers = {}
+    for q in q_str:
+        q_numbers[q] = [dtype=np.float64]
+    else:
+        K_iter = K_range
+    for N in np.arange(Nmin,Nmax+1,1, dtype=np.float64):
+        for J in np.arange(abs(N-S),abs(N+S)+1,1, dtype=np.float64):
+            for F in np.arange(abs(J-I),abs(J+I)+1,1, dtype=np.float64):
+                for K in K_values:
+                    if N < abs(K):
+                        continue
+                    if M_values=='none':
+                        M=abs(F)%1
+                        l_iter = {True:[0], False:[-l_mag,l_mag]}[l_mag==0]
+                        L_iter = {True:[0], False:[-L_mag,L_mag]}[L_mag==0]
+                        for l in l_iter:
+                            for L in L_iter:
+                                if K != l+L:
+                                    continue
+                                else:
+                                    values = [l,L,K,N,J,F,M]
+                                    for q,val in zip(q_str,values):
+                                        q_numbers[q].append(val+0)    #looks weird but adding 0 converts -0 to 0
+                    else:
+                        if M_values=='all' or M_values=='custom':
+                            Mmin = -F
+                        elif M_values=='pos':
+                            Mmin = abs(F) % 1
+                        for M in np.arange(Mmin,F+1,1, dtype=np.float64):
+                            if (M_values=='custom' and M in M_range) or (M_values=='all') or (M_values=='pos'):
+                                l_iter = {True:[0], False:[-l_mag,l_mag]}[l_mag==0]
+                                L_iter = {True:[0], False:[-L_mag,L_mag]}[L_mag==0]
+                                for l in l_iter:
+                                    for L in L_iter:
+                                        if K != l+L:
+                                            continue
+                                        else:
+                                            values = [l,L,K,N,J,F,M]
+                                            for q,val in zip(q_str,values):
+                                                q_numbers[q].append(val+0)    #looks weird but adding 0 converts -0 to 0
+                            elif M_values=='custom' and M not in M_range:
+                                continue
+
 #########################   DEVELOPMENT  END   ###################################
 
 
