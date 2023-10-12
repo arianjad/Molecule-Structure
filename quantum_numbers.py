@@ -114,24 +114,85 @@ def q_numbers_bBJ_new(N_range,Lambda,S=1/2,I_list=[0,1/2],M_values='all'):
                                     i+=1
     return q_numbers
 
+def gen_M_iter(Jtot, M_values,M_range=[]):
+    if M_values == 'none':
+        M_iter = np.array([abs(Jtot)%1],dtype=np.float64)
+    else:
+        if M_values == 'all' or M_values == 'custom':
+            Mmin = -Jtot
+        elif M_values == 'pos':
+            Mmin = abs(Jtot) % 1
+        M_iter = np.arange(Mmin,Jtot+1,1, dtype=np.float64)
+        if M_values == 'custom':
+            intersect = np.isin(M_iter,M_range)
+            mask = np.searchsorted(M_iter,intersect)
+            M_iter = M_iter[mask]
+    return M_iter
 
-def q_numbers_bBJ_MNH2(N_range,l_mag,S=1/2,I_list=[0,1/2,1/2],M_values='all',K_range=[],M_range=[]):
+def q_numbers_ATM(N_range,M_values='all',K_range=[],M_range=[]):
+    '''
+    This function generates quantum numbers for an asymmetric top rotor in the prolate limit.
+    '''
+    Nmin,Nmax=N_range[0],N_range[-1]
+    q_str = ['K','N','M']
+    q_numbers = {}
+    for q in q_str:
+        q_numbers[q] = []
+    for N in np.arange(Nmin,Nmax+1,1,dtype=np.float64):
+        if K_range==[]:
+            K_iter = np.arange(0,N+1,dtype=np.float64)
+        else:
+            K_iter = K_range
+        for _K in K_iter:
+            if abs(N)<abs(_K):
+                continue
+            M_iter = gen_M_iter(N,M_values,M_range)
+            for M in M_iter:
+                for K in [-_K,_K]:
+                    values = [K,N,M]
+                    for q,val in zip(q_str,values):
+                        q_numbers[q].append(val+0)
+    return q_numbers
+
+
+
+def q_numbers_bBJ_MNH2(N_range,l_mag,L_mag,S=1/2,I_list=[0,1/2,1/2],M_values='all',Ka_range=[],M_range=[]):
     '''
     This function generates a basis for metal amide molecules (ie M-NH2) in Hund's case (b)_BetaJ.
+    We assume a prolate top.
+    We assume 2 indistinguishable "hydrogen" atoms
     The arguments are:
         N_range: Range of rotational states to consider
         l_mag: magnitude of the vibrational angular momentum projection
+        L_mag: approximate magnitude of the electronic angular momentum projection
         S: electron spin
         I_list: List of nuclear spins, [IM, iN, iH], where IM = metal spin, iN = nitrogen spin, iH = hydrogen spin
         M_values: choice of M sublevel values to generate. Options are 'all', 'pos','none', and 'custom'. For custom, see M_range.
         K_range: list of K states to generates
         M_range: if M_values is 'custom', this list selects which M sublevels should be generated
     '''
-    IM=I_list[0]
-    iN=I_list[1]
-    iH = I_list[-1]
+    IM=I_list[0] #The code ignores IM currently
+    iN=I_list[1] #Nitrogen spin
+    iH = I_list[-1] #Hydrogen spins
+
+    #Identify if indistinguishable particles are bosonic or fermionic
+    if iH % 1/2 == 0:
+        exch_sym = 'even'
+    elif iH % 1/2 != 0 :
+        exch_sym = 'odd'
+
+    #Identify exchange symmtery of total nuclear spin state (assuming 2 spins)
+    if iH==0:
+        nucl_sym = {0:'even'}
+    elif iH==1/2:
+        nucl_sym = {0:'odd',1:'even'}
+
+    #Total spin of indistinguishable particles
+    iHT_iter = np.arange(abs(iH-iH),abs(iH+iH)+1)
+
     Nmin,Nmax=N_range[0],N_range[-1]
-    q_str = ['l','K','N','J','F1','iHT','F','M'] #quantum numbers, iHT = total combined H spins
+    #quantum numbers, Kr = projection of R, iHT = total combined H spins
+    q_str = ['l','Lambda','Kr','K','N','J','F1','iHT','F','M']
     for N in np.arange(Nmin,Nmax+1,1,dtype=np.float64):
         if K_range==[]:
             K_iter = np.arange(0,N+1,dtype=np.float64)
@@ -142,6 +203,13 @@ def q_numbers_bBJ_MNH2(N_range,l_mag,S=1/2,I_list=[0,1/2,1/2],M_values='all',K_r
                 continue
             else:
                 for J in np.arange(abs(N-S),abs(N+S)+1,1, dtype=np.float64):
+                    for F1 in np.arange(abs(J-iN),abs(J+iN)+1,1, dtype=np.float64):
+                        for iHT in iHT_iter:
+                            #Impose nuclear symmetry selection rule on rotational states
+                            #Currently hard coded for a vibronic C2V A1 character
+                            #Assuming symmetry axis is along
+                            if iHT==0
+                            for F in np.arange(abs(F1-iHT),)
 
 
 
