@@ -36,10 +36,11 @@ class Molecule_Library(object):
     electron spin.
     '''
 
-    def __init__(self,molecule,I_spins,M_values,P_values,trap):
+    def __init__(self,molecule,I_spins,M_values,P_values,trap,K_values):
         self.I_spins = I_spins
         self.M_values=M_values
         self.P_values=P_values
+        self.K_values = K_values
         self.trap = trap
         self.molecule = molecule
         self.parameters = all_params[self.molecule]
@@ -81,6 +82,10 @@ class Molecule_Library(object):
             '40A010':'aBJ',
             '40B000':'bBJ',
             }
+        if self.molecule=='SrNH2':
+            all_cases={
+            'X': 'bBJ'
+            }
         return all_cases
 
     def collect_all_K(self):
@@ -104,12 +109,21 @@ class Molecule_Library(object):
             '40A010': 2,
             '40B000':0,
             }
+        if self.molecule='SrNH2':
+            all_K = {
+            'X':self.K_values
+            }
         return all_K
 
 
     def collect_all_matrix_elements(self,I_spins,M_values):
         iH = self.I_spins[-1]
         IM = self.I_spins[0]
+        iN=self.I_spins[1]
+
+        bBJ_ATM_X_matrix_elements={
+
+        }
 
 
         bBJ_even_X_matrix_elements={

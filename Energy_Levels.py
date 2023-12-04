@@ -25,7 +25,7 @@ class MoleculeLevels(object):
     '''
 
     @classmethod
-    def initialize_state(cls,molecule,isotope,state,N_range,M_values='all',I=[0,1/2],S=1/2,P_values=[],M_range=[],round=6,trap=False,theta_num=None):
+    def initialize_state(cls,molecule,isotope,state,N_range,M_values='all',I=[0,1/2],S=1/2,P_values=[],K_values=[],M_range=[],round=6,trap=False,theta_num=None):
         if molecule=='YbOH':
             if isotope not in ['170','171','172','173','174','176']:
                 print(isotope, 'is not a valid isotope of Yb')
@@ -46,6 +46,11 @@ class MoleculeLevels(object):
             if state not in ['X010','X000','A000','B000']:
                 print('Your input state, ', state, ' is not currently supported by this code. \nAn example state string: X000')
                 return None
+        elif molecule=='SrNH2':
+            if isotope not in ['88']:
+                print(isotope,'Sr not yet supported')
+            if state not in ['X']:
+                print(state,'not yet supported')
         iso_state = isotope + state
         if P_values == []:
             print('No P values provided, using P=1/2 as default')
@@ -64,6 +69,7 @@ class MoleculeLevels(object):
             'I_spins': I,    #spin of nuclei, [I_Yb, I_H]. I=0 means ignore
             'M_range': M_range,
             'P_values': P_values,
+            'K_values': K_values,
             'trap': trap,
             'theta_num':theta_num,
         }

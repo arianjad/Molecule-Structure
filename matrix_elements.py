@@ -83,6 +83,59 @@ def bBS_2_bBJ_matrix(bBS, bBJ, S=1/2, I = 5/2):
 def unpack(bra,ket):
     return
 
+
+############ Asymmetric Top case bBJ #################
+
+def ATM_Rot_Tkq(k,q,K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=1/2,iN=1/2):
+    if not kronecker(N0,N1)*kronecker(M0,M1)*kronecker(J0,J1)*kronecker(F10,F11)*kronecker(iHT0,iHT1)*kronecker(F0,F1):
+        return 0
+    else:
+        return (-1)**k * np.sqrt(2*k+1) *\
+            (-1)**k * (-1)**(N0-K0) * wigner_3j(N0,k,N0,-K0,q,K1)*\
+            wigner_6j(1,1,k,N0,N0,N0) * N0*(N0+1)*(2*N0+1)
+
+def ATM_Rot_T00(K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=1/2,iN=1/2):
+    return ATM_Rot_Tkq(0,0,K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=S,iN=iN)
+
+def ATM_Rot_T20(K0,N0,M0,K1,N1,M1):
+    return ATM_Rot_Tkq(2,0,K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=S,iN=iN)
+
+def ATM_Rot_T22(K0,N0,M0,K1,N1,M1):
+    return ATM_Rot_Tkq(2,2,K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=S,iN=iN) + ATM_Rot_Tkq(2,-2,K0,N0,J0,F10,iHT0,F0,M0,K1,N1,J1,F11,iHT1,F1,M1,S=S,iN=iN)
+
+# def ATM_Rot_Tkq(k,q,K0,N0,M0,K1,N1,M1):
+#     if not kronecker(N0,N1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**k * np.sqrt(2*k+1) *\
+#             (-1)**(N0-M0) * wigner_3j(N0, 0, N0, -M0, 0, M0) * wigner_6j(k,k,0,N0,N0,N0) *\
+#             (-1)**(N0-K0) * (2*N0+1) * wigner_3j(N0,k,N0,-K0,q,K1)*\
+#             np.sqrt(2*k+1) * wigner_6j(1,1,k,N0,N0,N0) * N0*(N0+1)*(2*N0+1)
+#
+# def ATM_Rot_T00(K0,N0,M0,K1,N1,M1):
+#     return ATM_Rot_Tkq(0,0,K0,N0,M0,K1,N1,M1)
+#
+# def ATM_Rot_T20(K0,N0,M0,K1,N1,M1):
+#     return ATM_Rot_Tkq(2,0,K0,N0,M0,K1,N1,M1)
+#
+# def ATM_Rot_T22(K0,N0,M0,K1,N1,M1):
+#     return ATM_Rot_Tkq(2,2,K0,N0,M0,K1,N1,M1) + ATM_Rot_Tkq(2,-2,K0,N0,M0,K1,N1,M1)
+
+# def ATM_Rot_Sears_Tkq(k,q,K0,N0,M0,K1,N1,M1):
+#     if not kronecker(N0,N1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**(N0-K0) * wigner_3j(N0,k,N0,-K0,q,K1) *\
+#             (-1)**k*np.sqrt(2*k+1) * N0*(N0+1)*(2*N0+1) * wigner_6j(N0,N0,1,k,1,N0)
+#
+# def ATM_Rot_Sears_T00(K0,N0,M0,K1,N1,M1):
+#     return ATM_Rot_Sears_Tkq(0,0,K0,N0,M0,K1,N1,M1)
+#
+# def ATM_Rot_Sears_T20(K0,N0,M0,K1,N1,M1):
+#     return ATM_Rot_Sears_Tkq(2,0,K0,N0,M0,K1,N1,M1)
+#
+# def ATM_Rot_Sears_T22(K0,N0,M0,K1,N1,M1):
+
 ########## Vibronic bBJ ###########
 
 def Parity_v_bBJ(l0,L0,K0,N0,J0,F0,M0,l1,L1,K1,N1,J1,F1,M1,S=1/2,I=1/2):
