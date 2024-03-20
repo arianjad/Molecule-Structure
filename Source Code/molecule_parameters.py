@@ -43,18 +43,18 @@ params_174X000 = { #RaF
 'D': 1.4e-7*c
 }
 
-# params_174X010 = {
-# 'Be': 7328.48,
-# 'Gamma_SR': -87.69,
-# 'Gamma_Prime': 0,
-# 'bF': 4.80,
-# 'c': 2.46,
-# 'b': (4.80-2.46/3),
-# 'q_lD': 12.20, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
-# 'p_lD': 12.09,
-# 'muE': 2.15*0.503412,
-# #Origin 319.909053
-# }
+params_174X010 = {
+'Be': 7328.48,
+'Gamma_SR': -87.69,
+'Gamma_Prime': 0,
+'bF': 4.80,
+'c': 2.46,
+'b': (4.80-2.46/3),
+'q_lD': 12.20, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
+'p_lD': 12.09,
+'muE': 2.15*0.503412,
+#Origin 319.909053
+}
 
 # #YbOH With gamma prime
 # params_174X010 = {
@@ -72,19 +72,19 @@ params_174X000 = { #RaF
 # }
 
 #BaOH
-params_174X010 = {
-'Be': 6485.2640,
-'Gamma_SR': 68.65,
-'Gamma_Prime': 0, #optical 15.61,detuned raman 17.38
-'bF': 4.08, #YbOH Value
-'c': 3.41, #YbOH Value
-'q_lD': -9.4932, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
-'p_lD': 2.33, #optical -10.73, detuned raman -11.30
-'muE': 1.43*0.503412,
-'Origin': 	341.6,
-'g_l': 0.0,
-'g_S':2.0023,
-}
+# params_174X010 = {
+# 'Be': 6485.2640,
+# 'Gamma_SR': 68.65,
+# 'Gamma_Prime': 0, #optical 15.61,detuned raman 17.38
+# 'bF': 4.08, #YbOH Value
+# 'c': 3.41, #YbOH Value
+# 'q_lD': -9.4932, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
+# 'p_lD': 2.33, #optical -10.73, detuned raman -11.30
+# 'muE': 1.43*0.503412,
+# 'Origin': 	341.6,
+# 'g_l': 0.0,
+# 'g_S':2.0023,
+# }
 
 #226RaF
 params_174A000 = {
