@@ -26,22 +26,22 @@ params_general = {
 # 'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
 # }
 
-# params_174X000 = { #YbF
-# 'Be': 7233.8271,
-# 'Gamma_SR': -13.41679,
-# 'bF': 170.26374,
-# 'c': 85.4028,
-# 'muE': 3.91*0.503412 #Debye in MHz/(V/cm)
-# }
-
-params_174X000 = { #RaF
-'Be': 5755.56,
-'Gamma_SR': 175.38,
-'bF': 96.3,
-'c': 19,
-'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
-'D': 1.4e-7*c
+params_174X000 = { #YbF
+'Be': 7233.8271,
+'Gamma_SR': -13.41679,
+'bF': 170.26374,
+'c': 85.4028,
+'muE': 3.91*0.503412 #Debye in MHz/(V/cm)
 }
+
+# params_174X000 = { #RaF
+# 'Be': 5755.56,
+# 'Gamma_SR': 175.38,
+# 'bF': 96.3,
+# 'c': 19,
+# 'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
+# 'D': 1.4e-7*c
+# }
 
 params_174X010 = {
 'Be': 7328.48,
@@ -88,20 +88,21 @@ params_174X010 = {
 
 #226RaF
 params_174A000 = {
-'Be': 5726.48,
-'ASO': 0*2067.6*c, #Fixed from 1350 cm^-1
-'a': -1.6/2,         # YbF value, using h1/2 = a- (bf+2c/3) = A||/2
+'Be': 5726.48 - 2*1.4e-7*c, #R^2 form
+'ASO': 2067.6*c, #Fixed from 1350 cm^-1
+'h1/2': 0,         # Calc relayed from Silviu, using h1/2 = a- (bf+2c/3) = A||/2
+'a':19/2,
 'bF': 0,     #
 'c': 0,     #
-'d': -4.6, #YbF value
-'p+2q': -0.41071*c,
+'d': -9, #Calc relayed from Silviu. They use PGopher convention, we use B+C, so need minus sign
+'p+2q': -0.41071*c+1.9e-7*c, #R^2 form
 'q':0,
 'D': 1.4e-7*c,
 'p2q_D': 1.9e-7*c,
 'g_lp': -0.724,#-0.865,
 'muE': 0.43*0.503412,
 'g_S': 2.0023,
-'Origin': 13284.427+0*2067.6/2, #Pi1/2 origin + ASO(=1350 cm-1)
+'Origin': 13284.427+0*2067.6/2 + 5726.48/c, #Pi1/2 origin + ASO(=1350 cm-1), also with B offset due to code being R^2
 }
 
 # 174YbOH
@@ -168,17 +169,29 @@ params_173X010 = { # all units MHz except for muE
 'muE': 2.12*0.503412 #Debye in MHz/(V/cm)
 }
 
-params_173A000 = {
-'Be': 7590.30,
+params_173A000 = { #DyO
+'Be': 0.33*c,
 'ASO': 0, #Actually 4.047*10**7,
-'h1/2Yb': -126.51,
-'dYb': -261.72,
-'bFH': 0.07,     # extrapolated from YbF
-'cH': -0.18,     # extrapolated from YbF
-'e2Qq0': -1924.66,
-'p+2q': -13141.63,
-'muE': 0.43*0.503412
+'h1/2Yb': 1000,
+'dYb': -0,
+'bFH': 0,     # extrapolated from YbF
+'cH': -0.0,     # extrapolated from YbF
+'e2Qq0': 0,
+'p+2q': 0,
+'muE': 2*0.503412
 }
+
+# params_173A000 = {
+# 'Be': 7590.30,
+# 'ASO': 0, #Actually 4.047*10**7,
+# 'h1/2Yb': -126.51,
+# 'dYb': -261.72,
+# 'bFH': 0.07,     # extrapolated from YbF
+# 'cH': -0.18,     # extrapolated from YbF
+# 'e2Qq0': -1924.66,
+# 'p+2q': -13141.63,
+# 'muE': 0.43*0.503412
+# }
 
 params_171A000 = {
 'Be': 7597.79,

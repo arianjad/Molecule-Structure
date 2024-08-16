@@ -223,9 +223,11 @@ class Molecule_Library(object):
         'Lambda Doubling q':me.LambdaDoubling_q_even_aBJ,
 
         # Hydrogen Hyperfine
-        'I.S': me.IS_even_aBJ,                   # I.S Fermi Contact Interaction
-        'IzSz': me.IzSz_even_aBJ,                # I.n*S.n projection of I and S on internuclear axis n
-        'T2_0(IS)': me.T2IS_even_aBJ            # q=0 molecule frame electron-IH dipole-dipole interaction (sqrt6 * (3IzSz - I.S))
+	    'Iz': me.Iz_even_aBJ,
+        'IzLz': me.IzLz_even_aBJ,
+        # 'I.S': me.IS_even_aBJ,                   # I.S Fermi Contact Interaction
+        # 'IzSz': me.IzSz_even_aBJ,                # I.n*S.n projection of I and S on internuclear axis n
+        'T2_2(I,S)': me.T2IS2_even_aBJ            # q=2 molecule frame electron-I dipole-dipole interaction (hyperfine d term or A_perp)
         }
 
 
@@ -560,13 +562,15 @@ class Molecule_Library(object):
             alt_q_builders = {
                 '174X000': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=0,I_list = I_spins,P_values=[1/2]),
-                    'decoupled': partial(qn.q_numbers_decoupled, K_mag=0,I_list = I_spins)
+                    'decoupled': partial(qn.q_numbers_decoupled, K_mag=0,I_list = I_spins),
+                    'bBS': partial(qn.q_numbers_bBS, K_mag=0,I_list = I_spins),
                     },
                 '174X010': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=1,P_values=[1/2,3/2],I_list = I_spins),
                     'decoupled': partial(qn.q_numbers_decoupled, K_mag=1,I_list = I_spins),
                     'recouple_J': partial(qn.q_numbers_decoupled_mJ, K_mag=1,I_list = I_spins),
                     'decouple_I': partial(qn.q_numbers_decoupled_mJ, K_mag=1,I_list = I_spins),
+                    'bBS': partial(qn.q_numbers_bBS, K_mag=1,I_list = I_spins),
                     'vibronic': partial(qn.q_numbers_vibronic_even_aBJ,l_mag=1,L_mag=0,I_list=I_spins,P_values=[1/2,3/2])
                     },
                 '173X000': {

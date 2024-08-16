@@ -45,7 +45,7 @@ def H_even_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
                 H0[i][j] = params['Be']*elements['N^2'] + params['Gamma_SR']*elements['N.S'] + \
                     params['bF']*elements['I.S'] + params['c']/3*np.sqrt(6)*elements['T2_0(I,S)']
                 if params.get('d') is not None:
-                    H0[i][j]+= -params['d']*elements['T2_2(I,S)']
+                    H0[i][j]+= params['d']*elements['T2_2(I,S)']
                 if params.get('q_lD') is not None:
                     H0[i][j] += params['p_lD']*elements['l doubling p'] - params['q_lD']*elements['l doubling q'] -params['Gamma_SR']*elements['NzSz']+params['Gamma_Prime']*elements['NzSz'] #old: params['q_lD']/2*elements['l-doubling']
                     # H0[i][j] += -params['q_lD']/2*elements['l-doubling'] - params['Gamma_SR']*elements['NzSz']+params['Gamma_Prime']*elements['NzSz']
@@ -143,8 +143,12 @@ def H_even_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
                 q_args = {**state_out,**state_in}
                 elements = {term: element(**q_args) for term, element in matrix_elements.items()}
                 H0[i][j] = params['Be']*elements['N^2'] + params['ASO']*elements['SO'] + \
-                    params['bF']*elements['I.S'] + params['c']*np.sqrt(6)/3*elements['T2_0(IS)']+\
+                    params['a']*elements['IzLz']+\
                     params['p+2q']*elements['Lambda Doubling p+2q'] - params['q']*elements['Lambda Doubling q']
+                if params.get('d') is not None:
+                    H0[i][j]+= params['d']*elements['T2_2(I,S)']
+                if params.get('h1/2') is not None:
+                    H0[i][j]+= params['h1/2']*elements['Iz']
                 if M_values!='none':
                     V_B[i][j]+= params['g_L']*params['mu_B']*elements['ZeemanLZ']+params['g_S']*params['mu_B']*elements['ZeemanSZ'] +\
                     params['g_lp']*params['mu_B']*elements['ZeemanParityZ']
