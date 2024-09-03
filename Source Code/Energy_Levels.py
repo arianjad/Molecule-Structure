@@ -12,6 +12,13 @@ import torch
 from hamiltonian_builders import tensor_matrix
 from fractions import Fraction
 
+#Import for temporary implementation
+from hamiltonian_builders import build_operator
+from matrix_elements import StarkZ_bBJ
+from matrix_elements import ZeemanZ_bBJ
+from matrix_elements import ZeemanX_bBJ
+from matrix_elements import Sz_bBJ
+
 class MoleculeLevels(object):
 
     '''This class is used to determine energy levels for a given vibronic state
@@ -131,6 +138,18 @@ class MoleculeLevels(object):
         self.PTV_B = None
         self.PTV0 = None
         self.PTV_type = None
+        if self.hunds_case == 'bBJ':
+            S_Z = build_operator(self.q_numbers,self.q_numbers,partial(ZeemanZ_bBJ,I=self.I_spins[-1]))
+            S_X = build_operator(self.q_numbers,self.q_numbers,partial(ZeemanX_bBJ,I=self.I_spins[-1]))
+            D_Z = build_operator(self.q_numbers,self.q_numbers,partial(StarkZ_bBJ,I=self.I_spins[-1]))
+            Sigma = build_operator(self.q_numbers,self.q_numbers,partial(Sz_bBJ, I = self.I_spins[-1]))
+
+            self.operators = {
+                'S_Z': S_Z,
+                'S_X': S_X,
+                'D_Z': D_Z,
+                'Sigma': Sigma
+            }
 
 
         self.state_str =  r'$^{{{iso}}}${mol} $\tilde{{{state}}}({vib})$'.format(iso=self.isotope,mol=self.molecule,state = self.state[:1],vib=self.state[1:])
@@ -343,7 +362,7 @@ class MoleculeLevels(object):
         else:
             return self.D_eff_evecs(*self.eigensystem(Ez,Bz),Ez,Bz,step=step)
 
-    def g_eff_evecs(self,evals,evecs,Ez,Bz,step=1e-7):
+    def g_eff_evecs_old(self,evals,evecs,Ez,Bz,step=1e-7):
         evals0,evecs0 = evals,evecs
         evals1,evecs1 = self.eigensystem(Ez,Bz+step,set_attr=False)
         order = state_ordering(evecs0,evecs1,round=self.round)
@@ -357,7 +376,7 @@ class MoleculeLevels(object):
         g_eff = np.array(g_eff)
         return g_eff
 
-    def D_eff_evecs(self,evals,evecs,Ez,Bz,step=1e-7):
+    def D_eff_evecs_old(self,evals,evecs,Ez,Bz,step=1e-7):
         evals0,evecs0 = evals,evecs
         evals1,evecs1 = self.eigensystem(Ez+step,Bz,set_attr=False)
         order = state_ordering(evecs0,evecs1,round=self.round)
@@ -370,6 +389,25 @@ class MoleculeLevels(object):
             D_eff.append((E1-E0)/(step*self.parameters['muE']))
         D_eff = np.array(D_eff)
         return D_eff
+
+
+    def g_eff_evecs(self,evals,evecs,Ez,Bz,step=1e-7):
+        evals0,evecs0 = evals,evecs
+        S_Z = self.operators['S_Z']
+        g_eff = []
+        for _evec in evecs0:
+            S_Z_value = self.parameters['g_S']*_evec@S_Z@_evec.T
+            g_eff.append(S_Z_value)
+        return np.array(g_eff)
+
+    def D_eff_evecs(self,evals,evecs,Ez,Bz,step=1e-7):
+        evals0,evecs0 = evals,evecs
+        D_Z = self.operators['D_Z']
+        D_eff = []
+        for _evec in evecs0:
+            D_Z_value = self.parameters['mu_E']*_evec@D_Z@_evec.T
+            D_eff.append(D_Z_value)
+        return np.array(D_eff)
 
 #Is this redundant?
     # def g_eff_EB(self,Ez,Bz,step=1e-7):
