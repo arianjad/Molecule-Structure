@@ -26,22 +26,22 @@ params_general = {
 # 'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
 # }
 
-params_174X000 = { #YbF
-'Be': 7233.8271,
-'Gamma_SR': -13.41679,
-'bF': 170.26374,
-'c': 85.4028,
-'muE': 3.91*0.503412 #Debye in MHz/(V/cm)
-}
-
-# params_174X000 = { #RaF
-# 'Be': 5755.56,
-# 'Gamma_SR': 175.38,
-# 'bF': 96.3,
-# 'c': 19,
-# 'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
-# 'D': 1.4e-7*c
+# params_174X000 = { #YbF
+# 'Be': 7233.8271,
+# 'Gamma_SR': -13.41679,
+# 'bF': 170.26374,
+# 'c': 85.4028,
+# 'muE': 3.91*0.503412 #Debye in MHz/(V/cm)
 # }
+
+params_174X000 = { #RaF
+'Be': 5755.56,
+'Gamma_SR': 175.38,
+'bF': 96.3,
+'c': 19,
+'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
+'D': 1.4e-7*c
+}
 
 # params_174X010 = {
 # 'Be': 7328.48,
@@ -79,11 +79,14 @@ params_174X010 = {
 'bF': -0.7, #Calc BaOH Value
 'c': 1.0, #Calc BaOH Value
 'q_lD': -9.4932, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
-'p_lD': 2.33, #optical -10.73, detuned raman -11.30
+'p_lD': -2.66, #optical -10.73, detuned raman -11.30
 'muE': 1.43*0.503412,
 'Origin': 	341.6,
 'g_l': 0.0,
 'g_S':2.0023,
+'azz': 8.9828296767*10**(-8),    # From Eifion's calculations: 361 a.u. (at 1064 nm of wavelength)
+'axxyy': 2*1.81896080157*10**(-7), # From Eifion's calculations: 731 a.u. (at 1064 nm of wavelength), then 2x bc I am representing axx+ayy
+# Conversion factor for electric dipole polarizabilities from a.u. to h.MHz/(V/cm)^2: 0.248831847d-9
 }
 
 #226RaF

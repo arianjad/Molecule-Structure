@@ -18,6 +18,7 @@ from matrix_elements import StarkZ_bBJ
 from matrix_elements import ZeemanZ_bBJ
 from matrix_elements import ZeemanX_bBJ
 from matrix_elements import Sz_bBJ
+from scipy.optimize import linear_sum_assignment
 
 class MoleculeLevels(object):
 
@@ -250,7 +251,7 @@ class MoleculeLevels(object):
 
 
     # Bz must be in Gauss
-    def ZeemanMap(self,Bz_array,Ez_val=0,plot=False,output=False,write_attribute=True,method='torch',initial_evecs=None,order=True,**kwargs):
+    def ZeemanMap(self,Bz_array,Ez_val=0,plot=False,output=False,write_attribute=True,method='torch',initial_evecs=None,initial_evals=None,order=True,ordering='evecs',**kwargs):
         self.Bz = Bz_array
         self._Ez = Ez_val
         # t0 = perf_counter()
@@ -273,13 +274,20 @@ class MoleculeLevels(object):
         if order:
             if initial_evecs is None:
                 evecs_old = evecs_B[0]
+                evals_old = evals_B[0]
             else:
                 evecs_old = initial_evecs
+                evals_old = initial_evals
             for i in range(len(Bz_array)):
                 if i == 0 and initial_evecs is None:
                     continue
                 evals_new,evecs_new = evals_B[i], evecs_B[i]
-                order = state_ordering(evecs_old,evecs_new,round=self.round)
+                if ordering=='evecs':
+                    order = state_ordering(evecs_old,evecs_new,round=self.round)
+                elif ordering=='evals':
+                    order = state_ordering_evals(evals_old,evals_new,round=self.round)
+                elif ordering=='all':
+                    order = state_ordering_evals_evecs(evals_old,evecs_old,evals_new,evecs_new,round=self.round)
                 evecs_ordered = evecs_new[order,:]
                 evals_ordered = evals_new[order]
                 #fix phase?
@@ -288,6 +296,7 @@ class MoleculeLevels(object):
                 evecs_B[i] = evecs_ordered
                 evals_B[i] = evals_ordered
                 evecs_old = evecs_B[i]
+                evals_old = evals_B[i]
         # t3 = perf_counter()
         # print('1:',(t1-t0))
         # print('2:',(t2-t1))
@@ -304,7 +313,7 @@ class MoleculeLevels(object):
             return
 
     # Ez must be in V/cm
-    def StarkMap(self,Ez_array,Bz_val=1e-9,plot=False,output=False,write_attribute=True,method='torch',initial_evecs=None,order=True,**kwargs):
+    def StarkMap(self,Ez_array,Bz_val=1e-9,plot=False,output=False,write_attribute=True,method='torch',initial_evecs=None,initial_evals=None,order=True,ordering='evecs',**kwargs):
         self.Ez = Ez_array
         self._Bz = Bz_val
         if self.trap:
@@ -323,14 +332,21 @@ class MoleculeLevels(object):
         evals_E,evecs_E = diagonalize_batch(E_matrices,method=method,round=self.round)
         if initial_evecs is None:
             evecs_old = evecs_E[0]
+            evals_old = evals_E[0]
         else:
             evecs_old = initial_evecs
+            evals_old = initial_evals
         if order:
             for i in range(len(Ez_array)):
                 if i == 0 and initial_evecs is None:
                     continue
                 evals_new,evecs_new = evals_E[i], evecs_E[i]
-                order = state_ordering(evecs_old,evecs_new,round=self.round)
+                if ordering=='evecs':
+                    order = state_ordering(evecs_old,evecs_new,round=self.round)
+                elif ordering=='evals':
+                    order = state_ordering_evals(evals_old,evals_new,round=self.round)
+                elif ordering=='all':
+                    order = state_ordering_evals_evecs(evals_old,evecs_old,evals_new,evecs_new,round=self.round)
                 evecs_ordered = evecs_new[order,:]
                 evals_ordered = evals_new[order]
                 #fix phase
@@ -1000,7 +1016,7 @@ class MoleculeLevels(object):
                 idx.append(i)
         return np.array(idx)
 
-    def EB_grid(self,Ez,Bz,E_or_B_first = 'E',reverse=False,interp=False,method='torch',output=False,evecs=False,PTV=False,trap_shifts=False,order_states=True,EDM_or_MQM='EDM'):
+    def EB_grid(self,Ez,Bz,E_or_B_first = 'E',reverse=False,interp=False,method='torch',output=False,evecs=False,PTV=False,trap_shifts=False,order_states=True,EDM_or_MQM='EDM',ordering='evecs'):
         self.eigensystem(Ez[0],Bz[0])
         N_evals = len(self.evals0)
         evec_dim = len(self.evecs0[0])
@@ -1029,7 +1045,7 @@ class MoleculeLevels(object):
         if E_or_B_first == 'E':
             evals_E,evecs_E = self.StarkMap(Ez,Bz[0],output=True,write_attribute=False,method=method,order=order_states)
             for i in range(N_Ez):
-                evals_B, evecs_B = self.ZeemanMap(Bz, Ez_val = Ez[i],output=True,write_attribute=False,method=method,initial_evecs=evecs_E[i],order=order_states)
+                evals_B, evecs_B = self.ZeemanMap(Bz, Ez_val = Ez[i],output=True,write_attribute=False,method=method,initial_evecs=evecs_E[i],initial_evals=evals_E[i],order=order_states,ordering=ordering)
                 for j in range(N_Bz):
                     evals_EB[:,i,j] = evals_B[j]
                     if evecs:
@@ -1042,7 +1058,7 @@ class MoleculeLevels(object):
         else:
             evals_B,evecs_B = self.ZeemanMap(Bz,Ez[0],output=True,write_attribute=False,method=method,order=order_states)
             for i in range(N_Bz):
-                evals_E, evecs_E = self.StarkMap(Ez, Bz_val = Bz[i], output=True,write_attribute=False,method=method,initial_evecs = evecs_B[i],order=order_states)
+                evals_E, evecs_E = self.StarkMap(Ez, Bz_val = Bz[i], output=True,write_attribute=False,method=method,initial_evecs = evecs_B[i],initial_evals=evals_B[i],order=order_states,ordering=ordering)
                 for j in range(N_Ez):
                     evals_EB[:,j,i] = evals_E[j]
                     if evecs:
@@ -1182,9 +1198,30 @@ def Calculate_forbidden_TDMs(p,Ground, Excited, Ez, Bz, scale=1,Normalize=False)
     TDM_p = (E_evecs@TDM_matrix@G_evecs.T)
     return TDM_p
 
+def state_ordering_evals_evecs(evals_old, evecs_old, evals_new, evecs_new,round=8):
+    delta = np.abs(np.subtract.outer(evals_old,evals_new))/(np.abs(evals_old+evals_new)/2)
+    overlap = np.round(abs(evecs_old@evecs_new.T),round)  
+    loss_func = delta - overlap
+    # ordering = np.argmin(loss_func, axis=1)
+    row_ind,col_ind = linear_sum_assignment(loss_func)
+    ordering=col_ind
+    return ordering
+
+
+def state_ordering_evals(evals_old,evals_new, round=8):
+    delta = np.abs(np.subtract.outer(evals_old,evals_new))
+    # row_ind,col_ind = linear_sum_assignment(delta)
+    # ordering=col_ind
+    ordering = np.argmin(delta, axis=1)
+    return ordering
+
 
 def state_ordering(evecs_old,evecs_new,round=8):
     overlap = np.round(abs(evecs_old@evecs_new.T),round)     #Essentially a matrix of the fidelities: |<phi|psi>|
+    ordering = np.argmax(overlap,axis=1) #numpy
+    # row_ind, col_ind = linear_sum_assignment(overlap,maximize=True)
+    # ordering = col_ind
+
     #calculate trace distance
     # for o in overlap:
     #     for _o in o:
@@ -1193,7 +1230,7 @@ def state_ordering(evecs_old,evecs_new,round=8):
     # dist = abs(1-overlap)/step**2
     # ordering = np.array([dist[i,:].argmin() for i in range(len(evecs_old))])  #python
     # ordering = np.argmin(dist,axis=1) #numpy
-    ordering = np.argmax(overlap,axis=1) #numpy
+
     return ordering
 
 def order_eig(evals,evecs):

@@ -333,7 +333,7 @@ class Molecule_Library(object):
         if self.molecule == 'YbOH':
             H_builders = {
                 '174X000': ham.H_even_X,
-                '174X010': ham.H_even_X,
+                '174X010': partial(ham.H_even_X,trap=self.trap),
                 '173X000': ham.H_odd_X,
                 '173X010': ham.H_odd_X,
                 '174A000': ham.H_even_A,
