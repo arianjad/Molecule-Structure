@@ -34,3 +34,50 @@ class SiteAwareOperator:
     def matrix(self, basis: Basis, params: Mapping[str, Any]) -> np.ndarray:
         key = self._select_case(basis)
         return self._cases[key](basis, params)
+
+
+from .operator_registry import register_operator
+from .legacy_bridge import make_operator_from_element, make_siteaware_operator
+
+# ---- Replace the placeholder imports with your real legacy functions ----
+# from matrix_elements import (
+#     spin_rotation_element_even,   # f(bra_qn, ket_qn, params, meta) -> float
+#     spin_rotation_element_odd,
+#     fermi_contact_M_even,
+#     fermi_contact_M_odd,
+#     electron_zeeman_element,      # site-agnostic (if yours is)
+# )
+
+# ---- Example placeholders (temporary zeros) so the file imports cleanly ----
+def _zero_el(b, k, p, m): return 0.0
+spin_rotation_element_even = _zero_el
+spin_rotation_element_odd  = _zero_el
+fermi_contact_M_even       = _zero_el
+fermi_contact_M_odd        = _zero_el
+electron_zeeman_element    = _zero_el
+
+# Spin-rotation γ
+register_operator(
+    make_siteaware_operator(
+        "SpinRotation",
+        even_element_fn=spin_rotation_element_even,
+        odd_element_fn=spin_rotation_element_odd,
+    )
+)
+
+# Fermi contact b_F (metal-site example; you can add H-site as another operator if needed)
+register_operator(
+    make_siteaware_operator(
+        "FermiContact_M",
+        even_element_fn=fermi_contact_M_even,
+        odd_element_fn=fermi_contact_M_odd,
+    )
+)
+
+# Electron Zeeman (often site-agnostic)
+register_operator(
+    make_operator_from_element(
+        "ElectronZeeman",
+        electron_zeeman_element,
+    )
+)
