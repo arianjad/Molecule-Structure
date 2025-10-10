@@ -50,7 +50,7 @@ class MoleculeLevels(object):
         M_sublevels: 'none', 'all' (default), 'pos', or 'custom'. Specifying 'custom' means the input to M_list is used
         M_list: list of M sublevels to include, only used if M_sublevels='custom'
         I_nuclei: list of nuclear spins, must be len(2) e.g. [I_1, I_2], where I_1 = metal, I_2 = ligand
-        isotope: optional string to specify isotope, e.g. '171', if None defaults to most common isotope
+        isotope: optional string to specify isotope label, e.g. 171 or 226, if None defaults to most common isotope on backend
         P_values: absolute value of projection values (i.e. Omega) to include, e.g. [1/2] or [1/2,3/2] for 2Pi states
         round: integer, how much to round eigenvalues and eigenvectors
         trap: boolean, whether to include tensor AC Stark interaction for an ODT
@@ -112,7 +112,7 @@ class MoleculeLevels(object):
             else: 
                 self.iso_state = '174' + self.electronic_state + '000'
         elif self.spin_statistics == 'fermion':
-            if self.metadata['isotope'] is not None:
+            if self.metadata['isotope'] in [171,173]:
                 self.iso_state = self.metadata['isotope'] + self.vibronic_state
             else:
                 # Default to 171 in backend
@@ -181,8 +181,11 @@ class MoleculeLevels(object):
         self.PTV0 = None
         self.PTV_type = None
 
-
-        self.state_str =  r'$^{{{iso}}}${mol} $\tilde{{{state}}}({vib})$'.format(iso=self.metadata['isotope'],mol=self.molecule,state = self.electronic_state,vib=self.vibrational_state)
+        if self.metadata['isotope'] is not None:
+            iso = self.metadata['isotope']
+        else:
+            iso=''
+        self.state_str =  r'$^{{{iso}}}${mol} ${{state}}({vib})$'.format(iso=iso,mol=self.molecule,state = self.electronic_state,vib=self.vibrational_state)
 
     def update_params(self,update_dict,recompute=True):
         if update_dict is None:
@@ -909,8 +912,116 @@ class MoleculeLevels(object):
         if verbose:
             print('Successfully converted eigenvectors from {} to {}'.format(current_case,new_case))
         return converted_evecs
+    
+    def gen_state_str(
+        self,
+        vector_idx,
+        evecs=None,
+        basis=None,
+        label_q=None,
+        parity=False,
+        single=False,
+        thresh=0.01,
+        show_coeff=True,
+        new_line=False,
+        round=None,
+        frac_cmd=r'\frac',   # choose r'\frac', r'\tfrac', or r'\dfrac'
+    ):
+        # pick q-number set and optional basis change
+        q_numbers = self.q_numbers
+        if label_q is None:
+            label_q = list(self.q_str)  # copy to avoid mutating class attr
+        if round is None:
+            round = self.round
+        if evecs is None:
+            evecs = self.evecs0
 
-    def gen_state_str(self,vector_idx,evecs=None,basis=None,label_q=None,parity=False,single=False,thresh=0.01,show_coeff=True,new_line=False,round=None,frac=''):
+        if basis is not None and basis not in self.hunds_case:
+            if 'decoupled' in basis:
+                q_numbers = self.alt_q_numbers['decoupled']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['decoupled'])
+                evecs = self.convert_evecs('decoupled', evecs=evecs, verbose=False)
+            elif 'a' in basis:
+                q_numbers = self.alt_q_numbers['aBJ']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['aBJ'])
+                evecs = self.convert_evecs('aBJ', evecs=evecs, verbose=False)
+            elif 'bBJ' in basis:
+                q_numbers = self.alt_q_numbers['bBJ']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['bBJ'])
+                evecs = self.convert_evecs('bBJ', evecs=evecs, verbose=False)
+            elif 'recouple' in basis:
+                q_numbers = self.alt_q_numbers['recouple_J']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['recouple_J'])
+            elif 'decouple_I' in basis:
+                q_numbers = self.alt_q_numbers['decouple_I']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['decouple_I'])
+            elif 'bBS' in basis:
+                q_numbers = self.alt_q_numbers['bBS']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['bBS'])
+                evecs = self.convert_evecs('bBS', evecs=evecs, verbose=False)
+
+        # pretty names for some labels
+        latex_q = {'L': r'\Lambda', 'Sigma': r'\Sigma', 'Omega': r'\Omega'}
+
+        vec = deepcopy(evecs[vector_idx])
+        vec[np.abs(vec) < thresh] = 0
+        nz = np.nonzero(vec)[0]
+        if single and len(nz) > 0:
+            nz = [int(np.argmax(np.abs(vec)))]
+
+        parts = []  # collect ket terms (no $ here)
+
+        for i, idx in enumerate(nz):
+            coeff = float(np.round(vec[idx], round))
+            sgn = '+' if coeff >= 0 else '-'
+            sgn_to_show = ' ' if (i == 0 and sgn == '+') else sgn
+
+            # sign + (optional) coefficient + opening ket bar
+            if show_coeff:
+                term = rf'\,{sgn_to_show}\,{abs(coeff)}\,|'
+            else:
+                term = rf'\,{sgn_to_show}\,|'
+
+            if parity:
+                pm = '+' if self.parities[vector_idx] > 0 else '-'
+                term += rf'{pm},'
+
+            # q=val comma-separated; rational values rendered with frac_cmd
+            vals = {q: q_numbers[q][idx] for q in label_q}
+            for q in label_q:
+                qname = latex_q.get(q, q)
+                v = vals[q]
+                # robust fraction handling
+                try:
+                    frac = Fraction(v).limit_denominator()
+                except TypeError:
+                    frac = Fraction(float(v)).limit_denominator()
+
+                if frac.denominator == 1:
+                    v_tex = f'{int(frac.numerator)}'
+                else:
+                    # put the minus out front for nice typesetting
+                    sign = '-' if frac.numerator < 0 else ''
+                    v_tex = rf'{sign}{frac_cmd}{{{abs(frac.numerator)}}}{{{frac.denominator}}}'
+
+                term += rf'{qname}={v_tex},'
+
+            term = term[:-1] + r'\rangle\,'
+            parts.append(term)
+
+        body = ''.join(parts)
+        if new_line:
+            body = r'\\ ' + body
+
+        return r'$' + body + r'$'
+
+    def gen_state_str_old(self,vector_idx,evecs=None,basis=None,label_q=None,parity=False,single=False,thresh=0.01,show_coeff=True,new_line=False,round=None,frac=''):
         q_numbers = self.q_numbers
         if label_q == None:
             label_q = self.q_str
