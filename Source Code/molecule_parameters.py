@@ -279,18 +279,11 @@ molecules['DyO']['boson']['A000'] = {
 
 
 
-# helpers
-def make_state_label(state_name, vibration):
-    if vibration is None:
-        v = 0
-    else:
-        v = vibration
-    return f'{state_name}{v}'
 
-def get_molecule_params(molecule_name, state_name, vibration=None, fermion_or_boson=None,
+def get_molecule_params(molecule_name, elec_state,vib_state, fermion_or_boson=None,
                         include_general=True, overrides=None):
 
-    state_label = make_state_label(state_name, vibration)
+    vibronic_label = f'{elec_state}{vib_state}'
 
     if molecule_name not in molecules:
         raise KeyError(f"Unknown molecule '{molecule_name}'. Available: {list(molecules)}")
@@ -300,13 +293,13 @@ def get_molecule_params(molecule_name, state_name, vibration=None, fermion_or_bo
     if fermion_or_boson is None:
         fermion_or_boson='boson'
     
-    molecule_states = molecule[fermion_or_boson]
+    vibronic_states = molecule[fermion_or_boson]
 
-    if state_label not in molecule_states:
-        raise KeyError(f"Unknown state '{state_label}' for '{molecule_name}' ({fermion_or_boson}). "
-                       f"Available: {list(molecule_states)}")
+    if vibronic_label not in vibronic_states:
+        raise KeyError(f"Unknown state '{vibronic_label}' for '{molecule_name}' ({fermion_or_boson}). "
+                       f"Available: {list(vibronic_states)}")
 
-    state_params = molecule_states[state_label]
+    state_params = vibronic_states[vibronic_label]
 
     if include_general:
         merged = dict(params_general)

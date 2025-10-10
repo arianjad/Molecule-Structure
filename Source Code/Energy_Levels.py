@@ -12,7 +12,7 @@ import torch
 from hamiltonian_builders import tensor_matrix
 from fractions import Fraction
 
-from molecule_parameters import get_molecule_params,make_state_label
+from molecule_parameters import get_molecule_params
 
 
 class MoleculeLevels(object):
@@ -26,45 +26,50 @@ class MoleculeLevels(object):
     '''
 
     @classmethod
-    def initialize_state(cls,molecule_name,state_name,N_list,fermion_or_boson='boson',vibration=0,isotope=None,params=None,M_sublevels='all',I_nuclei=[0,1/2],S_electron=1/2,P_values=[],M_list=[],round=6,trap=False,theta_num=None):
+    def initialize_state(cls,molecule_name,
+                         elec_state, vib_state,
+                         N_list, fermion_or_boson='boson',
+                         params=None,S_electron=1/2,
+                         M_sublevels='all',M_list = [],
+                         I_nuclei=[0,1/2],isotope=None,
+                         P_values=[],round=6,
+                         trap=False,theta_num=None):
         '''
         This is a method to initialize a molecule state object. 
 
-        Inputs:
+        Args: 
         molecule_name: string, name of molecule, e.g. 'YbOH'
-        state_name: string, name of state, e.g. 'X' or 'A'
-        fermion_or_boson: string, 'fermion' or 'boson', determines spin statistics (i.e. F=half-integer or integer)
+        elec_state: string, name of state, e.g. 'X' or 'A'
+        vib_state: string or integer, vibrational level, e.g. 0,1,... for diatomics or '000', '010', for triatomics
         N_list: list of values of rotational quantum number N to include (e.g. [N for N in N_values])
+
+        Keyword Args:
+        fermion_or_boson: string, 'fermion' or 'boson' (default), determines spin statistics (i.e. F=half-integer or integer)
         params: dictionary of molecular parameters, default None imports based on molecule and state
-        M_sublevels: 'none', 'all', 'pos', or 'custom'. Specifying 'custom' means the input to M_list is used
+        S_electron: electronic spin, default S=1/2 for doublet states
+        M_sublevels: 'none', 'all' (default), 'pos', or 'custom'. Specifying 'custom' means the input to M_list is used
         M_list: list of M sublevels to include, only used if M_sublevels='custom'
         I_nuclei: list of nuclear spins, must be len(2) e.g. [I_1, I_2], where I_1 = metal, I_2 = ligand
-        S_electron: electronic spin, e.g. S=1/2 for doublet states
-        P_values: absolute value of projection values (i.e. Omega) to include, e.g. [1/2] or [1/2,3/2] for 2Pi states
-        vibration: vibrational level, currently only used for labeling, defaults to v=0
         isotope: optional string to specify isotope, e.g. '171', if None defaults to most common isotope
+        P_values: absolute value of projection values (i.e. Omega) to include, e.g. [1/2] or [1/2,3/2] for 2Pi states
         round: integer, how much to round eigenvalues and eigenvectors
         trap: boolean, whether to include tensor AC Stark interaction for an ODT
         theta_num: angle of ODT trapping field from lab z axis, in radians. If None, defaults to 0
+
         '''
         #TODO: implement state_model labeling vibronic symmetry of state, e.g. 'Sigma', 'Pi'... 
 
-
-        #resolve params if None
+        # input checks
+        if len(elec_state)>1:
+            raise ValueError('Electronic state name must be a single letter, e.g. X, A, B, C')   
+        
+        # Get parameters from molecule_parameters.py if not provided
         if params is None:
-            params = get_molecule_params(
-                molecule_name,
-                state_name,
-                vibration=vibration,
-                fermion_or_boson=fermion_or_boson
-                )
-            
-        if len(state_name)>1:
-            raise ValueError('Electronic state name must be a single letter, e.g. X, A, B, C')
-            
-        if not isinstance(params,dict):
+            params = get_molecule_params(molecule_name,elec_state,vib_state,fermion_or_boson)
+        elif not isinstance(params,dict):
             raise ValueError('Params must be a dictionary of molecular parameters, see molecule_parameters.py for examples')
 
+        # P_values are projections of the total angular momentum J onto the molecular axis
         if P_values == []:
             Nmin = min([abs(n_) for n_ in N_list])
             S = S_electron
@@ -74,8 +79,10 @@ class MoleculeLevels(object):
         # Properties contain information relevant to the state of interest
         properties = {
             'molecule': molecule_name,
-            'spin_stats': fermion_or_boson,
-            'state': make_state_label(state_name,vibration),
+            'spin_statistics': fermion_or_boson,
+            'electronic_state': elec_state,
+            'vibrational_state': vib_state,
+            'vibronic_state': f'{elec_state}{vib_state}',
             'parameters': params,
             'N_range': N_list,
             'M_values': M_sublevels, #old notation
@@ -84,8 +91,6 @@ class MoleculeLevels(object):
             'I_spins': I_nuclei,    #spin of nuclei, [I_metal, I_ligand]. I=0 means ignore
             'M_range': M_list, #old notation
             'P_values': P_values,
-            'vibration': vibration,
-            'state_name': state_name,
             'trap': trap,
             'theta_num':theta_num,
             'metadata':{'isotope': isotope}
@@ -100,21 +105,21 @@ class MoleculeLevels(object):
         # Initialize a library with relevant functions and parameters for all states
         #TODO: Clean up the names from YbOH specific to general
         # Right now this part is hacky in order to retain continuity with old code
-        if self.spin_stats == 'boson':
+        if self.spin_statistics == 'boson':
             # Need to distinguish X0 and X000, etc
-            if len(self.state)>2:
-                self.iso_state = '174' + self.state
+            if len(self.vibronic_state)>2: # Triatomic
+                self.iso_state = '174' + self.vibronic_state
             else: 
-                self.iso_state = '174' + self.state_name + '000'
-        elif self.spin_stats == 'fermion':
+                self.iso_state = '174' + self.electronic_state + '000'
+        elif self.spin_statistics == 'fermion':
             if self.metadata['isotope'] is not None:
-                self.iso_state = self.metadata['isotope'] + self.state
+                self.iso_state = self.metadata['isotope'] + self.vibronic_state
             else:
                 # Default to 171 in backend
-                if len(self.state)>2:
-                    self.iso_state = '171' + self.state
+                if len(self.vibronic_state)>2:
+                    self.iso_state = '171' + self.vibronic_state
                 else: 
-                    self.iso_state = '171' + self.state_name + '000'    
+                    self.iso_state = '171' + self.electronic_state + '000'    
             
 
         self.library = Molecule_Library(self.molecule,self.I_spins,self.M_values,self.P_values,self.trap)
@@ -177,7 +182,7 @@ class MoleculeLevels(object):
         self.PTV_type = None
 
 
-        self.state_str =  r'$^{{{iso}}}${mol} $\tilde{{{state}}}({vib})$'.format(iso=self.metadata['isotope'],mol=self.molecule,state = self.state_name,vib=self.vibration)
+        self.state_str =  r'$^{{{iso}}}${mol} $\tilde{{{state}}}({vib})$'.format(iso=self.metadata['isotope'],mol=self.molecule,state = self.electronic_state,vib=self.vibrational_state)
 
     def update_params(self,update_dict,recompute=True):
         if update_dict is None:
@@ -459,10 +464,10 @@ class MoleculeLevels(object):
         return shifts
 
     def PTV_shift(self,EDM_or_MQM):
-        if self.spin_stats == 'boson':
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif self.spin_stats == 'fermion':
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         self.H_PTV = H_PTV
@@ -549,7 +554,7 @@ class MoleculeLevels(object):
 
 
     def PTV_Map(self,EDM_or_MQM,E_or_B='E', plot=False):
-        if self.spin_stats=='boson':
+        if self.spin_statistics=='boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
         elif self.spin_states=='fermion':
@@ -753,10 +758,10 @@ class MoleculeLevels(object):
         return fig
 
     def display_PTV(self,Ez,Bz,EDM_or_MQM,idx = None,width=0.75,figsize=(9,9),ylim=None,round=None):
-        if self.spin_stats == 'boson':
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif self.spin_stats == 'fermion':
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         if Ez==self.E0 and Bz==self.B0:
@@ -1014,10 +1019,10 @@ class MoleculeLevels(object):
             trap_shifts=False
         N_Bz = len(Bz)
         N_Ez = len(Ez)
-        if self.spin_stats == 'boson':
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif self.spin_stats == 'fermion':
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         if trap_shifts:
