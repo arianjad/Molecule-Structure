@@ -210,20 +210,24 @@ def q_numbers_vibronic_even_bBJ(N_range,l_mag,L_mag,S=1/2,I_list=[0,1/2],M_value
                                 continue
     return q_numbers
 
-def q_numbers_even_bBJ(N_range,K_mag,S=1/2,I_list=[0,1/2],M_values='all',M_range=[]):
+#TODO: Apply changes made in this function (N_list instead of N_range) to the other quantum number functions
+def q_numbers_even_bBJ(N_list,K_mag,S=1/2,I_list=[0,1/2],M_values='all',M_range=[]):
     IM=I_list[0]
     iH = I_list[-1]
-    Nmin,Nmax=N_range[0],N_range[-1]
+    N_list = np.array(N_list)
+    Nmin = (np.abs(N_list)).min()
     K_mag = abs(K_mag)
     if Nmin<K_mag:
-        print('Nmin must be >= |K|')
+        print('Nmin must be >= |K|, removing values with N<|K|')
         Nmin=abs(K_mag)
+        N_list = np.array([_N for _N in N_list if abs(_N)>=Nmin])
+    N_list = np.array(N_list,dtype=np.float64)
     q_str = ['K','N','J','F','M']
     I = max(IM,iH)
     q_numbers = {}
     for q in q_str:
         q_numbers[q] = []
-    for N in np.arange(Nmin,Nmax+1,1, dtype=np.float64):
+    for N in N_list:
         for J in np.arange(abs(N-S),abs(N+S)+1,1, dtype=np.float64):
             for F in np.arange(abs(J-I),abs(J+I)+1,1, dtype=np.float64):
                 if M_values=='none':
