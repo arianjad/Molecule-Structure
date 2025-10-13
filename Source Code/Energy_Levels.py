@@ -103,6 +103,7 @@ class MoleculeLevels(object):
         self.__dict__.update(properties)
 
         # Initialize a library with relevant functions and parameters for all states
+        
         #TODO: Clean up the names from YbOH specific to general
         # Right now this part is hacky in order to retain continuity with old code
         if self.spin_statistics == 'boson':
@@ -214,12 +215,10 @@ class MoleculeLevels(object):
         return
 
 
-    def eigensystem(self,Ez_val,Bz_val,method='torch',order=True, set_attr=True, Normalize=False,disable_trap=False,angle=None, chop=None):
+    def eigensystem(self,Ez_val,Bz_val,method='torch',order=True, set_attr=True, Normalize=False,angle=None, chop=None):
         if angle is not None:
             self.theta_trap = angle
-        if self.trap and not disable_trap:
-            evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val,self.I_trap,self.theta_trap),method=method,order=order, Normalize=Normalize,round=self.round)
-        elif self.trap and disable_trap:
+        if self.trap:
             evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val,self.I_trap,self.theta_trap),method=method,order=order, Normalize=Normalize,round=self.round)
         else:
             evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val),method=method,order=order, Normalize=Normalize,round=self.round)
@@ -528,7 +527,7 @@ class MoleculeLevels(object):
         return
 
 
-    def write_state(self,eval_i,Ez=None,Bz=None,show_PTV=False):
+    def write_state(self,eval_i,Ez=None,Bz=None,show_energy = True, show_PTV=False):
         if Ez is None and Bz is None:
             pass
         else:
@@ -541,7 +540,8 @@ class MoleculeLevels(object):
             i = len(self.evals0)+i
         vector=self.evecs0[i]
         energy = self.evals0[i]
-        print('E = {} MHz\n'.format(energy))
+        if show_energy:
+            print('E = {} MHz\n'.format(energy))
         if self.PTV0 is not None and show_PTV:
             print('{} Shift = {}\n'.format(self.PTV_type,self.PTV0[i]))
         #sum_sq = 0

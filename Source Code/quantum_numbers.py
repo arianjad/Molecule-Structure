@@ -231,7 +231,7 @@ def q_numbers_even_bBJ(N_list,K_mag,S=1/2,I_list=[0,1/2],M_values='all',M_range=
         for J in np.arange(abs(N-S),abs(N+S)+1,1, dtype=np.float64):
             for F in np.arange(abs(J-I),abs(J+I)+1,1, dtype=np.float64):
                 if M_values=='none':
-                    for K in {True:[0], False:[-K_mag,K_mag]}[K_mag==0]:
+                    for K in {True:[0.0], False:[-K_mag,K_mag]}[K_mag==0]:
                         M=abs(F)%1
                         values = [K,N,J,F,M]
                         for q,val in zip(q_str,values):
