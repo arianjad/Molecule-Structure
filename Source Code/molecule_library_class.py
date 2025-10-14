@@ -27,7 +27,7 @@ class Molecule_Library(object):
     giving the angular momentum name, and the dict value containing an array of
     the eigenvalues of each basis vector.
     For example, {'J': [0,1,1,1], 'M': [0,-1,0,1]}
-    
+
     Lambda: projection of angular momentum on the internuclear axis, excluding
     electron spin.
     '''
@@ -50,6 +50,7 @@ class Molecule_Library(object):
         self.basis_changers = self.collect_change_basis(I_spins)
         self.TDM_builders = self.collect_TDM()
         self.alt_q_number_builders = self.collect_alt_q(I_spins,P_values)
+        self.alt_q_str = self.collect_alt_q_str()
         self.TDM_p_builders = self.collect_p_TDM()
         self.all_parity = self.collect_parity()
         self.TDM_p_forbidden_builders = self.collect_p_TDM_forbidden()
@@ -560,6 +561,8 @@ class Molecule_Library(object):
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=0,I_list = I_spins,P_values=[1/2]),
                     'decoupled': partial(qn.q_numbers_decoupled, K_mag=0,I_list = I_spins),
                     'bBS': partial(qn.q_numbers_bBS, K_mag=0,I_list = I_spins),
+                    'recouple_J': partial(qn.q_numbers_decoupled_mJ, K_mag=0,I_list = I_spins),
+                    'decouple_I': partial(qn.q_numbers_decoupled_mJ, K_mag=0,I_list = I_spins),
                     },
                 '174X010': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=1,P_values=[1/2,3/2],I_list = I_spins),
@@ -633,3 +636,14 @@ class Molecule_Library(object):
                     },
                 }
         return alt_q_builders
+
+    def collect_alt_q_str(self):
+        alt_q_str = {'aBJ': ['K','Sigma','P','J','F','M'],
+                     'bBJ': ['K','N','J','F','M'],
+                    'decoupled': ['K','N','M_N','M_S','M_I','M_F'],
+                    'recouple_J': ['K','N','J','M_J','M_I','M_F'],
+                    'decouple_I': ['K','N','J','M_J','M_I','M_F'],
+                    'bBS': ['K','N','G','F1','F','M'],
+                    'vibronic': ['l','L','K','Sigma','Omega','P','J','F','M'],
+                    }
+        return alt_q_str

@@ -929,8 +929,7 @@ class MoleculeLevels(object):
     ):
         # pick q-number set and optional basis change
         q_numbers = self.q_numbers
-        if label_q is None:
-            label_q = list(self.q_str)  # copy to avoid mutating class attr
+
         if round is None:
             round = self.round
         if evecs is None:
@@ -965,7 +964,10 @@ class MoleculeLevels(object):
                 if label_q is None:
                     label_q = list(self.alt_q_numbers['bBS'])
                 evecs = self.convert_evecs('bBS', evecs=evecs, verbose=False)
-
+        
+        if label_q is None:
+            label_q = list(self.q_str)
+        
         # pretty names for some labels
         latex_q = {'L': r'\Lambda', 'Sigma': r'\Sigma', 'Omega': r'\Omega'}
 
@@ -1024,7 +1026,10 @@ class MoleculeLevels(object):
     def gen_state_str_old(self,vector_idx,evecs=None,basis=None,label_q=None,parity=False,single=False,thresh=0.01,show_coeff=True,new_line=False,round=None,frac=''):
         q_numbers = self.q_numbers
         if label_q == None:
-            label_q = self.q_str
+            if basis == self.hunds_case:
+                label_q = self.q_str
+            else:
+                label_q = self.library.alt_q_str[basis]
         if round is None:
             round=self.round
         if evecs is None:
