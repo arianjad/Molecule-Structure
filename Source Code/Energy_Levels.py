@@ -186,7 +186,7 @@ class MoleculeLevels(object):
             iso = self.metadata['isotope']
         else:
             iso=''
-        self.state_str =  r'$^{{{iso}}}${mol} ${{state}}({vib})$'.format(iso=iso,mol=self.molecule,state = self.electronic_state,vib=self.vibrational_state)
+        self.state_str =  rf'$^{{{iso}}}${self.molecule} ${{{self.electronic_state}}}({{{self.vibrational_state}}})$'
 
     def update_params(self,update_dict,recompute=True):
         if update_dict is None:
@@ -556,7 +556,7 @@ class MoleculeLevels(object):
                 print(' {} |K={},\u03A3={},P={},J={},F={},M={}> \n'.format(coeff,v['K'],v['Sigma'],v['P'],v['J'],v['F'],v['M']))
 
 
-    def PTV_Map(self,EDM_or_MQM,E_or_B='E', plot=False):
+    def PTV_Map(self,EDM_or_MQM,E_or_B='E', plot=False,**kwargs):
         if self.spin_statistics=='boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
@@ -593,7 +593,7 @@ class MoleculeLevels(object):
             PTV_vs_B = np.array(PTV_vs_B)
             self.PTV_B = PTV_vs_B
         if plot:
-            self.plot_PTV(E_or_B)
+            self.plot_PTV(E_or_B,**kwargs)
         return
 
 
@@ -622,7 +622,7 @@ class MoleculeLevels(object):
             return g_eff_vs_B
 
 
-    def plot_PTV(self,E_or_B='E',kV_kG=False):
+    def plot_PTV(self,E_or_B='E',kV_kG=False,idx=None):
 
         if self.PTV_E is None and E_or_B=='E':
             print('Need to run PTV_Map first')
@@ -640,6 +640,8 @@ class MoleculeLevels(object):
 
         field,shifts = {'E': [self.Ez,self.PTV_E], 'B':[self.Bz,self.PTV_B]}[E_or_B]
         shifts = shifts.T # change primary index from E field to eigenvector
+        if idx is not None:
+            shifts = shifts[idx]
 
         y_label = {
             'EDM': r'$\langle \Sigma \rangle$',
@@ -654,7 +656,7 @@ class MoleculeLevels(object):
         }[self.PTV_type]
 
 
-        title = state_str + ' ' + PTV_str + r', $N={}$'.format(str(self.N_range)[1:-1])
+        title = state_str + ' ' + PTV_str
 
         plt.figure(figsize=(10,7))
         for trace in shifts:
