@@ -3,8 +3,21 @@ import numpy as np
 from sympy.physics.wigner import wigner_3j,wigner_6j,wigner_9j
 
 
-def hyperfine_b(bF_value,c_value):
-    return bF_value - c_value/3
+def bF_2_b(bF_value,c_value):
+    b = bF_value - c_value/3
+    return b
+
+def b_2_bF(b_value, c_value):
+    bF = b_value + c_value/3
+    return bF
+
+def abinitio_2_effective_hyperfine(A_par,A_perp,state='Sigma'):
+    if 'Sigma' in state:
+        b = A_perp
+        c = A_par - A_perp
+        bF = b_2_bF(b,c)
+    return bF,c
+
 
 
 params_general = {
@@ -20,7 +33,7 @@ c=params_general['c']
 
 # Dictionary to hold all molecule parameters
 
-species_names = ['YbOH','CaOH','BaOH','RaF','YbF','DyO']
+species_names = ['YbOH','CaOH','BaOH','RaF','RaOH','YbF','DyO']
 
 # Build nested structure with fermion/boson branches
 molecules = {molecule_name: {'boson': {}, 'fermion': {}} for molecule_name in species_names}
@@ -52,6 +65,20 @@ molecules['RaF']['boson']['A0'] = {
     'Origin': 13284.427+0*1350 + 5755.56/19, #Pi1/2 origin + ASO(=1350 cm-1), also with B offset due to code being R^2
     }
 
+bF_225, c_225 = abinitio_2_effective_hyperfine(A_par=-0.5692*c, A_perp=-0.5445*c, state='Sigma')
+molecules['RaOH']['fermion']['X010'] = {
+    'Be': 5814.3, # X000 value
+    'Gamma_SR': 151, # X000 value
+    'Gamma_Prime':0,
+    'bFYb': bF_225,
+    'cYb': c_225,
+    'bFH': 4.08, # YbOH Value
+    'cH': 3.41, # YbOH Value
+    'e2Qq0': 0,
+    'q_lD': -15,
+    'muE': 2.15*0.503412 # Debye in MHz/(V/cm)
+    }
+
 
 
 molecules['YbOH']['boson']['X000'] = {
@@ -59,7 +86,7 @@ molecules['YbOH']['boson']['X000'] = {
     'Gamma_SR': -81.150,
     'bF': 4.80,
     'c': 2.46,
-    'b': hyperfine_b(4.80,2.46),
+    'b': bF_2_b(4.80,2.46),
     'D': 0.006084,
     'Gamma_D': 0.00476,
     'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
@@ -70,7 +97,7 @@ molecules['YbOH']['boson']['X010'] = {
     'Gamma_Prime': 17.38, #optical 15.61,detuned raman 17.38
     'bF': 4.08, #4.07 splitting fit, 4.08 combined fit
     'c': 3.41, #3.49 splitting fit, 3.41 combined fit
-    'b': hyperfine_b(4.08,3.41),
+    'b': bF_2_b(4.08,3.41),
     'q_lD': -12.03, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
     'p_lD': -11.30, #optical -10.73, detuned raman -11.30
     'D': 0.006952,
@@ -88,7 +115,7 @@ molecules['YbOH']['boson']['A000'] = {
     'a': 0.01,         # extrapolated from YbF
     'bF': 0.06985,     # extrapolated from YbF
     'c': 0.1799,     # extrapolated from YbF
-    'b': hyperfine_b(0.06985,0.1799),
+    'b': bF_2_b(0.06985,0.1799),
     'p+2q': -13133,
     'q': -9.4932,
     'D': 0.006952,
@@ -184,7 +211,7 @@ molecules['CaOH']['boson']['40X000'] = {
     'Gamma_SR': 34.7593,
     'bF': 2.602,
     'c': 2.053,
-    'b': hyperfine_b(2.602,2.053),
+    'b': bF_2_b(2.602,2.053),
     'muE': 1.465*0.503412, #Debye in MHz/(V/cm)
     # 'g_N': 5.253736,
     }
@@ -195,7 +222,7 @@ molecules['CaOH']['boson']['40X010'] = {
     'Gamma_Prime': 0,
     'bF': 2.45,#2.247, #2.293,#2.2445, #2.602
     'c': 2.6,#2.601,#2.522,##2.6074, #2.053
-    'b': hyperfine_b(2.45,2.6),
+    'b': bF_2_b(2.45,2.6),
     'p_lD': -0.00,
     'q_lD': -21.53,
     # 'q_lD_D': 6.4*10**-5,
@@ -212,7 +239,7 @@ molecules['CaOH']['boson']['40A000'] = {
     'a': 0,         # extrapolated from YbF
     'bF': 0.07,     # extrapolated from YbF
     'c': -0.18,     # extrapolated from YbF
-    'b': hyperfine_b(0.07,-0.18),
+    'b': bF_2_b(0.07,-0.18),
     'p+2q': -1305 ,
     'q': -9.764,
     'g_lp': -0.865, #Unknown
@@ -223,7 +250,7 @@ molecules['CaOH']['boson']['40B000'] = {
     'Gamma_SR': -1307.54,
     'bF': 2.602*0.04, #Hyperfine extrapolated from CaF A state to X state ratio
     'c': 2.053*0.04,
-    'b': hyperfine_b(2.602*0.04,2.053*0.04),
+    'b': bF_2_b(2.602*0.04,2.053*0.04),
     'muE': 0.744*0.503412 #Debye in MHz/(V/cm)
     }
 
@@ -233,7 +260,7 @@ molecules['BaOH']['boson']['X000'] = {
     'Gamma_SR': 68.65,
     'bF': 4.08, #YbOH Value
     'c': 3.41, #YbOH Value
-    'b': hyperfine_b(4.08,3.41),
+    'b': bF_2_b(4.08,3.41),
     'D': 0.006952,
     'muE': 1.43*0.503412,
     'Origin': 	341.6,
@@ -243,9 +270,9 @@ molecules['BaOH']['boson']['X000'] = {
 molecules['BaOH']['boson']['X010'] = {
     'Be': 6485.2640,
     'Gamma_SR': 68.65,
-    'bF': 4.08, #YbOH Value
+    'bF': 4.09, #YbOH Value
     'c': 3.41, #YbOH Value
-    'b': hyperfine_b(4.08,3.41),
+    'b': bF_2_b(4.08,3.41),
     'D': 0.006952,
     'muE': 1.43*0.503412,
     'Origin': 	341.6,

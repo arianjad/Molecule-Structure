@@ -425,7 +425,12 @@ def EDM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
         return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G1+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
             wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(S*(S+1)*(2*S+1))
 
-
+def NSM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1):
+        return 0
+    else:
+        return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G0+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
+            wigner_6j(G1,N1,F10,N0,G0,1)*wigner_6j(I,G1,S,G0,I,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(I*(I+1)*(2*I+1))
 
 
 ######### Vibronic aBJ ##############

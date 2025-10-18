@@ -2,7 +2,7 @@ import numpy as np
 import sympy as sy
 from functools import partial
 from molecule_parameters import params_general
-from matrix_elements import MQM_bBS,EDM_bBS,Sz_bBJ,T2QM_bBS,b2a_matrix,decouple_b_even,bBS_2_bBJ_matrix,recouple_J_even,decouple_b_I_even
+from matrix_elements import MQM_bBS,EDM_bBS,Sz_bBJ,T2QM_bBS,b2a_matrix,decouple_b_even,bBS_2_bBJ_matrix,recouple_J_even,decouple_b_I_even, NSM_bBS
 
 def H_even_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all',precision=5,trap=False,theta_num=None):
     q_str = list(q_numbers)     # Get keys for quantum number dict
@@ -285,6 +285,8 @@ def build_PTV_bBS(q_numbers,EDM_or_MQM,IM=5/2,iH=1/2):
                 H_PTV[i,j] = -EDM*EDM_bBS(**q_args,I=IM,iH=iH)
             elif EDM_or_MQM == 'MQM':
                 H_PTV[i,j] = Mzz/(2*5/2*(2*5/2-1))*(np.sqrt(5/3))*MQM_bBS(**q_args,I=IM,iH=iH)
+            elif EDM_or_MQM == 'NSM':
+                H_PTV[i,j] = NSM_bBS(**q_args,I=IM,iH=iH)
             else:
                 H_PTV[i,j] = Mzz/(2*5/2*(2*5/2-1))*(np.sqrt(5/3))*MQM_bBS(**q_args,I=IM,iH=iH) -EDM*EDM_bBS(**q_args,I=IM,iH=iH)
     #         elif H_MQM==2:
