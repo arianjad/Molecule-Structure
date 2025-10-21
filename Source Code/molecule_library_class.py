@@ -386,7 +386,8 @@ class Molecule_Library(object):
             PTV_builders = {
                 '174X000': ham.build_PTV_bBJ,
                 '174X010': ham.build_PTV_bBJ,
-                '173X000': ham.build_PTV_bBS,
+                '173X000': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
+                '171X000': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
                 '173X010': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
                 '171X010': partial(ham.build_PTV_bBS,IM=IM,iH=iH)
             }

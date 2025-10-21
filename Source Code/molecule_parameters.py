@@ -65,7 +65,21 @@ molecules['RaF']['boson']['A0'] = {
     'Origin': 13284.427+0*1350 + 5755.56/19, #Pi1/2 origin + ASO(=1350 cm-1), also with B offset due to code being R^2
     }
 
+
 bF_225, c_225 = abinitio_2_effective_hyperfine(A_par=-0.5692*c, A_perp=-0.5445*c, state='Sigma')
+
+molecules['RaF']['fermion']['X0'] = {
+    'Be': 5755.56,
+    'Gamma_SR': 175.38*1.004, # scaled from 226
+    'bFYb': bF_225,
+    'cYb': c_225,
+    'bFH': 96.3,
+    'cH': 19,
+    'e2Qq0': 0,
+    'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
+    'D': 1.4e-7*c
+    }
+
 molecules['RaOH']['fermion']['X010'] = {
     'Be': 5814.3, # X000 value
     'Gamma_SR': 151, # X000 value
