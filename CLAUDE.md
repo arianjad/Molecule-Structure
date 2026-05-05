@@ -1,0 +1,43 @@
+# CLAUDE.md — Molecule-Structure (this fork)
+
+Personal fork (`arianjad/Molecule-Structure`). The codebase at `~/Documents/Molecular-Structure/` is a historical lab fork (HutzlerLab) — separate codebase, not authoritative here. Don't import from it or cross-reference unprompted.
+
+## Working frame
+
+Define a molecule Hamiltonian → diagonalize → explore properties. Spectra, Stark/Zeeman maps, level diagrams, and PT-violating shifts are all downstream.
+
+## Repo map
+
+- `Source Code/` — the library. Flat module directory (not a package). Active edits land here.
+  Public API: `Energy_Levels.MoleculeLevels`. Dispatch: `molecule_library_class.Molecule_Library`. Constants: `molecule_parameters.py`. Matrix elements per Hund's case: `matrix_elements.py`.
+- `Jupyter Notebooks/` — analyses. Has its own CLAUDE.md governing that zone.
+- `Old Code/`, `From Others/`, `CaOH_Supplemental/`, `*.zip` — reference / archival material. Useful to read; not authoritative — check `Source Code/` before treating any pattern as canonical.
+- `Data/` — large reference data. Don't read into context unless the task needs it.
+- `Figures/` — figure outputs (gitignored).
+
+## Branches
+
+Default `main`. `fix-for-distrib` is the current working branch. `BaOH`, `YbOH`, `dev`, `molspin` are archival.
+
+## Environment
+
+- `Structure` — for running this codebase (notebooks, source-code imports). Use `conda run -n Structure ...`.
+- `claude-code` — your sandbox for unrelated utility commands. Not for running this codebase.
+
+## Verification gate
+
+The single completeness check for any `Source Code/` change: the tutorial notebook runs end-to-end on a fresh kernel.
+
+```
+conda run -n Structure jupyter execute "Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb"
+```
+
+Module edits leave the user's running kernel stale — fresh-kernel re-execution is the verification, not autoreload.
+
+## Source Code rules
+
+**`molecule_parameters.py` integrity.** When adding or changing a constant: inline-comment the source (paper / NIST / theory note), name the isotope, confirm units. Most entries are MHz; constants given in cm⁻¹ are multiplied by `c` inline. Don't propagate a value across isotopes/states without flagging it.
+
+**YbOH-backend wart.** `Molecule_Library` routes everything except `CaOH` through the YbOH backend (`molecule_library_class.py:40-43`). Known structural wart; extending it to new molecules is fine, but don't refactor unprompted.
+
+**Physics conventions.** See `README.md` (units MHz/V·cm⁻¹/Gauss; polyatomic K/P notation; Hund's cases; PGopher-flipped sign conventions; spin-statistics flag). Don't fabricate or guess on coupling cases, matrix elements, or selection rules — stop and ask.
