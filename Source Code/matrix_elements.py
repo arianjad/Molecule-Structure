@@ -796,22 +796,56 @@ def Rot_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,
             2*(-1)**(J0-(P0)+S-Sigma0)*np.sqrt((2*J0+1)*J0*(J0+1)*(2*S+1)*S*(S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
 
-def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1):
+def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                K1,Sigma1,P1,J1,F11,F1,M1,
+                S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(K0,K1)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1)*
+            kronecker(F10,F11)*kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    else:
-        return K0*(-1)**(J1+I+F10)*wigner_6j(J1,I,F10,I,J0,1)*\
-            (-1)**(J0-P0)*wigner_3j(J0,1,J1,-P0,0,P1)*\
-            np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*(I+1)*I)
+    phase = (-1)**(J1 + I + F10 + J0 - P0)
+    return (K0 * phase
+            * wigner_6j(J1, I, F10, I, J0, 1)
+            * wigner_3j(J0, 1, J1, -P0, 0, P1)
+            * np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*I*(I+1)))
+
+# def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1):
+#         return 0
+#     else:
+#         return K0*(-1)**(J1+I+F10)*wigner_6j(J1,I,F10,I,J0,1)*\
+#             (-1)**(J0-P0)*wigner_3j(J0,1,J1,-P0,0,P1)*\
+#             np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*(I+1)*I)
+
+def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                     K1,Sigma1,P1,J1,F11,F1,M1,
+                     S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
+        return 0
+    phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + I + F10 + J0 - P0 + S - Sigma0)
+    pref  = (phase
+             * wigner_6j(J1, I, F10, I, J0, 1)
+             * np.sqrt(5*(2*J0+1)*(2*J1+1)
+                       * S*(S+1)*(2*S+1)
+                       * I*(I+1)*(2*I+1)))
+    return pref * sum([
+        sum([
+            kronecker(K0, -K1) *
+            wigner_3j(1, 1, 2, q1, q2 - q1, -q2) *
+            wigner_3j(S, 1, S, -Sigma0, -q1, Sigma1) *
+            wigner_3j(J0, 1, J1, -P0, (q2 - q1), P1)
+            for q1 in (-1, 0, 1)
+        ])
+        for q2 in (-2, 2)
+    ])
 
 #Check derivation
-def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11):
-        return 0
-    else:
-        return (-1)**(J1+I+F10+J0-P0+S-Sigma0)*\
-            wigner_6j(J1,I,F10,I,J0,1)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
-            sum([(-1)**(q)*kronecker(K0,-K1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1)*wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,1]])
+# def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11):
+#         return 0
+#     else:
+#         return (-1)*(-1)**(J1+I+F10+J0-P0+S-Sigma0)*\
+#             wigner_6j(J1,I,F10,I,J0,1)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
+#             sum([(-1)**(q)*kronecker(K0,-K1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1)*wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,1]])
 
 #Check derivation
 def T2q0_IM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
@@ -824,23 +858,59 @@ def T2q0_IM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=
             wigner_3j(J0,2,J1,-P0,0,P1)*np.sqrt((2*J0+1)*(2*J1+1))/\
             wigner_3j(I,2,I,-I,0,I)
 
-# Check derivation
-def iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+def IHL_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                K1,Sigma1,P1,J1,F11,F1,M1,
+                S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(K0,K1)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1)*
+            kronecker(F10,F11)*kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    else:
-        return (-1)**(2*F0-2*M0+F11+iH+F0+J11+I+F10+S-Sigma0+J0-P0)*wigner_6j(J1,I,F0,I,J0,1)*\
-            wigner_6j(J1,I,F0,I,J0,1)*np.sqrt((2*S+1)*(S+1)*S*(2*J0+1)*(2*J1+1)*I*(I+1)*(2*I+1))*\
-            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+    phase = (-1)**(F10 + iH + F0 + J0 - P0)
+    return (K0 * phase
+            * wigner_6j(F10, iH, F0, iH, F10, 1)
+            * wigner_3j(J0, 1, J1, -P0, 0, P1)
+            * np.sqrt((2*J0+1)*(2*J1+1)*(2*iH+1)*iH*(iH+1)))
 
-def T2iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+# T^2(I_H,S)_{q=±2}  (Frosch–Foley d term)
+def T2q2_IHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                     K1,Sigma1,P1,J1,F11,F1,M1,
+                     S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
         return 0
-    else:
-        return (-1)**(2*F0-2*M0+J1+I+F0+J0-P0+S-Sigma0)*wigner_6j(J1,I,F0,I,J0,1)*\
-            np.sqrt(5*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
-            sum([(-1)**(q)*wigner_3j(1,1,2,q,-q,0)*wigner_3j(S,1,S,-Sigma0,-q,Sigma1)*\
-            wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,0,1]])
+    phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + iH + F10 + J0 - P0 + S - Sigma0)
+    pref  = (phase
+             * wigner_6j(F10, iH, F0, iH, F10, 1)
+             * np.sqrt(5*(2*J0+1)*(2*J1+1)
+                       * S*(S+1)*(2*S+1)
+                       * iH*(iH+1)*(2*iH+1)))
+    return pref * sum([
+        sum([
+            kronecker(K0, -K1) *
+            wigner_3j(1, 1, 2, q1, q2 - q1, -q2) *
+            wigner_3j(S, 1, S, -Sigma0, -q1, Sigma1) *
+            wigner_3j(J0, 1, J1, -P0, (q2 - q1), P1)
+            for q1 in (-1, 0, 1)
+        ])
+        for q2 in (-2, 2)
+    ])
+
+
+# Check derivation
+# def iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**(2*F0-2*M0+F11+iH+F0+J1+I+F10+S-Sigma0+J0-P0)*wigner_6j(J1,I,F0,I,J0,1)*\
+#             wigner_6j(J1,I,F0,I,J0,1)*np.sqrt((2*S+1)*(S+1)*S*(2*J0+1)*(2*J1+1)*I*(I+1)*(2*I+1))*\
+#             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+
+# def T2iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**(2*F0-2*M0+J1+I+F0+J0-P0+S-Sigma0)*wigner_6j(J1,I,F0,I,J0,1)*\
+#             np.sqrt(5*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
+#             sum([(-1)**(q)*wigner_3j(1,1,2,q,-q,0)*wigner_3j(S,1,S,-Sigma0,-q,Sigma1)*\
+#             wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,0,1]])
 
 #Check derivation
 def LambdaDoubling_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):

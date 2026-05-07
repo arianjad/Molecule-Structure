@@ -901,7 +901,7 @@ class MoleculeLevels(object):
             if 'bBS' in current_case:
                 basis_matrix = self.library.basis_changers['a_bBJ'](intermediate,output)@self.library.basis_changers['bBS_bBJ'](inputt,intermediate)
             else:
-                basis_matrix = self.library.basis_changers['bBS_bBJ'](inputt,intermediate)@self.library.basis_changers['a_bBJ'](intermediate,output)
+                basis_matrix = self.library.basis_changers['bBS_bBJ'](intermediate,output)@self.library.basis_changers['a_bBJ'](inputt,intermediate)
         elif ('bBS' in new_case and 'bBJ' in current_case) or ('bBJ' in new_case and 'bBS' in current_case):
             basis_matrix = self.library.basis_changers['bBS_bBJ'](inputt,output)
         converted_evecs = []
@@ -984,7 +984,10 @@ class MoleculeLevels(object):
         for i, idx in enumerate(nz):
             coeff = float(np.round(vec[idx], round))
             sgn = '+' if coeff >= 0 else '-'
-            sgn_to_show = ' ' if (i == 0 and sgn == '+') else sgn
+            if show_coeff:
+                sgn_to_show = '' if (i == 0 and sgn == '+') else sgn
+            else:
+                sgn_to_show = ''
 
             # sign + (optional) coefficient + opening ket bar
             if show_coeff:
@@ -1012,6 +1015,8 @@ class MoleculeLevels(object):
                 else:
                     # put the minus out front for nice typesetting
                     sign = '-' if frac.numerator < 0 else ''
+                    if show_coeff == False:
+                        sign='' # no leading minus if no coeff shown
                     v_tex = rf'{sign}{frac_cmd}{{{abs(frac.numerator)}}}{{{frac.denominator}}}'
 
                 term += rf'{qname}={v_tex},'

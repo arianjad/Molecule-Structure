@@ -256,6 +256,8 @@ class Molecule_Library(object):
 
 
         # Hydrogen Hyperfine
+        'IzLz_H': me.IHL_odd_aBJ,                   # I.S Fermi Contact Interaction
+        'T2_2(IS)_H': me.T2q2_IHS_odd_aBJ,
         # 'IS_H': ,                   # I.S Fermi Contact Interaction
         # 'Iz_H': ,                   # I.n projection of I on internuclear axis n
         # 'Sz_H': ,                   # S.n projection of S on internuclear axis n

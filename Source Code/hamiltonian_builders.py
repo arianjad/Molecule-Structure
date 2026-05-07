@@ -237,8 +237,8 @@ def H_odd_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all
                 q_args = {**state_out,**state_in}
                 elements = {term: element(**q_args) for term, element in matrix_elements.items()}
                 H0[i][j] = params['Be']*elements['N^2'] + params['ASO']*elements['SO']+\
-                    params['h1/2Yb']*elements['IzLz_M'] - params['dYb']*elements['T2_2(IS)_M']+\
-                    params['p+2q']*elements['Lambda-Doubling']
+                    params['h1/2Yb']*elements['IzLz_M'] + params['dYb']*elements['T2_2(IS)_M']+\
+                    params['p+2q']*elements['Lambda-Doubling']+ params['h1/2H']*elements['IzLz_H'] + params['dH']*elements['T2_2(IS)_H']
                 if params['e2Qq0'] !=0:
                     H0[i][j]+= params['e2Qq0']*elements['T2_0(II)_M']
                 # if M_values!='none':
