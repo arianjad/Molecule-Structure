@@ -41,3 +41,13 @@ Module edits leave the user's running kernel stale — fresh-kernel re-execution
 **YbOH-backend wart.** `Molecule_Library` routes everything except `CaOH` through the YbOH backend (`molecule_library_class.py:40-43`). Known structural wart; extending it to new molecules is fine, but don't refactor unprompted.
 
 **Physics conventions.** See `README.md` (units MHz/V·cm⁻¹/Gauss; polyatomic K/P notation; Hund's cases; PGopher-flipped sign conventions; spin-statistics flag). Don't fabricate or guess on coupling cases, matrix elements, or selection rules — stop and ask.
+
+## References
+
+Brown & Carrington, *Rotational Spectroscopy of Diatomic Molecules* is the canonical reference for diatomic structure (matrix elements, sign conventions, basis transformations, coupling cases). Canonical PDF:
+
+```
+/Users/arianjadbabaie/Library/CloudStorage/GoogleDrive-arianjad@mit.edu/Shared drives/EMA-data-server/Books/AMO/Brown and Carrington, Rotational Spectroscopy of Diatomic Molecules.pdf
+```
+
+Consult via `mcp__pdf-mcp__pdf_search` / `pdf_read_pages` before answering diatomic-physics questions. The `brown-carrington` skill provides the chapter map and workflow.
