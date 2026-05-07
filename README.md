@@ -79,6 +79,19 @@ This code uses the `B+C` form for several effective-Hamiltonian terms. PGopher u
 
 Do not "fix" a minus sign in `molecule_parameters.py` without checking the inline source comment.
 
+### Case (a) Π Zeeman
+
+For Π states in case (a), the Zeeman block in `hamiltonian_builders.py` reads four parameters from the state's `molecule_parameters.py` dict:
+
+- `g_L` — orbital g-factor (T¹₀(L)·B_Z)
+- `g_S` — isotropic spin g-factor (g_S · S·B)
+- `g_l` — anisotropic spin g-factor correction, the perpendicular term `(Sx Bx + Sy By)` in the molecule frame; together with `g_S` gives `g_∥ = g_S`, `g_⊥ = g_S + g_l`. Brown & Carrington eq. 7.221. **Optional**: only applied if the key is present in the params dict.
+- `g_lp` — parity-dependent (Λ-doublet) Zeeman, `g_l′` in B&C eq. 7.232. Couples Λ-doublet components with simultaneous spin flip (ΔΛ=∓2, ΔΣ=±1).
+
+`g_l` and `g_lp` are typically two to four orders of magnitude smaller than `g_S` and `g_L`, but matter when fitting precision Zeeman spectra in Π states.
+
+**Basis-truncation caveat for `g_l`.** The `g_l` operator has selection rules ΔΛ=0, ΔΣ=±1, so in a ²Π state it couples only Π_{1/2} ↔ Π_{3/2}. If you initialize a state with `P_values=[1/2]` (truncating to the lower spin-orbit component), the `ZeemanPerpZ` matrix is identically zero everywhere in the basis and `g_l` produces no shift. To see `g_l` effects in a ²Π state, include both spin-orbit components, e.g. `P_values=[1/2, 3/2]`.
+
 ### Spin statistics
 
 `fermion_or_boson` at `initialize_state` selects whether the total `F` is half-integer or integer. The flag controls which backend Hamiltonian builder runs (`H_even_*` vs `H_odd_*`) and which `q_numbers_*` builder produces the basis.

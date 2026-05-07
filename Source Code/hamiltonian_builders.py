@@ -152,6 +152,8 @@ def H_even_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
                 if M_values!='none':
                     V_B[i][j]+= params['g_L']*params['mu_B']*elements['ZeemanLZ']+params['g_S']*params['mu_B']*elements['ZeemanSZ'] +\
                     params['g_lp']*params['mu_B']*elements['ZeemanParityZ']
+                    if params.get('g_l') is not None:
+                        V_B[i][j]+= params['g_l']*params['mu_B']*elements['ZeemanPerpZ']
                     V_E[i][j]+= -params['muE']*elements['StarkZ']
                 # H[i][j] = round(H[i][j],precision)
                 if params.get('D') is not None:

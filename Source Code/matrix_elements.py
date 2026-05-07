@@ -540,6 +540,23 @@ def ZeemanSZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
             (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
 
+# Anisotropic spin-Zeeman correction (Brown & Carrington eq. 7.221, parameter g_l):
+#   H_l = g_l mu_B B_Z * sum_{q=+-1} D^(1)*_{0,q}(omega) T^1_q(S)
+# Same matrix element form as ZeemanSZ but with q=0 dropped — operator reduces to
+# (Sx Bx + Sy By) in the molecule frame. Coupling rules: DK=0, DSigma=+-1, DOmega=+-1.
+# Coefficient adds to isotropic g_S as: g_perp = g_S + g_l, g_parallel = g_S.
+# IMPORTANT: in a 2Pi state, this couples Pi_{1/2}<->Pi_{3/2} only. Diagonalizing
+# with P_values=[1/2] alone makes the entire matrix vanish — both spin-orbit components
+# must be in the basis (e.g. P_values=[1/2, 3/2]) for g_l to have any effect.
+def ZeemanPerpZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
+    if not kronecker(K0,K1)*kronecker(M0,M1):
+        return 0
+    else:
+        return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*\
+            (-1)**(F1+J0+I+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(J1,F1,I,F0,J0,1)*\
+            (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
+            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
+
 def ZeemanParityZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
     if kronecker(K0,K1)*(not kronecker(M0,M1)):
         return 0
@@ -852,6 +869,17 @@ def ZeemanSZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I
             (-1)**(F11+J0+I+1)*np.sqrt((2*F10+1)*(2*F11+1))*wigner_6j(J1,F11,I,F10,J0,1)*\
             (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+
+# Anisotropic spin-Zeeman correction (B&C eq. 7.221, parameter g_l), odd-isotopologue version.
+def ZeemanPerpZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    if not kronecker(K0,K1):
+        return 0
+    else:
+        return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*\
+            (-1)**(F1+F10+iH+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(F11,F1,iH,F0,F10,1)*\
+            (-1)**(F11+J0+I+1)*np.sqrt((2*F10+1)*(2*F11+1))*wigner_6j(J1,F11,I,F10,J0,1)*\
+            (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
+            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
 
 def ZeemanParityZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if kronecker(K0,K1):

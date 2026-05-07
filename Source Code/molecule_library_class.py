@@ -233,6 +233,7 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanLZ': me.ZeemanLZ_even_aBJ,
             'ZeemanSZ': me.ZeemanSZ_even_aBJ,
+            'ZeemanPerpZ': me.ZeemanPerpZ_even_aBJ,  # B&C g_l anisotropic spin-Zeeman correction
             'ZeemanParityZ': me.ZeemanParityZ_even_aBJ,
             'StarkZ': me.StarkZ_even_aBJ,            # Stark interaction with lab z electric field
             }
@@ -265,6 +266,7 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanLZ': me.ZeemanLZ_odd_aBJ,
             'ZeemanSZ': me.ZeemanSZ_odd_aBJ,
+            'ZeemanPerpZ': me.ZeemanPerpZ_odd_aBJ,  # B&C g_l anisotropic spin-Zeeman correction
             'ZeemanParityZ': me.ZeemanParityZ_odd_aBJ,
             'StarkZ': me.StarkZ_odd_aBJ,            # Stark interaction with lab z electric field
             }
