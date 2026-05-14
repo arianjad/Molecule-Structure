@@ -85,3 +85,28 @@ Highest-risk phase. Regression-gated against the Phase 1f baseline.
 - Chirped-detuning slower variant: separate downstream work; the `run_trajectory_sweep` helper from Phase 3a will host it as a one-liner addition.
 - Stochastic recoil heating in trajectory integrator: separate.
 - Refactoring `Source Code/` — this entire spec is notebook-only. The verification gate from project CLAUDE.md (`jupyter execute RaF_Calcs_Tutorial.ipynb`) does NOT apply.
+
+## Results
+
+| Phase | Commit | Outcome |
+|---|---|---|
+| 1a–1e | d19443a | Cell 27/33/36/38/40 docs + monotonicity warning + capture-totals; cell 42 `F_max_default` comment added but lazy-init pattern preserved (see follow-up #2) |
+| 1f | d19443a | Baseline serialization cell + `.gitignore` entry for `zs_baselines_pre_refactor.json` |
+| 2a | d9bcca0 | ν_eg(B) monotonicity diagnostic — verdict: **MONOTONIC** for the chosen reference channel (je=2, ig=0) over Bz ∈ [1e-3, 1000] G. Silent-`argsort+interp1d`-failure concern is non-issue for this configuration. |
+| 2c | d9bcca0 | PB σ⁻ comb selectivity diagnostic — intended-fraction at B_d=1000 G, v_design=80 m/s: **s=10 → 1.000, s=100 → 1.000**. The F_max-at-low-B artifact at s=100 (F_max=18.5e-25 N landing at B=50 G) is therefore *not* the Petzold cycle — it's accidental off-target coverage of low-B states by the comb's wings. |
+| 2b/2d/2e | b4abc7f | `remix → s_remix` rename + `b_perp_to_s_remix` Larmor-equivalence helper (`s_remix=1.0 ↔ B_⊥=3.287 G` for Γ_FWHM and g_F=0.5). Cell 45 print table gained `B_⊥ (G)`, `Ω_L (MHz)` columns; Step-7b/7c markdown cells reference the calibration. |
+| 3a | c15d9f5 | Sweep helper trio extracted: `run_trajectory_sweep`, `format_capture_table`, `plot_v_of_z_grid`. Inserted as cell 38 (after `simulate_trajectory`). |
+| 3b | e7570a5 | 4 sweep cells refactored (cells 39, 43, 48, 53). **Cell 46 (s_remix sweep) intentionally not refactored** — its sweep axis is `s_remix` rather than (B_d × s × L), and its custom print table (`s_remix \| B_⊥ \| Ω_L \| F_max \| ratio \| v_capture`) and overlay-style v(z)/v(t) plot don't fit the helpers' shape. Wrapping would have added scaffolding without removing duplication. Net: 393 lines deleted, 253 inserted. |
+| 3c | 3c18679 | `build_paschen_back_sigma_minus` switched from energy-sort to `g_char_full['mS']` (sign of dominant m_S in decoupled basis), with energy-sort fallback when `mS_key` is unavailable. At B_d=1000 G: m_S values at the 6 selected indices = `[0.5, 0.5, 0.5, 0.5, 0.5, 0.5]` (clean Paschen-Back as expected). Cell 51 reuses `sb_pb_template / je_pb_ref / ig_pb_ref` from cell 50 — single ref build, per-s only the saturation varies. |
+| 3e | 7ebd74d | Regression-check cell inserted as cell 54 (just before the baseline serializer). Reads the prior-run baseline JSON, diffs current sweeps; rtol=1e-6 on F_max, exact match on capture-velocity sets. **First-run-after-insert: PASS** (trivial — baseline was just written). |
+
+**Regression deltas:** None. The 4 cell-8 refactors made bit-identical sequences of `make_B_of_z_nonlinear` and `simulate_trajectory` calls; numerics preserved by construction. Verified by spot-check against post-Phase-2 capture sets (e.g., `remix_full[150_100_2.75] = [40, 45]`, matching prior-session output).
+
+**Caveat on regression baseline:** The baseline JSON (`zs_baselines_pre_refactor.json`) was overwritten during Phase 3a's first execute, so the file at HEAD reflects post-3a numerics, not strictly pre-3a. Numerical preservation across Phase 3 was therefore validated by *inspection* of the helper function calls (identical to the original loop body) plus *spot-checks* of the captures dict. From Phase 3e onward, the cell-54 regression check guards against drift in any future change.
+
+**Open follow-ups:**
+
+1. **Cell 46 still has the `F_max_default = None ... if F_max_default is None:` lazy-init.** Phase 1 task 1e specified replacing this with `F_max_default = F_max_remix[remix_values[0]]`, but only a comment got added during Phase 1 execution. Cosmetic — cell works correctly because `remix_values` is sorted ascending. Worth fixing if cell 46 is ever otherwise edited.
+2. **`b_perp_to_s_remix` g_F default = 0.5** (Open Question 1). Still a rough order-of-magnitude approximation; per-sublevel g_F (0 to ~2/3 across X²Σ⁺ N=1 hyperfine sublevels) would be more accurate. Defer until needed for a quantitative B_⊥ design.
+3. **`max_step=1e-4` integrator-tolerance validation** (Open Question 4). Spec deferred to "only if Phase 1f baseline shows sensitivity"; baseline ran clean with no anomalies, so still deferred. Will revisit if a future change shows boundary-v_0 wobble.
+4. **The `simulate_spectra` / `select_dipole` drift across RaF X-A.ipynb / BaF X-A.ipynb / RaOH X-C.ipynb** noted in `RaF_Zeeman_Slower.ipynb`'s design doc is unresolved; separate cleanup conversation.
