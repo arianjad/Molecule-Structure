@@ -44,10 +44,9 @@ Module edits leave the user's running kernel stale — fresh-kernel re-execution
 
 ## References
 
-Brown & Carrington, *Rotational Spectroscopy of Diatomic Molecules* is the canonical reference for diatomic structure (matrix elements, sign conventions, basis transformations, coupling cases). Canonical PDF:
+Brown & Carrington, *Rotational Spectroscopy of Diatomic Molecules* is the canonical reference for diatomic structure (matrix elements, sign conventions, basis transformations, coupling cases). Two copies, same edition:
 
-```
-/Users/arianjadbabaie/Library/CloudStorage/GoogleDrive-arianjad@mit.edu/Shared drives/EMA-data-server/Books/AMO/Brown and Carrington, Rotational Spectroscopy of Diatomic Molecules.pdf
-```
+- Local (prefer): `find ~/Zotero/storage -maxdepth 2 -iname 'Brown and Carrington*.pdf'` — hash subdir varies per machine.
+- Cross-machine: `/Users/arianjadbabaie/Library/CloudStorage/GoogleDrive-arianjad@mit.edu/Shared drives/EMA-data-server/Books/AMO/Brown and Carrington, Rotational Spectroscopy of Diatomic Molecules.pdf` — may be a Google Drive cloud-only placeholder; `pdf_info` returns `Failed to open file` until hydrated.
 
-Consult via `mcp__pdf-mcp__pdf_search` / `pdf_read_pages` before answering diatomic-physics questions. The `brown-carrington` skill provides the chapter map and workflow.
+Consult via `mcp__pdf-mcp__pdf_search` / `pdf_read_pages` before answering diatomic-physics questions. The `brown-carrington` skill provides the chapter map, resolution order, and workflow.
