@@ -4,79 +4,99 @@
     {
       "id": 0,
       "subject": "Task 1: Cheap edits to existing cells",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Add docstring upgrades, monotonicity warning, hyperfine-group warning, capture-totals summaries, and lazy-init comment fix to cells 27, 33, 36, 38, 40, 42 of the notebook. Pure additions; no behavior change.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` cells idx=27, 33, 36, 38, 40, 42\n\n**Acceptance Criteria:**\n- ssr docstring (cell 27) explains `remix` is a saturation parameter\n- `make_B_of_z_nonlinear` (cell 33) prints non-monotonicity warning\n- Cells 36 and 40 print Total captures summary\n- Cell 38 warns if hyperfine groups != 4\n- Cell 42 has explanatory comment on F_max_default lazy-init\n\n**Verify:** Python script greps each cell for required strings; expects 6 OK lines.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"python3 -c 'see plan task 1 verify block'\", \"acceptanceCriteria\": [\"ssr docstring updated\", \"make_B_of_z_nonlinear prints warning\", \"cells 36/40 print totals\", \"cell 38 group warning\", \"cell 42 lazy-init comment\"]}\n```"
     },
     {
       "id": 1,
       "subject": "Task 2: Baseline-serialization cell",
-      "status": "pending",
-      "blockedBy": [0],
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
       "description": "**Goal:** Add a new cell at the end of the notebook that serializes all sweep results to JSON for Phase 3 regression check. Add output JSON to .gitignore.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` (insert second-to-last cell)\n- Create at runtime: `Jupyter Notebooks/RaX/zs_baselines_pre_refactor.json`\n- Add to `.gitignore`\n\n**Acceptance Criteria:**\n- Cell inserted; on execution writes JSON file with up-to-5 sweep result groups\n- JSON in .gitignore\n- Notebook executes end-to-end clean\n\n**Verify:** `conda run -n Structure jupyter execute --inplace ...` exits 0; baseline JSON exists; printed keys include the relevant subset.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\", \".gitignore\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb' && test -f 'Jupyter Notebooks/RaX/zs_baselines_pre_refactor.json'\", \"acceptanceCriteria\": [\"baseline cell inserted\", \"JSON written on execute\", \"gitignore updated\"]}\n```"
     },
     {
       "id": 2,
-      "subject": "Task 3: ν_eg(B) monotonicity diagnostic cell",
-      "status": "pending",
-      "blockedBy": [1],
-      "description": "**Goal:** Insert a new cell after cell 33 (je_ref pick) that plots ν_eg(B) for the chosen reference channel, identifies local extrema, and prints MONOTONIC/NON-MONOTONIC verdict.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- New cell at idx=34 prints verdict and renders plot\n- Notebook re-executes clean\n\n**Verify:** notebook executes 0; cell idx=34 source contains 'MONOTONIC'.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"diagnostic cell inserted\", \"verdict printed\", \"plot rendered\"]}\n```"
+      "subject": "Task 3: \u03bd_eg(B) monotonicity diagnostic cell",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** Insert a new cell after cell 33 (je_ref pick) that plots \u03bd_eg(B) for the chosen reference channel, identifies local extrema, and prints MONOTONIC/NON-MONOTONIC verdict.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- New cell at idx=34 prints verdict and renders plot\n- Notebook re-executes clean\n\n**Verify:** notebook executes 0; cell idx=34 source contains 'MONOTONIC'.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"diagnostic cell inserted\", \"verdict printed\", \"plot rendered\"]}\n```"
     },
     {
       "id": 3,
-      "subject": "Task 4: Rename remix → s_remix + B_⊥ calibration helper",
-      "status": "pending",
-      "blockedBy": [2],
+      "subject": "Task 4: Rename remix \u2192 s_remix + B_\u22a5 calibration helper",
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
       "description": "**Goal:** Mechanical rename of the remix parameter to s_remix throughout the notebook. Add b_perp_to_s_remix and s_remix_to_b_perp helper functions and a markdown derivation cell.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` (cells 27, 42, others; insert helper cell after cell 27; insert markdown cell before remix-sweep section)\n\n**Acceptance Criteria:**\n- Zero bare `remix` parameter occurrences (variable names with 'remix' as substring may stay)\n- b_perp_to_s_remix and s_remix_to_b_perp defined\n- Markdown derivation with mapping table\n- Sweeps bit-identical to baseline\n\n**Verify:** notebook executes 0; regex check shows no bare `remix` keyword arg.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb' && python3 -c 'see plan task 4 verify'\", \"acceptanceCriteria\": [\"remix renamed\", \"helpers added\", \"derivation markdown added\", \"sweeps unchanged\"]}\n```"
     },
     {
       "id": 4,
-      "subject": "Task 5: PB σ⁻ comb selectivity diagnostic cell",
-      "status": "pending",
-      "blockedBy": [3],
-      "description": "**Goal:** Insert a new cell after the PB F-grid cell that decomposes per-channel scattering rate into intended (m_S=+½ → A) vs off-target, and plots intended-fraction vs B over [50, 1000] G.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- Cell prints intended-fraction at B_design for both s_per_sb values\n- Renders plot of intended-fraction vs B for both s values\n- Notebook executes clean\n\n**Verify:** notebook executes 0; cell with 'comb selectivity' present.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"selectivity cell inserted\", \"intended-fraction printed and plotted\"]}\n```"
+      "subject": "Task 5: PB \u03c3\u207b comb selectivity diagnostic cell",
+      "status": "completed",
+      "blockedBy": [
+        3
+      ],
+      "description": "**Goal:** Insert a new cell after the PB F-grid cell that decomposes per-channel scattering rate into intended (m_S=+\u00bd \u2192 A) vs off-target, and plots intended-fraction vs B over [50, 1000] G.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- Cell prints intended-fraction at B_design for both s_per_sb values\n- Renders plot of intended-fraction vs B for both s values\n- Notebook executes clean\n\n**Verify:** notebook executes 0; cell with 'comb selectivity' present.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"selectivity cell inserted\", \"intended-fraction printed and plotted\"]}\n```"
     },
     {
       "id": 5,
-      "subject": "Task 6: Cell 42 secondary B_⊥ axis + markdown narrative updates",
-      "status": "pending",
-      "blockedBy": [4],
-      "description": "**Goal:** Add B_⊥ + Ω_L columns to cell 42's remix-sweep print table. Append short paragraphs to the five Step markdown cells referencing relevant new diagnostics.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` (cell 42 + 5 Step markdowns)\n\n**Acceptance Criteria:**\n- Cell 42's print loop has B_⊥ and Ω_L columns derived from s_remix_to_b_perp\n- Five Step markdown cells each have a new short paragraph\n- Sweeps unchanged\n\n**Verify:** notebook executes 0; cell 42 source contains 'B_⊥' or 's_remix_to_b_perp'.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"B_perp axis added\", \"Step markdown updates\"]}\n```"
+      "subject": "Task 6: Cell 42 secondary B_\u22a5 axis + markdown narrative updates",
+      "status": "completed",
+      "blockedBy": [
+        4
+      ],
+      "description": "**Goal:** Add B_\u22a5 + \u03a9_L columns to cell 42's remix-sweep print table. Append short paragraphs to the five Step markdown cells referencing relevant new diagnostics.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` (cell 42 + 5 Step markdowns)\n\n**Acceptance Criteria:**\n- Cell 42's print loop has B_\u22a5 and \u03a9_L columns derived from s_remix_to_b_perp\n- Five Step markdown cells each have a new short paragraph\n- Sweeps unchanged\n\n**Verify:** notebook executes 0; cell 42 source contains 'B_\u22a5' or 's_remix_to_b_perp'.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"B_perp axis added\", \"Step markdown updates\"]}\n```"
     },
     {
       "id": 6,
       "subject": "Task 7: Define sweep helper trio",
-      "status": "pending",
-      "blockedBy": [5],
+      "status": "completed",
+      "blockedBy": [
+        5
+      ],
       "description": "**Goal:** Add a single new cell after simulate_trajectory defining run_trajectory_sweep, format_capture_table, plot_v_of_z_grid. Helpers defined but not yet used.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- All three helpers defined in one cell\n- Notebook re-executes clean (helpers are unused yet)\n\n**Verify:** notebook executes 0; all three function names present.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"three helpers defined\", \"notebook clean\"]}\n```"
     },
     {
       "id": 7,
       "subject": "Task 8: Replace duplicated boilerplate in cells 36, 40, 42, 44, 48",
-      "status": "pending",
-      "blockedBy": [6],
-      "description": "**Goal:** For each of the five trajectory-sweep cells, replace the duplicated nested-loop sweep + capture-table + v(z) plot with thin wrappers around the helpers from Task 7. Cell 42 keeps its custom B_⊥/Ω_L/F_max table from Phase 2 — only the inner trajectory loop is replaced.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` cells 36, 40, 42, 44, 48 (idx may shift; locate by content)\n\n**Acceptance Criteria:**\n- No inline `for v0 in v0_scan ... simulate_trajectory` loop remains outside helper definition\n- Notebook re-executes clean\n- Phase 3 Task 10 will verify regression\n\n**Verify:** regex search for inline trajectory loops returns 0 hits.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"5 cells refactored\", \"no inline trajectory loops\", \"executes clean\"]}\n```"
+      "status": "completed",
+      "blockedBy": [
+        6
+      ],
+      "description": "**Goal:** For each of the five trajectory-sweep cells, replace the duplicated nested-loop sweep + capture-table + v(z) plot with thin wrappers around the helpers from Task 7. Cell 42 keeps its custom B_\u22a5/\u03a9_L/F_max table from Phase 2 \u2014 only the inner trajectory loop is replaced.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` cells 36, 40, 42, 44, 48 (idx may shift; locate by content)\n\n**Acceptance Criteria:**\n- No inline `for v0 in v0_scan ... simulate_trajectory` loop remains outside helper definition\n- Notebook re-executes clean\n- Phase 3 Task 10 will verify regression\n\n**Verify:** regex search for inline trajectory loops returns 0 hits.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"5 cells refactored\", \"no inline trajectory loops\", \"executes clean\"]}\n```"
     },
     {
       "id": 8,
       "subject": "Task 9: PB function uses g_char_full['mS']; cell 47 single ref",
-      "status": "pending",
-      "blockedBy": [7],
+      "status": "completed",
+      "blockedBy": [
+        7
+      ],
       "description": "**Goal:** Robust manifold selection in build_paschen_back_sigma_minus via g_char_full['mS'] sign. Build PB sideband template + ref ONCE in cell 47 instead of per-s.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb` cells 46 (PB function), 47 (PB F-grid)\n\n**Acceptance Criteria:**\n- ig_list selected by sign of mS_dom\n- assert n_sidebands match with informative error\n- Cell 47 builds template once outside s loop; varies only s field\n- F_max bit-identical to baseline\n\n**Verify:** notebook executes 0; PB F_max from regression check unchanged.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"mS-based selection\", \"single ref reuse\", \"PB unchanged\"]}\n```"
     },
     {
       "id": 9,
       "subject": "Task 10: Regression check cell + verification",
-      "status": "pending",
-      "blockedBy": [8],
+      "status": "completed",
+      "blockedBy": [
+        8
+      ],
       "description": "**Goal:** Insert regression-check cell that loads zs_baselines_pre_refactor.json and asserts current sweep results match. Fail-fast on any disagreement.\n\n**Files:**\n- Modify: `Jupyter Notebooks/RaX/zeeman_slower_2.ipynb`\n\n**Acceptance Criteria:**\n- Cell loads JSON, walks each sweep, compares F_max (rtol=1e-6) and capture lists (exact)\n- On agreement: prints PASS\n- On disagreement: prints itemized deltas and raises AssertionError\n- Notebook executes 0 (regression passes)\n\n**Verify:** notebook executes 0; PASS line present.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/zeeman_slower_2.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute --inplace 'Jupyter Notebooks/RaX/zeeman_slower_2.ipynb'\", \"acceptanceCriteria\": [\"regression cell inserted\", \"PASS\"]}\n```"
     },
     {
       "id": 10,
       "subject": "Task 11: Update spec doc with post-refactor results",
-      "status": "pending",
-      "blockedBy": [9],
+      "status": "completed",
+      "blockedBy": [
+        9
+      ],
       "description": "**Goal:** Append a Results section to the spec listing each phase's commit SHA, regression outcome, and any open follow-ups.\n\n**Files:**\n- Modify: `docs/superpowers/specs/2026-05-13-zeeman-slower-2-comprehensive-hardening-design.md`\n\n**Acceptance Criteria:**\n- New `## Results` section\n- Lists each phase's commit SHA\n- States regression PASS or itemized deltas\n- Notes any open follow-ups\n\n**Verify:** grep finds the new section.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/specs/2026-05-13-zeeman-slower-2-comprehensive-hardening-design.md\"], \"verifyCommand\": \"grep '^## Results' 'docs/superpowers/specs/2026-05-13-zeeman-slower-2-comprehensive-hardening-design.md'\", \"acceptanceCriteria\": [\"Results section appended\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-05-13T00:00:00Z"
+  "lastUpdated": "2026-05-14T14:41:40.352464+00:00"
 }
