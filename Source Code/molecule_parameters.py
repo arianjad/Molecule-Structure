@@ -48,7 +48,7 @@ molecules['RaF']['boson']['X0'] = {
     'D': 1.4e-7*c
     }
 molecules['RaF']['boson']['A0'] = { 
-    'Be': 5743.96+2*1.4e-7*c, #R^2 form
+    'Be': 5743.96-2*1.4e-7*c, #5743.96=B(N^2) paper val; -2*Lam^2*D gives B(R^2) for R^2-form engine (B&C Tbl 7.2; sign-corrected 2026-05-15, verified numerically)
     'ASO': 1350*c, #Fixed from 1350 cm^-1
     'h1/2': 0,         # Calc relayed from Silviu, using h1/2 = a- (bf+2c/3) = A||/2
     'a':19/2,
@@ -84,7 +84,7 @@ molecules['RaF']['fermion']['X0'] = {
     }
 
 molecules['RaF']['fermion']['A0'] = { 
-    'Be': 5729.03+2*1.4e-7*c, #R^2 form
+    'Be': 5729.03-2*1.4e-7*c, #5729.03=B(N^2) paper val; -2*Lam^2*D gives B(R^2) for R^2-form engine (B&C Tbl 7.2; sign-corrected 2026-05-15, verified numerically)
     'ASO': 1350*c, #Fixed from 1350 cm^-1
     'h1/2Yb': -2852/2, # From Skripnikov theory
     'dYb': -1*-0.076*c, # From Wilkins experiment, they use pgopher convention, so i add - sign
