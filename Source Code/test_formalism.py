@@ -39,10 +39,58 @@ def test_caller_dict_not_mutated():
     convert_params_to_engine_R2(src)
     assert src == {'formalism': 'R2', 'Be': 1.0}, src
 
+import warnings as _w
+
+def test_sigma_is_identity():
+    src = {'formalism': 'N2', 'Lambda': 0, 'Be': 100.0, 'p+2q': -3.0,
+           'p2q_D': 0.05}
+    out = convert_params_to_engine_R2(src)
+    assert out == {'Be': 100.0, 'p+2q': -3.0, 'p2q_D': 0.05}, out
+
+def test_be_d_row():
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 1, 'Be': 100.0, 'D': 0.5})
+    assert out['Be'] == 100.0 - 2 * 1 * 0.5, out
+    assert out['D'] == 0.5, out                     # D unchanged
+
+def test_generic_x_row_lambda2():
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 2, 'p+2q': -10.0, 'p2q_D': 0.25})
+    assert out['p+2q'] == -10.0 + 4 * 0.25, out     # Λ²=4
+    assert out['p2q_D'] == 0.25, out                # X_D unchanged
+
+def test_all_partners_and_passthrough():
+    src = {'formalism': 'N2', 'Lambda': 1,
+           'Gamma_SR': 7.0, 'Gamma_D': 0.1,
+           'q_lD': -4.0, 'q_lD_D': 0.2,
+           'ASO': 5e6, 'muE': 1.23}             # ASO/muE: no X_D → identity
+    out = convert_params_to_engine_R2(src)
+    assert out['Gamma_SR'] == 7.0 + 1 * 0.1, out
+    assert out['q_lD'] == -4.0 + 1 * 0.2, out
+    assert out['ASO'] == 5e6 and out['muE'] == 1.23, out
+
+def test_sextic_key_raises():
+    expect_valueerror(lambda: convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 1, 'Be': 1.0, 'p2q_H': 1e-9}))
+
+def test_orphan_xd_warns():
+    with _w.catch_warnings(record=True) as rec:
+        _w.simplefilter('always')
+        out = convert_params_to_engine_R2(
+            {'formalism': 'N2', 'Lambda': 1, 'p2q_D': 0.05})
+    assert any('p2q_D' in str(r.message) for r in rec), rec
+    assert out['p2q_D'] == 0.05, out
+
 if __name__ == '__main__':
     check('r2_passthrough_and_strip', test_r2_passthrough_and_strip)
     check('absent_formalism_is_r2', test_absent_formalism_is_r2)
     check('unknown_formalism_raises', test_unknown_formalism_raises)
     check('n2_without_lambda_raises', test_n2_without_lambda_raises)
     check('caller_dict_not_mutated', test_caller_dict_not_mutated)
+    check('sigma_is_identity', test_sigma_is_identity)
+    check('be_d_row', test_be_d_row)
+    check('generic_x_row_lambda2', test_generic_x_row_lambda2)
+    check('all_partners_and_passthrough', test_all_partners_and_passthrough)
+    check('sextic_key_raises', test_sextic_key_raises)
+    check('orphan_xd_warns', test_orphan_xd_warns)
     print(f"OK: {_passed} passed")

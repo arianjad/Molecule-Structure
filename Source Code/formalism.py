@@ -46,4 +46,28 @@ def convert_params_to_engine_R2(params: dict, c_cm: float = DEFAULT_C_CM) -> dic
             "formalism='N2' requires 'Lambda' (|Λ|); set 'Lambda': 0 for Σ "
             "states. Λ is never inferred (spec §3, §6, §7).")
 
-    return out  # full conversion added in Tasks 1–2
+    sextic = _SEXTIC_KEYS.intersection(out)
+    if sextic:
+        raise ValueError(
+            f"formalism='N2' converter is quartic-truncated; sextic keys "
+            f"{sorted(sextic)} not supported.")
+
+    lam2 = int(lam) ** 2
+    if lam2 == 0:
+        return out                            # Σ: convention-independent
+
+    be_n2 = out.get('Be')                     # snapshot N² values (hazard #2)
+    d_n2 = out.get('D')
+
+    if be_n2 is not None and d_n2 is not None:
+        out['Be'] = be_n2 - 2 * lam2 * d_n2   # B row
+
+    for x, xd in CENTRIFUGAL_PARTNERS.items():            # generic-X row
+        if x in out and xd in out:
+            out[x] = out[x] + lam2 * out[xd]
+        elif xd in out and x not in out:
+            warnings.warn(
+                f"formalism='N2': '{xd}' present without partner '{x}'; "
+                f"no conversion applied (likely data error).")
+
+    return out                                # G row added in Task 2
