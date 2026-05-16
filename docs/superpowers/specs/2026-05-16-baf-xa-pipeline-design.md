@@ -125,12 +125,12 @@ Builder [hamiltonian_builders.py:145-167]:
 `'p+2q'` multiplies the literal combined-(p+2q) operator; `'q'` enters
 separately (builder applies the `−q` sign internally).
 
-→ `'p+2q'` = p + 2q = −7713.96 + 2(−2.52) = **−7718.99 MHz**
+→ `'p+2q'` = p + 2q = −7713.96 + 2(−2.52) = **−7719.00 MHz** (earlier draft wrote −7718.99 — hand-add slip; −7713.96−5.04 = −7719.00; 0.01 MHz, immaterial)
 → `'q'` = **−2.52 MHz**
 → `'p2q_D'` = p_D = **−0.00699 MHz**
 
 Sanity (paper §IV): A²Π₁/₂ J=1/2 Λ-splitting ≈ |p+2q|·(J+½) ⟹ at J=½,
-≈ |−7718.99| ≈ 7719 MHz vs paper's stated **7723 MHz** (≈4 MHz residual from
+≈ |−7719.00| ≈ 7719 MHz vs paper's stated **7723 MHz** (≈4 MHz residual from
 p_D / higher order). |p| alone (7714) is 9 MHz off — confirms the combined
 value belongs in `'p+2q'`. The `'p+2q'` and `'q'` operators are **distinct**
 matrix elements (builder L147), not double-counting; for the A²Π₁/₂ J=1/2
@@ -139,7 +139,7 @@ correction, so a `'q'` sign error cannot corrupt the §6 hyperfine
 discriminators (21.8 / 65.6 MHz). RaF A0 set `'q'`=0 (²Π₁/₂-only); BaF keeps
 q=−2.52 (YbOH A000 pattern) for completeness. Cross-check: Steimle [24]
 Table III gives the combined `(p+2q) = −0.25755 cm⁻¹ ≈ −7721 MHz` for
-¹³⁸BaF (Steimle set q≈0), consistent with `'p+2q'` = −7718.99 MHz here
+¹³⁸BaF (Steimle set q≈0), consistent with `'p+2q'` = −7719.00 MHz here
 (Effantin p,q split; ~2 MHz fit-to-fit) — independently confirms the
 **combined** value belongs in `'p+2q'`.
 
@@ -239,7 +239,7 @@ molecules['BaF']['boson']['A0'] = {
     'bF': 0,
     'c': 0,
     'd': -3.58,             # Denis2022 [39]; pgopher->B+C needs minus (RaF A0 precedent)
-    'p+2q': -7713.96 + 2*(-2.52),  # =-7718.99; Effantin1990 [18] combined (op-grounded builders:147; Steimle[24] (p+2q)=-7721 cross-check)
+    'p+2q': -7713.96 + 2*(-2.52),  # =-7719.00 (earlier draft -7718.99: hand-add slip, -7713.96-5.04=-7719.00; 0.01 MHz immaterial); Effantin1990 [18] combined (op-grounded builders:147; Steimle[24] (p+2q)=-7721 cross-check)
     'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
     'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
     'D': 0.006007,          # Effantin1990 [18]; 2.0036e-7 cm^-1

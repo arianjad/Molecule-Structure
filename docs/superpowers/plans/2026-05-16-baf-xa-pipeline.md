@@ -28,11 +28,12 @@
 
 **Acceptance Criteria:**
 - [ ] `get_molecule_params('BaF','X',0,'boson')` returns a dict with `bF` ≈ 66.2503, `c` == 8.224, `Be` == 6473.9588
-- [ ] `get_molecule_params('BaF','A',0,'boson')` returns a dict with `Be` == 6347.847 (no −2Λ²D), `p+2q` == -7718.99, `a` == 29.32, `d` == -3.58
+- [ ] `get_molecule_params('BaF','A',0,'boson')` returns a dict with `Be` == 6347.847 (no −2Λ²D), `p+2q` == **-7719.00** (= -7713.96+2·(-2.52); spec §3.2/§4 wrote -7718.99 — hand-add slip, 0.01 MHz, immaterial), `a` == 29.32, `d` == -3.58
+- [ ] `A0['Origin']` == `11946.109609 + 6347.847/c` (N² T₀,₀ + **Be_A** G-row, hand-written; **not** `formalism:'N2'`; **not** Be_X). Absolute-frequency validation deferred to Task 2 (Origin not exercised by this task's verify command)
 - [ ] No `KeyError`; existing RaF/YbOH/CaOH entries untouched
 
 **Verify:** `conda run -n Structure python -c "import sys; sys.path.insert(0,'Source Code'); from molecule_parameters import get_molecule_params as g; x=g('BaF','X',0,'boson'); a=g('BaF','A',0,'boson'); print(round(x['bF'],4), x['c'], x['Be']); print(a['Be'], a['p+2q'], a['a'], a['d'])"`
-→ expected: `66.2503 8.224 6473.9588` / `6347.847 -7718.99 29.32 -3.58`
+→ expected: `66.2503 8.224 6473.9588` / `6347.847 -7719.0 29.32 -3.58`
 
 **Steps:**
 
@@ -56,28 +57,28 @@ molecules['BaF']['boson']['X0'] = {
     'muE': 3.170*0.503412,  # 3.170(3) D, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
     }
 molecules['BaF']['boson']['A0'] = {
-    'Be': 6347.847,         # Steimle2011 [24] B(R^2); 0.2117414 cm^-1. arXiv:2511.06986 Eq.(3) R^2-form -> NO -2*Lam^2*D (deliberately unlike RaF A0, whose source was N^2-form)
+    'Be': 6347.847,         # Steimle2011 [24], 0.2117414 cm^-1, held fixed in fit. Entered direct (NO -2*Lam^2*D): the R^2<->N^2 B-row term is +-2*Lam^2*D = 0.012 MHz << 0.3 MHz exp.unc & all validation tols -> immaterial regardless of B's source convention. The ~6348 MHz Lam^2*B convention shift lives entirely in Origin (G-row), not here. (RaF A0 differs: its source B was N^2 at a level the converter's -2Lam^2D handles.)
     'ASO': 18955512.5,      # This work arXiv:2511.06986; 632.287838 cm^-1
     'h1/2': 0,
     'a': 26.55 - 0.5*(-5.54),  # =29.32; arXiv:2511.06986 Eq.(4)/B&C p.845 h1/2=a-(b+c)/2; Denis2022 [39]. Gated on Table II 21.8 MHz (plan Task 2)
     'bF': 0,
     'c': 0,
     'd': -3.58,             # Denis2022 [39]; pgopher->B+C needs minus (RaF A0 precedent)
-    'p+2q': -7713.96 + 2*(-2.52),  # =-7718.99; Effantin1990 [18] combined p+2q (op-grounded hamiltonian_builders.py:147; Steimle (p+2q)=-7721 cross-check)
+    'p+2q': -7713.96 + 2*(-2.52),  # =-7719.00 (spec/§4 wrote -7718.99: hand-add slip, -7713.96-5.04=-7719.00; 0.01 MHz, immaterial); Effantin1990 [18] combined p+2q (op-grounded hamiltonian_builders.py:147; Steimle (p+2q)=-7721 cross-check)
     'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
     'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
     'D': 0.006007,          # Effantin1990 [18]; 2.0036e-7 cm^-1
     'A_D': 0.93,            # Steimle2011 [24]; consumed iff A2Pi builder reads it (plan Task 2 confirms)
     'muE': 1.50*0.503412,   # 1.50(2) D A2Pi1/2, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
     'g_S': 2.0023,
-    'Origin': 11946.109609 + 0*632.287838 + 6473.9588/c,  # RaF-A0-template structure: T0,0[cm-1] + 0*ASO[cm-1] + Be_X[MHz]/c (R^2 B-offset). Carries known convention offset (spec §5); validated on RELATIVE splittings only
+    'Origin': 11946.109609 + 6347.847/c,  # T0,0[cm^-1] (arXiv:2511.06986 Tbl III, "This work"; pgopher-DEFAULT N^2 fit) + Be_A[MHz]/c R^2 G-row. Code rot op is R^2-form B*(N^2-Lam^2); paper T0,0 is N^2-convention (pgopher default; paper p.8: 0.21 cm^-1~B_A offset vs Steimle). Be_A=6347.847 (THIS state's own B) NOT Be_X=6473.9588 (Be_X was the +126 MHz bug class the converter/RaF-migration removed). NOT formalism:'N2' (would mis-apply -2Lam^2D to R^2-form Be/p+2q, spec §3.4). Abs line confirmed vs Table II 348666424.4 MHz in Task 2.
     }
 ```
 
 - [ ] **Step 2: Run the verify command**
 
 Run: `conda run -n Structure python -c "import sys; sys.path.insert(0,'Source Code'); from molecule_parameters import get_molecule_params as g; x=g('BaF','X',0,'boson'); a=g('BaF','A',0,'boson'); print(round(x['bF'],4), x['c'], x['Be']); print(a['Be'], a['p+2q'], a['a'], a['d'])"`
-Expected: `66.2503 8.224 6473.9588` then `6347.847 -7718.99 29.32 -3.58`
+Expected: `66.2503 8.224 6473.9588` then `6347.847 -7719.0 29.32 -3.58`
 
 - [ ] **Step 3: Commit**
 
@@ -107,6 +108,7 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 - [ ] Script runs under `conda run -n Structure` with no exception
 - [ ] `abs(x_split - 65.6) <= 1.0` (X Fermi-contact mapping correct)
 - [ ] `abs(a_split - 21.8) <= 1.0` (A²Π₁/₂ hyperfine mapping correct — spec §3.3 gate)
+- [ ] `abs(nu_centroid - 348666439.0) <= 5.0` (absolute X→A line confirms the N² T₀,₀ + Be_A G-row Origin — spec §5; a ~6348 MHz miss = inverted N²/R², ~126 MHz = Be_X-not-Be_A)
 - [ ] No-M BR matrix is finite, non-negative; each A²Π₁/₂(J=1/2,−) hyperfine level's normalized decay spreads over X N=0 **and** N=1 (both > 0) and sums to 1.0 ± 1e-6
 - [ ] If `'a'`/`'d'` were changed, the spec §3.3 STOP-comment in `molecule_parameters.py` is updated to record the resolved mapping + that 21.8 MHz now passes
 
@@ -163,6 +165,20 @@ for col in ex:
     assert abs(p.sum() - 1.0) <= 1e-6, "normalized BR != 1"
     assert n0 > 0 and n1 > 0, f"A level {col}: decay missing an N branch (N=0:{n0}, N=1:{n1})"
     print(f"  A idx {col}: BR to X N=0 = {n0:.4f}, N=1 = {n1:.4f}")
+
+# Absolute-frequency convention confirmation (spec §5; user decision: N² T0,0 + Be_A G-row).
+# Common-mode to all hf components, so use the manifold centroid; a wrong N²/R² Origin
+# choice misses by Be_A·Λ² ~ 6348 MHz (>> 5 MHz tol); Be_X-vs-Be_A bug ~ 126 MHz (also caught).
+c_cm = 29979.2458                                       # == molecule_parameters.c
+Ec = e.evals0[ex]/c_cm + e.parameters['Origin']         # A 2Pi1/2(J=1/2,-) levels, cm^-1
+Gc = g.evals0[gx]/c_cm                                  # X N=0,J=1/2 levels, cm^-1
+nu_centroid = c_cm*(Ec.mean() - Gc.mean())              # MHz, hf-centroid X(N=0)->A(J=1/2,-)
+TBL2_CENTROID = (348666402.6 + 348666424.4 + 348666490.0)/3   # = 348666439.0 MHz (Table II)
+print(f"abs X(N=0)->A(2Pi1/2,J=1/2,-) centroid = {nu_centroid:.1f} MHz "
+      f"(Table II {TBL2_CENTROID:.1f}; tol 5 MHz)")
+assert abs(nu_centroid - TBL2_CENTROID) <= 5.0, (
+    f"absolute line off by {nu_centroid - TBL2_CENTROID:.1f} MHz — Origin N²/R² "
+    f"convention wrong (~6348 MHz miss => use the other Origin form; spec §5)")
 
 assert abs(x_split - 65.6) <= 1.0, f"X bF mapping off: {x_split} (expect 65.6)"
 assert abs(a_split - 21.8) <= 1.0, f"A 2Pi1/2 hyperfine mapping off: {a_split} (expect 21.8) — spec §3.3 residual"
@@ -307,6 +323,7 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 **Acceptance Criteria:**
 - [ ] `conda run -n Structure jupyter execute "Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb"` exits 0 (no regression; no `--allow-errors`)
 - [ ] Spec §7: item #1 (§3.3 `'a'` residual) updated with the Task 2 result (resolved value or still-open with evidence); item #4 marked "confirmed — generic `'174X000'/'174A000'` path, no wiring"; item #5 records whether the A²Π builder consumed `A_D`
+- [ ] Spec §5 Origin framing corrected: paper T₀,₀ = pgopher-default N²; `Origin = T₀,₀ + Be_A·Λ²/c` (hand G-row, not `formalism:'N2'`, not Be_X); the old "documented offset / RaF +B/c template" wording removed
 - [ ] Spec status header changed from `awaiting user review before writing-plans` to `implemented <date>`
 
 **Verify:** `conda run -n Structure jupyter execute "Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb"; echo $?` → final line `0`
@@ -324,6 +341,7 @@ Edit `docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md` §7:
 - Item 1: replace "*Highest-risk item.*" with the Task 2 verdict, e.g. `RESOLVED — 'a'=29.32 reproduces Table II 21.8 MHz (Task 2, <date>)` (or the corrected form actually used).
 - Item 4: `RESOLVED — BaF boson uses the generic '174X000'/'174A000' dispatch; no molecule_library_class.py change needed (confirmed Task 1).`
 - Item 5: record whether `A_D` is consumed by the boson A²Π builder (from Task 2 Step 3 inspection); if unused, note it's inert/kept for documentation.
+- §5 Origin: replace the "documented absolute offset / RaF-A0-template +B/c" framing with the resolved finding — paper Eq.(3) is R²-*symbolic* but the fit/Table III is **pgopher-default N²** (corroborated by the p.8 0.21 cm⁻¹≈B_A offset vs Steimle [24]); code operator is R²-form, so `Origin = T₀,₀ + Be_A·Λ²/c` (hand-written G-row with **this state's own B**; **not** `formalism:'N2'`, **not** Be_X). Confirmed vs Table II (Task 2, centroid ≤5 MHz). Also nuance §3.4: its "Eq.(3) R²-form" is the *symbolic* operator only (the fit is pgopher-default N²); the no-−2Λ²D **decision stands** because the R²↔N² B-row term is 0.012 MHz (≪ 0.3 MHz exp. unc.), immaterial — record this bound rather than the "cleanly R²-form" rationale.
 - Header `**Status:**` → `implemented <YYYY-MM-DD>`.
 
 - [ ] **Step 3: Commit**
@@ -342,7 +360,7 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 - Spec §6 (Table II 65.6/21.8 MHz discriminators, BR sum=1/structure, no quantitative intensity) → Task 2. ✓
 - Spec §3.3 (the one acceptance-gated residual) → Task 2 Step 3, arbitrated by the 21.8 MHz data. ✓
 - Spec §3.4 (Be R²-form, no −2Λ²D) → Task 1 dict + comment. ✓
-- Spec §5 (Origin convention offset, relative-splitting validation) → Task 1 `'Origin'` formula + Task 3 absolute-line caveat. ✓
+- Spec §5 (Origin convention) → **resolved**: paper T₀,₀ is N²-convention (pgopher-default fit; verified vs paper Eq.3/p.8 + the 0.21 cm⁻¹≈B_A Steimle offset). Origin = `11946.109609 + 6347.847/c` (N² T₀,₀ + **Be_A** G-row by hand; **not** `formalism:'N2'` — would corrupt R²-form Be/p+2q per §3.4). Task 1 dict + Task 2 absolute Table II confirmation (centroid ≤5 MHz). Spec §5's "documented offset / RaF-template +B/c" framing is a misread of the paper-vs-Steimle note — corrected in Task 4. ✓
 - Spec §3.6 (A–B perturbation → BR not quantitatively matched) → Task 2 BR acceptance is structure/normalization only. ✓
 - CLAUDE.md verification gate → Task 4. ✓
 - Deliverable (RaF-style notebook) → Task 3. ✓
