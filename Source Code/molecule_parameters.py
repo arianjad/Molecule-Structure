@@ -51,7 +51,10 @@ molecules['RaF']['boson']['X0'] = {
 molecules['RaF']['boson']['A0'] = {
     'formalism': 'N2',   # raw paper (N²) values; converter → engine R² (spec)
     'Lambda': 1,         # A²Π, declared case-(a) basis Λ
-    'Be': 5743.96,       # B(N²) paper value
+    'Be': 0.191015*c,    # B′₀(N²) = 0.191015(5)[15] cm⁻¹. Udrescu et al.,
+                         # Nat. Phys. 2024, DOI 10.1038/s41567-023-02296-w,
+                         # Table I, ²²⁶Ra¹⁹F A²Π₁/₂ v=0. Was 5743.96 MHz —
+                         # wrong source, ~17.5 MHz high vs this paper (Task 6).
     'ASO': 1350*c,       # Fixed from 1350 cm^-1
     'h1/2': 0,           # Calc relayed from Silviu, h1/2 = a-(bf+2c/3)=A||/2
     'a':19/2,
@@ -62,8 +65,8 @@ molecules['RaF']['boson']['A0'] = {
     'q':0,
     'D': 1.4e-7*c,
     'p2q_D': 1.9e-7*c,   # X_D for p+2q
-    'g_lp': -0.41071/(2*5743.96/c),#-0.865,
-    'g_l': -6000/(2*5743.96),
+    'g_lp': -0.41071/(2*0.191015),#-0.865,  # 0.191015 = B′₀(N²) cm⁻¹ (Udrescu 2024)
+    'g_l': -6000/(2*0.191015*c),
     'muE': 1*0.503412,
     'g_S': 2.0023,
     'Origin': 13284.427, # PHYSICAL band origin (N²); converter adds R² G-row.

@@ -141,13 +141,13 @@ def test_raf_a0_regression_oracle():
     c = mp.c
     # boson
     b = mp.get_molecule_params('RaF', 'A', '0', 'boson')
-    assert abs(b['Be'] - (5743.96 - 2*1.4e-7*c)) < 1e-9, b['Be']
+    assert abs(b['Be'] - (0.191015*c - 2*1.4e-7*c)) < 1e-9, b['Be']
     assert abs(b['p+2q'] - (-0.41071*c + 1.9e-7*c)) < 1e-9, b['p+2q']
     old_buggy_b = 13284.427 + 5755.56/c
-    corrected_b = 13284.427 + 5743.96/c - 1.4e-7
+    corrected_b = 13284.427 + (0.191015*c)/c - 1.4e-7
     assert abs(b['Origin'] - corrected_b) < 1e-9, b['Origin']
     # shift vs. buggy = Λ²ΔBe/c − Λ⁴D/c; D-term = (1.4e-7*c)/c = 1.4e-7
-    assert abs((b['Origin'] - old_buggy_b) - ((5743.96-5755.56)/c - 1.4e-7)) < 1e-9
+    assert abs((b['Origin'] - old_buggy_b) - ((0.191015*c-5755.56)/c - 1.4e-7)) < 1e-9
     assert 'formalism' not in b and 'Lambda' not in b
     # fermion
     f = mp.get_molecule_params('RaF', 'A', '0', 'fermion')
