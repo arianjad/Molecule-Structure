@@ -42,6 +42,8 @@ Module edits leave the user's running kernel stale — fresh-kernel re-execution
 
 **Physics conventions.** See `README.md` (units MHz/V·cm⁻¹/Gauss; polyatomic K/P notation; Hund's cases; PGopher-flipped sign conventions; spin-statistics flag). Don't fabricate or guess on coupling cases, matrix elements, or selection rules — stop and ask.
 
+**Library API currency.** Before nontrivial SymPy, QuTiP, or SciPy-linalg work, consult the context7 MCP (`mcp__context7__*`) for the installed version's API — these are version-volatile. Not for stable NumPy/stdlib.
+
 ## References
 
 Brown & Carrington, *Rotational Spectroscopy of Diatomic Molecules* is the canonical reference for diatomic structure (matrix elements, sign conventions, basis transformations, coupling cases). Two copies, same edition:
