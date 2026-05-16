@@ -81,6 +81,38 @@ def test_orphan_xd_warns():
     assert any('p2q_D' in str(r.message) for r in rec), rec
     assert out['p2q_D'] == 0.05, out
 
+def test_g_row_lambda1():
+    c = 29979.2458
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 1,
+         'Be': 5743.96, 'D': 1.4e-7 * c, 'Origin': 13284.427})
+    exp = 13284.427 + 1 * 5743.96 / c - 1 * (1.4e-7 * c) / c
+    assert abs(out['Origin'] - exp) < 1e-12, (out['Origin'], exp)
+
+def test_g_row_lambda2_powers():
+    c = 1000.0
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 2, 'Be': 10.0, 'D': 2.0,
+         'Origin': 100.0}, c_cm=c)
+    exp = 100.0 + 4 * 10.0 / c - 16 * 2.0 / c          # Λ²=4, Λ⁴=16
+    assert abs(out['Origin'] - exp) < 1e-12, (out['Origin'], exp)
+
+def test_g_row_sigma_unchanged():
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 0, 'Be': 50.0, 'Origin': 9.0})
+    assert out['Origin'] == 9.0, out
+
+def test_g_row_no_be_no_shift():
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 1, 'Origin': 9.0})
+    assert out['Origin'] == 9.0, out
+
+def test_g_row_custom_c():
+    out = convert_params_to_engine_R2(
+        {'formalism': 'N2', 'Lambda': 1, 'Be': 300.0, 'Origin': 0.0},
+        c_cm=100.0)
+    assert abs(out['Origin'] - 3.0) < 1e-12, out      # 300/100, no D
+
 if __name__ == '__main__':
     check('r2_passthrough_and_strip', test_r2_passthrough_and_strip)
     check('absent_formalism_is_r2', test_absent_formalism_is_r2)
@@ -93,4 +125,9 @@ if __name__ == '__main__':
     check('all_partners_and_passthrough', test_all_partners_and_passthrough)
     check('sextic_key_raises', test_sextic_key_raises)
     check('orphan_xd_warns', test_orphan_xd_warns)
+    check('g_row_lambda1', test_g_row_lambda1)
+    check('g_row_lambda2_powers', test_g_row_lambda2_powers)
+    check('g_row_sigma_unchanged', test_g_row_sigma_unchanged)
+    check('g_row_no_be_no_shift', test_g_row_no_be_no_shift)
+    check('g_row_custom_c', test_g_row_custom_c)
     print(f"OK: {_passed} passed")

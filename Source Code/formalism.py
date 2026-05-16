@@ -70,4 +70,10 @@ def convert_params_to_engine_R2(params: dict, c_cm: float = DEFAULT_C_CM) -> dic
                 f"formalism='N2': '{xd}' present without partner '{x}'; "
                 f"no conversion applied (likely data error).")
 
-    return out                                # G row added in Task 2
+    if 'Origin' in out and be_n2 is not None:             # G row (spec §6.1)
+        d_over_c = (d_n2 / c_cm) if d_n2 is not None else 0.0
+        out['Origin'] = (out['Origin']
+                         + lam2 * be_n2 / c_cm
+                         - (lam2 ** 2) * d_over_c)
+
+    return out
