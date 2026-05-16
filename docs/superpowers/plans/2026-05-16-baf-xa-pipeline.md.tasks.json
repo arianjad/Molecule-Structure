@@ -1,0 +1,33 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-16-baf-xa-pipeline.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Add 138Ba19F boson X0+A0 to molecule_parameters.py",
+      "status": "pending",
+      "description": "**Goal:** DB entries so get_molecule_params('BaF','X'|'A',0,'boson') returns spec §4 constants.\n\n**Files:** Modify Source Code/molecule_parameters.py (replace dead stub line `# molecules['BaF']['boson']['X0'] = {` ~line 70 with the two spec §4 dicts, MHz-direct).\n\n**Acceptance:** get_molecule_params('BaF','X',0,'boson') -> bF≈66.2503, c==8.224, Be==6473.9588; ('BaF','A',0,'boson') -> Be==6347.847 (no -2Lam^2D), p+2q==-7718.99, a==29.32, d==-3.58; no KeyError; RaF/YbOH/CaOH untouched.\n\n**Verify:** conda run -n Structure python -c \"import sys; sys.path.insert(0,'Source Code'); from molecule_parameters import get_molecule_params as g; x=g('BaF','X',0,'boson'); a=g('BaF','A',0,'boson'); print(round(x['bF'],4),x['c'],x['Be']); print(a['Be'],a['p+2q'],a['a'],a['d'])\"\n\n**Steps:** Insert X0+A0 dicts (spec §4 verbatim) -> run verify -> commit.\n\n```json:metadata\n{\"files\": [\"Source Code/molecule_parameters.py\"], \"verifyCommand\": \"conda run -n Structure python -c \\\"import sys; sys.path.insert(0,'Source Code'); from molecule_parameters import get_molecule_params as g; x=g('BaF','X',0,'boson'); a=g('BaF','A',0,'boson'); print(round(x['bF'],4),x['c'],x['Be']); print(a['Be'],a['p+2q'],a['a'],a['d'])\\\"\", \"acceptanceCriteria\": [\"X dict: bF~66.2503, c==8.224, Be==6473.9588\", \"A dict: Be==6347.847, p+2q==-7718.99, a==29.32, d==-3.58\", \"no KeyError; other molecules untouched\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: BaF X-A no-M validation + resolve §3.3 hyperfine residual",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** Script asserting X(N=0,J=1/2) F-split≈65.6 MHz and A2Pi1/2(J=1/2,-) F-split≈21.8 MHz (≤1 MHz) + sane no-M A->X BR. The A assertion is the spec §3.3 gate; iterate 'a'/'d' mapping within this task until green.\n\n**Files:** Create Jupyter Notebooks/RaX/baf_xa_validate.py; only-if-failing modify Source Code/molecule_parameters.py BaF A0 'a'/'d' (read matrix_elements.py aBJ 2Pi1/2 element first).\n\n**Acceptance:** runs under conda run -n Structure; abs(x_split-65.6)<=1.0; abs(a_split-21.8)<=1.0; BR finite/non-negative, each A2Pi1/2(J=1/2,-) level normalized decay spreads over X N=0 AND N=1 summing to 1±1e-6; if 'a'/'d' changed, spec §3.3 STOP-comment updated.\n\n**Verify:** conda run -n Structure python \"Jupyter Notebooks/RaX/baf_xa_validate.py\" -> ends 'VALIDATION PASSED'.\n\n**Steps:** write script (asserts) -> run (X passes; A may fail) -> if A fails inspect IzLz/T2_2 aBJ 2Pi1/2 element + switch among defined parametrizations until 21.8 -> re-run green -> commit.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/baf_xa_validate.py\", \"Source Code/molecule_parameters.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Jupyter Notebooks/RaX/baf_xa_validate.py\\\"\", \"acceptanceCriteria\": [\"x_split within 1 MHz of 65.6\", \"a_split within 1 MHz of 21.8 (spec §3.3 gate)\", \"no-M BR finite, non-negative, normalized=1, spreads over X N=0 and N=1\", \"spec §3.3 comment updated if mapping changed\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: BaF X-A analysis notebook (deliverable)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Notebook producing hyperfine energies + no-M A->X BR table + the 3 Table II reference frequencies, mirroring RaF X-A.ipynb.\n\n**Files:** Create Jupyter Notebooks/RaX/make_baf_xa_nb.py (nbformat generator) and Jupyter Notebooks/RaX/BaF X-A.ipynb.\n\n**Acceptance:** BaF X-A.ipynb executes end-to-end fresh kernel exit 0; prints F-splittings, no-M BR table, and ref freqs 348666402.6/424.4/490.0; generator reproduces it.\n\n**Verify:** conda run -n Structure jupyter execute \"Jupyter Notebooks/RaX/BaF X-A.ipynb\" -> exit 0.\n\n**Steps:** write make_baf_xa_nb.py -> generate nb -> jupyter execute headless -> commit.\n\n```json:metadata\n{\"files\": [\"Jupyter Notebooks/RaX/make_baf_xa_nb.py\", \"Jupyter Notebooks/RaX/BaF X-A.ipynb\"], \"verifyCommand\": \"conda run -n Structure jupyter execute \\\"Jupyter Notebooks/RaX/BaF X-A.ipynb\\\"\", \"acceptanceCriteria\": [\"notebook executes fresh kernel exit 0\", \"prints F-splittings + no-M BR table + Table II ref freqs\", \"generator reproduces notebook\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: Verification gate + spec close-out",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** No regression to the CLAUDE.md verification gate; close resolved spec open items.\n\n**Files:** Modify docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md (§7 items #1/#4/#5; status header).\n\n**Acceptance:** conda run -n Structure jupyter execute \"Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb\" exits 0 (no --allow-errors); spec §7 #1 updated with Task 2 verdict, #4 'no wiring needed', #5 A_D finding; status -> implemented <date>.\n\n**Verify:** conda run -n Structure jupyter execute \"Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb\"; echo $? -> 0.\n\n**Steps:** run tutorial fresh kernel -> update spec §7 -> commit.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md\"], \"verifyCommand\": \"conda run -n Structure jupyter execute \\\"Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb\\\"; echo EXIT=$?\", \"acceptanceCriteria\": [\"tutorial notebook exits 0, no --allow-errors\", \"spec §7 #1/#4/#5 updated\", \"spec status -> implemented\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-16"
+}
