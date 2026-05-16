@@ -71,7 +71,31 @@ molecules['RaF']['boson']['A0'] = {
     }
 
 
-# molecules['BaF']['boson']['X0'] = {
+molecules['BaF']['boson']['X0'] = {
+    'Be': 6473.9588,        # Ryzlewicz1980 [22]; 138Ba19F; 0.21594802 cm^-1
+    'Gamma_SR': 80.984,     # Ryzlewicz1980 [22]; 0.0027013 cm^-1
+    'bF': b_2_bF(63.509, 8.224),  # =66.2503; Frosch-Foley b,c Ernst1986 [23]; bF=b+c/3 (B&C Eq.8.511 p.605/p.845; Steimle PRA84 012508 TblIII bF(F)=66.25 direct)
+    'c': 8.224,             # Ernst1986 [23]; 0.0002743 cm^-1
+    'D': 0.0055250,         # Effantin1990 [18]; 1.84294e-7 cm^-1
+    'muE': 3.170*0.503412,  # 3.170(3) D, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
+    }
+molecules['BaF']['boson']['A0'] = {
+    'Be': 6347.847,         # Steimle2011 [24], 0.2117414 cm^-1, held fixed in fit. Entered direct (NO -2*Lam^2*D): the R^2<->N^2 B-row term is +-2*Lam^2*D = 0.012 MHz << 0.3 MHz exp.unc & all validation tols -> immaterial regardless of B's source convention. The ~6348 MHz Lam^2*B convention shift lives entirely in Origin (G-row), not here. (RaF A0 differs: its source B was N^2 at a level the converter's -2Lam^2D handles.)
+    'ASO': 18955512.5,      # This work arXiv:2511.06986; 632.287838 cm^-1
+    'h1/2': 0,
+    'a': 26.55 - 0.5*(-5.54),  # =29.32; arXiv:2511.06986 Eq.(4)/B&C p.845 h1/2=a-(b+c)/2; Denis2022 [39]. Gated on Table II 21.8 MHz (plan Task 2)
+    'bF': 0,
+    'c': 0,
+    'd': -3.58,             # Denis2022 [39]; pgopher->B+C needs minus (RaF A0 precedent)
+    'p+2q': -7713.96 + 2*(-2.52),  # =-7719.00 (spec/§4 wrote -7718.99: hand-add slip, -7713.96-5.04=-7719.00; 0.01 MHz, immaterial); Effantin1990 [18] combined p+2q (op-grounded hamiltonian_builders.py:147; Steimle (p+2q)=-7721 cross-check)
+    'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
+    'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
+    'D': 0.006007,          # Effantin1990 [18]; 2.0036e-7 cm^-1
+    'A_D': 0.93,            # Steimle2011 [24]; consumed iff A2Pi builder reads it (plan Task 2 confirms)
+    'muE': 1.50*0.503412,   # 1.50(2) D A2Pi1/2, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
+    'g_S': 2.0023,
+    'Origin': 11946.109609 + 6347.847/c,  # T0,0[cm^-1] (arXiv:2511.06986 Tbl III, "This work"; pgopher-DEFAULT N^2 fit) + Be_A[MHz]/c R^2 G-row. Code rot op is R^2-form B*(N^2-Lam^2); paper T0,0 is N^2-convention (pgopher default; paper p.8: 0.21 cm^-1~B_A offset vs Steimle). Be_A=6347.847 (THIS state's own B) NOT Be_X=6473.9588 (Be_X was the +126 MHz bug class the converter/RaF-migration removed). NOT formalism:'N2' (would mis-apply -2Lam^2D to R^2-form Be/p+2q, spec §3.4). Abs line confirmed vs Table II 348666424.4 MHz in Task 2.
+    }
 
 bF_225, c_225 = abinitio_2_effective_hyperfine(A_par=-0.5692*c, A_perp=-0.5445*c, state='Sigma')
 
