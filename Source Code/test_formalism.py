@@ -122,6 +122,9 @@ def test_backcompat_all_entries_unchanged():
             for st, d in states.items():
                 if not isinstance(d, dict):
                     continue
+                if (mol, spin, st) in {('RaF','boson','A0'),
+                                       ('RaF','fermion','A0')}:
+                    continue   # migrated to N2 — covered by oracle test
                 before = dict(d)
                 after = convert_params_to_engine_R2(dict(d), c_cm=mp.c)
                 # all current entries are default-R2 ⇒ identical
@@ -130,6 +133,30 @@ def test_backcompat_all_entries_unchanged():
                 n += 1
     assert n > 0
     print(f"    swept {n} entries")
+
+def test_raf_a0_regression_oracle():
+    import importlib
+    mp = importlib.import_module('molecule_parameters')
+    importlib.reload(mp)
+    c = mp.c
+    # boson
+    b = mp.get_molecule_params('RaF', 'A', '0', 'boson')
+    assert abs(b['Be'] - (5743.96 - 2*1.4e-7*c)) < 1e-9, b['Be']
+    assert abs(b['p+2q'] - (-0.41071*c + 1.9e-7*c)) < 1e-9, b['p+2q']
+    old_buggy_b = 13284.427 + 5755.56/c
+    corrected_b = 13284.427 + 5743.96/c - 1.4e-7
+    assert abs(b['Origin'] - corrected_b) < 1e-9, b['Origin']
+    # shift vs. buggy = Λ²ΔBe/c − Λ⁴D/c; D-term = (1.4e-7*c)/c = 1.4e-7
+    assert abs((b['Origin'] - old_buggy_b) - ((5743.96-5755.56)/c - 1.4e-7)) < 1e-9
+    assert 'formalism' not in b and 'Lambda' not in b
+    # fermion
+    f = mp.get_molecule_params('RaF', 'A', '0', 'fermion')
+    assert abs(f['Be'] - (5729.03 - 2*1.4e-7*c)) < 1e-9, f['Be']
+    assert abs(f['p+2q'] - (-0.4109*c + 1.9e-7*c)) < 1e-9, f['p+2q']
+    old_buggy_f = 13284.427 + 5755.56/c
+    corrected_f = 13284.427 + 5729.03/c - 1.4e-7
+    assert abs(f['Origin'] - corrected_f) < 1e-9, f['Origin']
+    assert abs((f['Origin'] - old_buggy_f) - ((5729.03-5755.56)/c - 1.4e-7)) < 1e-9
 
 if __name__ == '__main__':
     check('r2_passthrough_and_strip', test_r2_passthrough_and_strip)
@@ -149,4 +176,5 @@ if __name__ == '__main__':
     check('g_row_no_be_no_shift', test_g_row_no_be_no_shift)
     check('g_row_custom_c', test_g_row_custom_c)
     check('backcompat_all_entries_unchanged', test_backcompat_all_entries_unchanged)
+    check('raf_a0_regression_oracle', test_raf_a0_regression_oracle)
     print(f"OK: {_passed} passed")

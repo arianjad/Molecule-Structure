@@ -48,23 +48,26 @@ molecules['RaF']['boson']['X0'] = {
     'muE': 3.91*0.503412, #Debye in MHz/(V/cm)
     'D': 1.4e-7*c
     }
-molecules['RaF']['boson']['A0'] = { 
-    'Be': 5743.96-2*1.4e-7*c, #5743.96=B(N^2) paper val; -2*Lam^2*D gives B(R^2) for R^2-form engine (B&C Tbl 7.2; sign-corrected 2026-05-15, verified numerically)
-    'ASO': 1350*c, #Fixed from 1350 cm^-1
-    'h1/2': 0,         # Calc relayed from Silviu, using h1/2 = a- (bf+2c/3) = A||/2
+molecules['RaF']['boson']['A0'] = {
+    'formalism': 'N2',   # raw paper (N²) values; converter → engine R² (spec)
+    'Lambda': 1,         # A²Π, declared case-(a) basis Λ
+    'Be': 5743.96,       # B(N²) paper value
+    'ASO': 1350*c,       # Fixed from 1350 cm^-1
+    'h1/2': 0,           # Calc relayed from Silviu, h1/2 = a-(bf+2c/3)=A||/2
     'a':19/2,
-    'bF': 0,     #
-    'c': 0,     #
-    'd': -9, #Calc relayed from Silviu. They use PGopher convention, we use B+C, so need minus sign
-    'p+2q': -0.41071*c+1.9e-7*c, #R^2 form
+    'bF': 0,
+    'c': 0,
+    'd': -9,             # Silviu; PGopher convention, B+C needs minus sign
+    'p+2q': -0.41071*c,  # X(N²) paper value
     'q':0,
     'D': 1.4e-7*c,
-    'p2q_D': 1.9e-7*c,
+    'p2q_D': 1.9e-7*c,   # X_D for p+2q
     'g_lp': -0.41071/(2*5743.96/c),#-0.865,
     'g_l': -6000/(2*5743.96),
     'muE': 1*0.503412,
     'g_S': 2.0023,
-    'Origin': 13284.427+0*1350 + 5755.56/c, #Pi1/2 origin + ASO(=1350 cm-1), also with B offset due to code being R^2
+    'Origin': 13284.427, # PHYSICAL band origin (N²); converter adds R² G-row.
+                         # NO hand +B/c term (that was the +11.6 MHz bug).
     }
 
 
@@ -84,17 +87,19 @@ molecules['RaF']['fermion']['X0'] = {
     'D': 1.4e-7*c
     }
 
-molecules['RaF']['fermion']['A0'] = { 
-    'Be': 5729.03-2*1.4e-7*c, #5729.03=B(N^2) paper val; -2*Lam^2*D gives B(R^2) for R^2-form engine (B&C Tbl 7.2; sign-corrected 2026-05-15, verified numerically)
-    'ASO': 1350*c, #Fixed from 1350 cm^-1
-    'h1/2Yb': -2852/2, # From Skripnikov theory
-    'dYb': -1*-0.076*c, # From Wilkins experiment, they use pgopher convention, so i add - sign
-    'h1/2H': 19/2,        
-    'aH':19/2,       # Calc relayed from Silviu, using h1/2 = a- (bf+2c/3) = A||/2
-    'bFH': 0,     #
-    'cH': 0,     #
-    'dH': -9, #Calc relayed from Silviu. They use PGopher convention, we use B+C, so need minus sign
-    'p+2q': -0.4109*c+1.9e-7*c, #R^2 form
+molecules['RaF']['fermion']['A0'] = {
+    'formalism': 'N2',
+    'Lambda': 1,
+    'Be': 5729.03,       # B(N²) paper value
+    'ASO': 1350*c,
+    'h1/2Yb': -2852/2,   # From Skripnikov theory
+    'dYb': -1*-0.076*c,  # Wilkins expt; pgopher convention → add - sign
+    'h1/2H': 19/2,
+    'aH':19/2,
+    'bFH': 0,
+    'cH': 0,
+    'dH': -9,
+    'p+2q': -0.4109*c,   # X(N²) paper value
     'q':0,
     'e2Qq0': 0,
     'D': 1.4e-7*c,
@@ -102,7 +107,7 @@ molecules['RaF']['fermion']['A0'] = {
     'g_lp': -0.4109/(2*0.191100),#-0.865,
     'muE': 1.0*0.503412,
     'g_S': 2.0023,
-    'Origin': 13284.427+0*1350 + 5755.56/c, #Pi1/2 origin + ASO(=1350 cm-1), also with B offset due to code being R^2
+    'Origin': 13284.427, # PHYSICAL band origin (N²); converter adds R² G-row
     }
 
 molecules['YbOH']['fermion']['171A000'] = {
