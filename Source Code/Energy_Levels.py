@@ -13,6 +13,7 @@ from hamiltonian_builders import tensor_matrix
 from fractions import Fraction
 
 from molecule_parameters import get_molecule_params
+from formalism import convert_params_to_engine_R2
 
 
 class MoleculeLevels(object):
@@ -66,8 +67,12 @@ class MoleculeLevels(object):
         # Get parameters from molecule_parameters.py if not provided
         if params is None:
             params = get_molecule_params(molecule_name,elec_state,vib_state,fermion_or_boson)
+            # already converted inside get_molecule_params (hazard #3)
         elif not isinstance(params,dict):
             raise ValueError('Params must be a dictionary of molecular parameters, see molecule_parameters.py for examples')
+        else:
+            # user-supplied dict: convert here (the only place this path is converted)
+            params = convert_params_to_engine_R2(params)
 
         # P_values are projections of the total angular momentum J onto the molecular axis
         if P_values == []:

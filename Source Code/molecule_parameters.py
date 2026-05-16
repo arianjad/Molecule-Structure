@@ -1,6 +1,7 @@
 import sympy as sy
 import numpy as np
 from sympy.physics.wigner import wigner_3j,wigner_6j,wigner_9j
+from formalism import convert_params_to_engine_R2
 
 
 def bF_2_b(bF_value,c_value):
@@ -388,7 +389,7 @@ def get_molecule_params(molecule_name, elec_state,vib_state, fermion_or_boson=No
     if overrides:
         merged.update(overrides)
     
-    return merged
+    return convert_params_to_engine_R2(merged, c_cm=c)
 
 
 ### Legacy Code ###
