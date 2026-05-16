@@ -108,6 +108,15 @@ Steimle's (Ref [24]) own convention, **not used** for the codebase `'bF'`.
 → `'c'` = **8.224 MHz**
 → optionally `'b'` = `bF_2_b(66.2503, 8.224)` = 63.509 (round-trip, YbOH-style)
 
+**Triple-confirmed (high confidence):** (i) B&C Eq. (8.511); (ii) Steimle [24]
+Table III tabulates the ¹³⁸BaF ¹⁹F Fermi contact *directly* as
+`bF(F) = 0.002209862 cm⁻¹ = 66.25 MHz` and `c(F) = 0.000274323 cm⁻¹ =
+8.224 MHz` — i.e. Steimle's own bF **is** 66.25, and `b = bF − c/3 = 63.51`
+recovers the paper's Frosch-Foley b; (iii) the measured 65.6 MHz Table II
+splitting (§6). All three agree on **66.25**; `b − c/3 = 60.77` is excluded by
+Steimle's own tabulated value. The arXiv:2511.06986 prose "bF = b − c/3" is
+the lone outlier and is a reporting-convention statement, not the operator.
+
 ### 3.2 A²Π Λ-doubling — RESOLVED
 
 Builder [hamiltonian_builders.py:145-167]:
@@ -128,7 +137,11 @@ matrix elements (builder L147), not double-counting; for the A²Π₁/₂ J=1/2
 scope the separate `'q'` term is a small higher-order / inter-ladder
 correction, so a `'q'` sign error cannot corrupt the §6 hyperfine
 discriminators (21.8 / 65.6 MHz). RaF A0 set `'q'`=0 (²Π₁/₂-only); BaF keeps
-q=−2.52 (YbOH A000 pattern) for completeness.
+q=−2.52 (YbOH A000 pattern) for completeness. Cross-check: Steimle [24]
+Table III gives the combined `(p+2q) = −0.25755 cm⁻¹ ≈ −7721 MHz` for
+¹³⁸BaF (Steimle set q≈0), consistent with `'p+2q'` = −7718.99 MHz here
+(Effantin p,q split; ~2 MHz fit-to-fit) — independently confirms the
+**combined** value belongs in `'p+2q'`.
 
 ### 3.3 A²Π₁/₂ hyperfine — ONE RESIDUAL (acceptance-gated)
 
@@ -138,11 +151,16 @@ Validated analog: RaF A0 (`'a'`=A‖/2-type scalar, `'h1/2'`=`'bF'`=`'c'`=0,
 `'d'` with pgopher→B&C minus). RaF A0 comment: `h1/2 = a − (bF+2c/3) = A‖/2`.
 
 Paper Eq. (4) ²Π₁/₂ diagonal scalar = `a − ½(b+c)` = 26.55 − ½(−5.54)
-= **29.32 MHz**. B&C-corroborated: **Brown & Carrington p.845** — the
-²Π₁/₂ axial hyperfine constant `h1/2 = a − (b+c)/2`, identical to paper
-Eq. (4). So the *physical target constant* is 29.32 MHz; the residual is
-only whether the codebase `a·IzLz` matrix element expects this scalar
-directly (Table-II-gated, not a physics question).
+= **29.32 MHz**. B&C-corroborated citation-grade — **Brown & Carrington
+p.845 (book p.813), verbatim:** *"The axial component of the total magnetic
+hyperfine interaction, h3/2, in the ²Π3/2 component is equal to a + (b + c)/2,
+where a, b and c are the Frosch and Foley constants. In the ²Π1/2 component
+the axial hyperfine constant, h1/2, is equal to a − (b + c)/2."* The same page
+also restates *"Note also that bF = b + (c/3)."* (second independent B&C
+confirmation of §3.1). Both BaF-paper Eq. (4) forms (²Π₁/₂ `a−½(b+c)`,
+²Π₃/₂ `a+½(b+c)`) match B&C exactly. So the *physical target constant* is
+29.32 MHz; the residual is only whether the codebase `a·IzLz` matrix element
+expects this scalar directly (Table-II-gated, not a physics question).
 
 → Candidate `'a'` = **29.32 MHz**, `'h1/2'` = 0, `'bF'`/`'c'` (A-state) = 0
 → `'d'` = **−3.58 MHz** (pgopher→B&C sign flip; RaF A0 precedent + Denis [39]
@@ -199,35 +217,41 @@ boson `²²⁶Ra`(I=0)`¹⁹F`(I=1/2). Mirror the **RaF boson X0/A0** template
 key-for-key. (`Molecule_Library` routes BaF through the YbOH backend — known
 wart, CLAUDE.md; extend, do not refactor.)
 
+Unit convention (per user): **MHz directly** from arXiv:2511.06986 Table III's
+MHz column (cm⁻¹ in comment) — *not* the RaF `<cm⁻¹>*c` form. `muE` keeps the
+codebase's intrinsic `<D>*0.503412` (Debye → MHz/(V·cm⁻¹)) form.
+
 ```python
 molecules['BaF']['boson']['X0'] = {
-    'Be': 6473.9588,            # Ryzlewicz1980 [22], 138Ba19F, MHz
-    'Gamma_SR': 80.984,         # Ryzlewicz1980 [22]
-    'bF': b_2_bF(63.509, 8.224),# = 66.2503; Frosch-Foley b,c from Ernst1986 [23]; codebase bF=b+c/3 (op-grounded, hamiltonian_builders.py:46)
-    'c': 8.224,                 # Ernst1986 [23]
-    'D': 1.84294e-7*c,          # Effantin1990 [18]; cm^-1 -> MHz via c
-    'muE': <Debye>*0.503412,    # TODO: dipole moment source (Steimle2011 [24] reports it) — confirm value before use
+    'Be': 6473.9588,        # Ryzlewicz1980 [22]; 138Ba19F; 0.21594802 cm^-1
+    'Gamma_SR': 80.984,     # Ryzlewicz1980 [22]; 0.0027013 cm^-1
+    'bF': b_2_bF(63.509, 8.224),  # =66.2503; Frosch-Foley b,c Ernst1986 [23]; bF=b+c/3 (B&C Eq.8.511; Steimle[24] tabulates bF(F)=66.25 directly)
+    'c': 8.224,             # Ernst1986 [23]; 0.0002743 cm^-1
+    'D': 0.0055250,         # Effantin1990 [18]; 1.84294e-7 cm^-1
+    'muE': 3.170*0.503412,  # 3.170(3) D, Steimle2011 [24] Table V; Debye->MHz/(V/cm)
+    # high-J only (§3.5; verify X2S builder consumes before adding): H=4.2e-10, Gamma_D=-0.0584, Gamma_H=0.000112 MHz
     }
 molecules['BaF']['boson']['A0'] = {
-    'Be': 6347.847,             # Steimle2011 [24] B(R^2); arXiv:2511.06986 Eq.(3) is R^2-form -> NO -2*Lam^2*D (unlike RaF A0, whose source was N^2-form)
-    'ASO': 632.287838*c,        # This work [arXiv:2511.06986]; cm^-1 -> MHz
+    'Be': 6347.847,         # Steimle2011 [24] B(R^2); 0.2117414 cm^-1. arXiv:2511.06986 Eq.(3) R^2-form -> NO -2*Lam^2*D (unlike RaF A0 N^2-form source)
+    'ASO': 18955512.5,      # This work [arXiv:2511.06986]; 632.287838 cm^-1
     'h1/2': 0,
-    'a': 26.55 - 0.5*(-5.54),   # = 29.32; Eq.(4) a-1/2(b+c); Denis2022 [39]. STOP: gate on Table II 21.8 MHz A-hf splitting
+    'a': 26.55 - 0.5*(-5.54),  # =29.32; Eq.(4)/B&C p.845 h1/2=a-(b+c)/2; Denis2022 [39]. STOP: gate on Table II 21.8 MHz A-hf splitting
     'bF': 0,
     'c': 0,
-    'd': -3.58,                 # Denis2022 [39] pgopher convention -> B+C needs minus (RaF A0 precedent)
-    'p+2q': -7713.96 + 2*(-2.52),# = -7718.99; Effantin1990 [18]; combined value (op-grounded, hamiltonian_builders.py:147)
-    'q': -2.52,                 # Effantin1990 [18]
-    'p2q_D': -0.00699,          # Effantin1990 [18] p_D
-    'D': 2.0036e-7*c,           # Effantin1990 [18]
-    'A_D': 0.93,                # Steimle2011 [24]; include if builder consumes it
-    'muE': <Debye>*0.503412,    # TODO: A2Pi1/2 dipole — Steimle2011 [24]; confirm before use
+    'd': -3.58,             # Denis2022 [39]; pgopher->B+C needs minus (RaF A0 precedent)
+    'p+2q': -7713.96 + 2*(-2.52),  # =-7718.99; Effantin1990 [18] combined (op-grounded builders:147; Steimle[24] (p+2q)=-7721 cross-check)
+    'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
+    'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
+    'D': 0.006007,          # Effantin1990 [18]; 2.0036e-7 cm^-1
+    'A_D': 0.93,            # Steimle2011 [24]; include iff A2Pi builder consumes it (Open #5)
+    'muE': 1.50*0.503412,   # 1.50(2) D A2Pi1/2, Steimle2011 [24] Table V; Debye->MHz/(V/cm)
     'g_S': 2.0023,
-    'Origin': <T0,0-based>,      # see §5; absolute origin carries known convention offset
+    'Origin': <T0,0-based>, # see §5; absolute origin carries known convention offset
     }
 ```
 
-`<…>` are explicit unresolved inputs, not placeholders to ship.
+`<T0,0-based>` is the one explicit unresolved input (§5), not a placeholder to
+ship. `muE` values are now resolved (Steimle [24] Table V).
 
 ## 5. The `Origin` key
 
@@ -277,27 +301,27 @@ do not tune blindly.
 
 1. **§3.3 A²Π₁/₂ `'a'` scalar** — RaF-pattern candidate `a−½(b+c)=29.32`;
    confirmed only by the 21.8 MHz Table II check. *Highest-risk item.*
-2. **`muE` (both states)** — not in arXiv:2511.06986 Table III; Steimle [24]
-   reports dipole moments. Source/confirm before populating; not needed for
-   frequency/BR validation but required for field-on use.
+2. **`muE` — RESOLVED.** Steimle [24] Table V (read citation-grade):
+   μ(X²Σ⁺)=**3.170(3) D**, μ(A²Π₁/₂)=**1.50(2) D** (A²Π₃/₂=1.31(2) D, out of
+   scope). Entered as `<D>*0.503412`. Not exercised by the freq/BR validation;
+   required for field-on use.
 3. **`'Origin'` construction** — convention offset documented (§5); resolve
    exact formula vs RaF A0 during implementation.
 4. **YbOH-backend routing** — confirm BaF dispatch keys
    (`molecule_library_class.py`) follow the RaF boson path.
 5. **`A_D`, `p2q_D` consumption** — confirm the boson A²Π builder consumes
    these keys (builder shows `p2q_D` and `D`; verify `A_D`).
-6. **Unit-entry style** — Table III gives both cm⁻¹ and MHz. RaF entries use
-   the `<cm⁻¹>*c` form; paper gives MHz directly. Decide per code-style.md
-   ("ask about existing patterns"): match RaF `*c` style for consistency, or
-   use the paper MHz column directly (less arithmetic, comment carries cm⁻¹).
-   User decision before implementation.
+6. **Unit-entry style — RESOLVED (user).** Use the arXiv:2511.06986 Table III
+   **MHz column directly**, cm⁻¹ in comment; `muE` keeps `<D>*0.503412`.
+   Diverges from RaF's `<cm⁻¹>*c` style by explicit user choice.
 
 ## 8. Verified-vs-asserted ledger
 
 | Claim | Basis | Confidence |
 |---|---|---|
 | Table III values (§2) | PDF read this session | high |
-| X `'bF'`=b+c/3 mapping | B&C Eq. 8.511 (p.605) + builders.py:46/187 | high |
+| X `'bF'`=b+c/3=66.25 | B&C Eq.8.511 + B&C p.845 + Steimle[24] TblIII bF(F)=66.25 + builders.py:46/187 + 65.6 MHz Tbl II | high |
+| μ(X)=3.170 D, μ(A²Π₁/₂)=1.50 D | Steimle[24] Table V (read this session) | high |
 | A `'p+2q'`=combined | hamiltonian_builders.py:147 | high |
 | A `'Be'` no −2Λ²D | Eq.(3) R²-form + builder L145/165 + ef06b86 | high |
 | A `'a'` physics value 29.32 | B&C p.845 h1/2=a−(b+c)/2 + Eq.(4) | high |
