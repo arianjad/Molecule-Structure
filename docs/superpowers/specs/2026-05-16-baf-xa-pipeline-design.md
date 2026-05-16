@@ -94,11 +94,15 @@ pattern-matching. Confidence: **high** (read the source this turn).
 Builder [hamiltonian_builders.py:45-48]:
 `H = Be·N² + Γ_SR·N·S + bF·(I·S) + (c/3)·√6·T²₀(I,S)`.
 
-`'bF'` multiplies `I·S` ⟹ `'bF'` **is the Fermi-contact constant**
-b_F = b + c/3 (standard B&C; matches `b_2_bF` in `molecule_parameters.py`).
-The paper tabulates the Frosch-Foley **operator** constants b, c (Eq. 1 form
-`b·I·S + c·I_zS_z`, identical to B&C). The paper's "bF = b − c/3" sentence is
-Steimle's reporting convention and is **not used**.
+`'bF'` multiplies `I·S` ⟹ `'bF'` **is the Fermi-contact constant**.
+Verified against **Brown & Carrington, Appendix 8.5, p.605 (book p.573),
+Eq. (8.511): `bF = b + (1/3)c`** (FF operator 8.507 `aI·L+bI·S+cIzSz+…` →
+B&C book form 8.510 with Fermi contact separated; also 8.516 `t0=c/3`,
+8.517 `t2=(2/3)d`). This matches `b_2_bF` in `molecule_parameters.py` and the
+codebase operator. The paper tabulates the Frosch-Foley **operator** constants
+b, c (Eq. 1 `b·I·S + c·I_zS_z`, identical to B&C 8.507). The paper's prose
+"bF = b − c/3 [Steimle 24]" is **inconsistent with B&C 8.511** — it is
+Steimle's (Ref [24]) own convention, **not used** for the codebase `'bF'`.
 
 → `'bF'` = `b_2_bF(63.509, 8.224)` = 63.509 + 8.224/3 = **66.2503 MHz**
 → `'c'` = **8.224 MHz**
@@ -134,7 +138,11 @@ Validated analog: RaF A0 (`'a'`=A‖/2-type scalar, `'h1/2'`=`'bF'`=`'c'`=0,
 `'d'` with pgopher→B&C minus). RaF A0 comment: `h1/2 = a − (bF+2c/3) = A‖/2`.
 
 Paper Eq. (4) ²Π₁/₂ diagonal scalar = `a − ½(b+c)` = 26.55 − ½(−5.54)
-= **29.32 MHz**.
+= **29.32 MHz**. B&C-corroborated: **Brown & Carrington p.845** — the
+²Π₁/₂ axial hyperfine constant `h1/2 = a − (b+c)/2`, identical to paper
+Eq. (4). So the *physical target constant* is 29.32 MHz; the residual is
+only whether the codebase `a·IzLz` matrix element expects this scalar
+directly (Table-II-gated, not a physics question).
 
 → Candidate `'a'` = **29.32 MHz**, `'h1/2'` = 0, `'bF'`/`'c'` (A-state) = 0
 → `'d'` = **−3.58 MHz** (pgopher→B&C sign flip; RaF A0 precedent + Denis [39]
@@ -289,10 +297,11 @@ do not tune blindly.
 | Claim | Basis | Confidence |
 |---|---|---|
 | Table III values (§2) | PDF read this session | high |
-| X `'bF'`=b+c/3 mapping | hamiltonian_builders.py:46 | high |
+| X `'bF'`=b+c/3 mapping | B&C Eq. 8.511 (p.605) + builders.py:46/187 | high |
 | A `'p+2q'`=combined | hamiltonian_builders.py:147 | high |
 | A `'Be'` no −2Λ²D | Eq.(3) R²-form + builder L145/165 + ef06b86 | high |
-| A `'a'`=a−½(b+c) exact | RaF pattern + Eq.(4); Table II gates | moderate |
+| A `'a'` physics value 29.32 | B&C p.845 h1/2=a−(b+c)/2 + Eq.(4) | high |
+| A `'a'` codebase-mapping exact | RaF pattern; Table II 21.8 MHz gates | moderate |
 | `'d'`=−3.58 sign | RaF A0 comment + Denis pgopher-consistent | moderate |
 | BR ≠ measured intensities | paper §III A–B anomaly | high |
 | High-J improvable later | paper p.6/8 (J>100 fixed set) | high |
