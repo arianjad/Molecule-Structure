@@ -168,6 +168,29 @@ fmt.update({col: "{:.4f}" for col in hf_cols})
               "(blue intensity = branching fraction; Σ→N=0 ≈ 0 = parity closure)"))
 """
 
+MD_AVG = """\
+## 3b.&nbsp; Excited-state-averaged branching &nbsp;<span style="color:gray">(A hyperfine is small — often unresolved)</span>
+
+Because the A²Π₁/₂ hyperfine splitting is only ≈ 22 MHz, the cooling laser
+often does not resolve it. The table below averages the branching ratio over
+**every** A²Π₁/₂(J=½,+) hyperfine sublevel with equal weight (thesis Eq. 3.4,
+hyperfine-generalized). Σ over X N=1 = 1, Σ over X N=0 ≈ 0 (parity closure).
+"""
+
+CELL_AVG = """\
+import xa_spectra as xs
+avg_df, per_df = xs.averaged_branching(g, e, e.select_q({'J': 0.5}, parity='+'))
+_n1 = avg_df['g_N'].astype(float) == 1
+view = avg_df.loc[_n1, ['g_J', 'g_F', 'BR']].copy()
+view['g_J'] = view['g_J'].map({0.5: '1/2', 1.5: '3/2'}).fillna(view['g_J'])
+print('sum over N=1 =', round(float(avg_df.loc[_n1, 'BR'].sum()), 6),
+      '  sum over N=0 =', '%.1e' % float(avg_df.loc[~_n1, 'BR'].sum()))
+(view.set_index(['g_J', 'g_F']).style
+ .format({'BR': '{:.4f}'})
+ .background_gradient(subset=['BR'], cmap='Blues')
+ .set_caption('Excited-averaged cooling BR  A²Π₁/₂(J=½,+) → X N=1'))
+"""
+
 CELL_PLOT = r'''ax = (br_df[hf_cols].T
       .plot(kind="barh", figsize=(8.5, 4.2), width=0.74,
             color=sns.color_palette("deep", len(br_df))))
@@ -208,6 +231,8 @@ cells = [
     nbf.v4.new_code_cell(CELL_FREQ),
     nbf.v4.new_markdown_cell(MD_BR),
     nbf.v4.new_code_cell(CELL_BR),
+    nbf.v4.new_markdown_cell(MD_AVG),
+    nbf.v4.new_code_cell(CELL_AVG),
     nbf.v4.new_code_cell(CELL_PLOT),
     nbf.v4.new_markdown_cell(MD_SUMMARY),
 ]
