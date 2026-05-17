@@ -1,6 +1,6 @@
 # X–A spectra + averaged-BR toolkit — design
 
-Status: designed 2026-05-16, awaiting user spec review.
+Status: implemented & validated 2026-05-17 (plan docs/superpowers/plans/2026-05-17-xa-spectra-toolkit.md; gates: test_xa_spectra/baf_xa_validate/tutorial all exit 0).
 Supersedes nothing. Builds on the validated BaF X–A pipeline
 (`docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md`).
 
