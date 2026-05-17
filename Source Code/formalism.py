@@ -1,11 +1,30 @@
-"""N²→R² spectroscopic-parameter converter (B&C Table 7.2, quartic-truncated).
+"""Bidirectional N²↔R² spectroscopic-parameter converter (B&C Table 7.2,
+quartic-truncated).
 
-The engine's rotational operator is R²-form (N²_op − Λ²·I). Constants from
-modern papers / default PGopher are N²-formulation. A state dict may declare:
-  'formalism': 'N2'   (default 'R2' → exact pass-through)
-  'Lambda':    |Λ|     (REQUIRED for any N2 state; 0 for Σ; never inferred)
-This module rewrites N² constants into the engine's R² convention at load time.
+The engine's rotational operator is R²-form (N²_op − Λ²·I). Modern papers and
+the PGopher default are N²-formulation. A state dict declares which convention
+ITS constants are in:
+  'formalism': 'N2' | 'R2'
+  'Lambda':    |Λ|            (REQUIRED whenever 'formalism' is set; 0 for Σ;
+                               never inferred — spec §3, §6, §7)
+
+`convert_formalism` rewrites the constants into the *other* convention — it is
+just the (exactly invertible) Table 7.2 arithmetic, so N²→R² and R²→N² are the
+same code with one sign — and sets 'formalism' to the new convention so the tag
+always follows the data. 'Lambda' is read, never popped, left untouched. A dict
+with no 'formalism' key is returned unchanged: no declared convention ⇒ nothing
+to convert. That identity-on-absence is what keeps every legacy (untagged, R²)
+entry byte-identical through the converter.
+
+The engine wants R², so the load-time call sites convert only when the declared
+formalism is 'N2' (molecule_parameters.get_molecule_params and the
+Energy_Levels user-dict path). 'formalism'/'Lambda' are left in the returned
+dict; the Hamiltonian builders read params by targeted key access, so the extra
+keys are inert.
+
 Spec: docs/superpowers/specs/2026-05-15-n2-r2-formalism-converter-design.md
+(that spec describes the earlier one-directional, metadata-stripping contract;
+this module is now bidirectional and tag-preserving — spec superseded here).
 """
 import warnings
 
@@ -14,8 +33,12 @@ import warnings
 # (state dicts reuse 'c' for the hyperfine dipolar constant). Hazard #1.
 DEFAULT_C_CM = 29979.2458
 
-# X ↔ its centrifugal-distortion partner X_D (B&C generic-X row). Declarative:
-# add a future verified pair here, no code change (spec §4.1).
+# X ↔ its centrifugal-distortion partner X_D (B&C generic-X row). Declarative,
+# verified pairs only (spec §4.1): add a pair here, no code change. The
+# converter applies the X-row to every pair in this map present in the dict —
+# this map is the sole limit on "convert everything convertible".
+# Candidate NOT added pending physics confirmation: 'ASO' ↔ 'A_D'
+# (BaF A0 carries 'A_D'); needs a B&C-grounded check before inclusion.
 CENTRIFUGAL_PARTNERS = {
     'p+2q':     'p2q_D',
     'Gamma_SR': 'Gamma_D',
@@ -26,54 +49,67 @@ CENTRIFUGAL_PARTNERS = {
 _SEXTIC_KEYS = {'H', 'p2q_H', 'Gamma_H', 'q_lD_H'}
 
 
-def convert_params_to_engine_R2(params: dict, c_cm: float = DEFAULT_C_CM) -> dict:
-    """Return a new dict with constants in the engine's R² convention.
+def convert_formalism(params: dict, c_cm: float = DEFAULT_C_CM) -> dict:
+    """Convert a parameter dict between the N² and R² conventions.
 
-    'formalism'/'Lambda' are consumed (stripped) so the engine never sees them.
+    Direction follows the dict's own 'formalism' tag: 'N2' → R², 'R2' → N².
+    The returned (new) dict carries the flipped 'formalism'; 'Lambda' is read,
+    not popped, and left in place. A dict with no 'formalism' is returned
+    unchanged. The caller's dict is never mutated.
     """
-    out = dict(params)                       # shallow copy; never mutate caller
-    formalism = out.pop('formalism', 'R2')
-    lam = out.pop('Lambda', None)
-
-    if formalism == 'R2':
-        return out
-    if formalism != 'N2':
+    out = dict(params)                          # copy; never mutate caller
+    formalism = out.get('formalism')            # READ, never pop
+    if formalism is None:
+        return out                              # no declared convention ⇒ identity
+    if formalism not in ('N2', 'R2'):
         raise ValueError(
             f"Unknown 'formalism' {formalism!r}; expected 'N2' or 'R2'.")
 
+    lam = out.get('Lambda')                     # READ, never pop
     if lam is None:
         raise ValueError(
-            "formalism='N2' requires 'Lambda' (|Λ|); set 'Lambda': 0 for Σ "
-            "states. Λ is never inferred (spec §3, §6, §7).")
+            "a set declaring 'formalism' requires 'Lambda' (|Λ|); set "
+            "'Lambda': 0 for Σ. Λ is never inferred (spec §3, §6, §7).")
 
     sextic = _SEXTIC_KEYS.intersection(out)
     if sextic:
         raise ValueError(
-            f"formalism='N2' converter is quartic-truncated; sextic keys "
-            f"{sorted(sextic)} not supported.")
+            f"quartic-truncated converter; sextic keys {sorted(sextic)} "
+            f"not supported.")
+
+    # Quartic-truncated B&C Table 7.2. D(N²)=D(R²) and X_D(N²)=X_D(R²) are
+    # identities at this order, so D / X_D are carried unchanged and serve as
+    # the (direction-independent) shift coefficients. With sgn = −1 for
+    # N²→R² and +1 for R²→N²:
+    #   Be     : Be_out     = Be_in     + sgn·2Λ²·D
+    #   X      : X_out       = X_in      − sgn·Λ²·X_D            (every partner)
+    #   Origin : Origin_out  = Origin_in − sgn·Λ²·Be_in/c − Λ⁴·D/c
+    # Origin is cm⁻¹ while Be/D are MHz ⇒ the 1/c. The Λ⁴D/c term is
+    # direction-independent; the pair round-trips to the identity exactly.
+    sgn = -1 if formalism == 'N2' else 1
+    out['formalism'] = 'R2' if formalism == 'N2' else 'N2'
 
     lam2 = int(lam) ** 2
     if lam2 == 0:
-        return out                            # Σ: convention-independent
+        return out                              # Σ: convention-independent (tag flipped)
 
-    be_n2 = out.get('Be')                     # snapshot N² values (hazard #2)
-    d_n2 = out.get('D')
+    be_in = out.get('Be')                       # snapshot input Be before B-row
+    d = out.get('D')                            # D(N²)=D(R²) at quartic
+    if be_in is not None and d is not None:
+        out['Be'] = be_in + sgn * 2 * lam2 * d
 
-    if be_n2 is not None and d_n2 is not None:
-        out['Be'] = be_n2 - 2 * lam2 * d_n2   # B row
-
-    for x, xd in CENTRIFUGAL_PARTNERS.items():            # generic-X row
+    for x, xd in CENTRIFUGAL_PARTNERS.items():  # convert every verified pair present
         if x in out and xd in out:
-            out[x] = out[x] + lam2 * out[xd]
+            out[x] = out[x] - sgn * lam2 * out[xd]
         elif xd in out and x not in out:
             warnings.warn(
-                f"formalism='N2': '{xd}' present without partner '{x}'; "
-                f"no conversion applied (likely data error).")
+                f"'{xd}' present without partner '{x}'; no conversion applied "
+                f"(likely data error).")
 
-    if 'Origin' in out and be_n2 is not None:             # G row (spec §6.1)
-        d_over_c = (d_n2 / c_cm) if d_n2 is not None else 0.0
+    if 'Origin' in out and be_in is not None:
+        d_over_c = (d / c_cm) if d is not None else 0.0
         out['Origin'] = (out['Origin']
-                         + lam2 * be_n2 / c_cm
+                         - sgn * lam2 * be_in / c_cm
                          - (lam2 ** 2) * d_over_c)
 
     return out

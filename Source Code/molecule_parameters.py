@@ -1,7 +1,7 @@
 import sympy as sy
 import numpy as np
 from sympy.physics.wigner import wigner_3j,wigner_6j,wigner_9j
-from formalism import convert_params_to_engine_R2
+from formalism import convert_formalism
 
 
 def bF_2_b(bF_value,c_value):
@@ -421,7 +421,11 @@ def get_molecule_params(molecule_name, elec_state,vib_state, fermion_or_boson=No
     if overrides:
         merged.update(overrides)
     
-    return convert_params_to_engine_R2(merged, c_cm=c)
+    # Engine wants R²: convert only an explicitly N²-tagged set; R²/untagged
+    # passes through unchanged (copied). convert_formalism flips the tag.
+    if merged.get('formalism') == 'N2':
+        return convert_formalism(merged, c_cm=c)
+    return dict(merged)
 
 
 ### Legacy Code ###
