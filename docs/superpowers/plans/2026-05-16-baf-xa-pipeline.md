@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add ¹³⁸Ba¹⁹F to the molecule database and reproduce arXiv:2511.06986 Table II hyperfine splittings + a no-M A²Π₁/₂→X²Σ⁺ branching table, via the validated RaF-style X–A pipeline.
+**Goal:** Add ¹³⁸Ba¹⁹F to the molecule database, reproduce arXiv:2511.06986 Table II frequencies (the (−)/N=0 line, F→F line-by-line) + the parity-closed laser-cooling branching table (A²Π₁/₂ v=0,J=½,+ → X²Σ⁺ v=0,N=1), via the validated RaF-style X–A pipeline. *(Scope corrected 2026-05-16: BR target is the cooling (+)↔N=1 closed system, not the physically-wrong (−)→N=0,1; see spec §1/§6.)*
 
 **Architecture:** ¹³⁸Ba¹⁹F (I=0 + I=1/2) is structurally identical to RaF boson; the YbOH backend routes both through the molecule-agnostic `'174X000'/'174A000'` dispatch, so the *only* code change is two dicts in `molecule_parameters.py`. Everything else is `MoleculeLevels.initialize_state` + `branching_ratios` calls. Conventions/values are fixed by the approved spec (`docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md`), triple-verified against B&C Eq.(8.511)/p.845 and Steimle PRA 84 012508.
 
@@ -91,7 +91,7 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 
 ### Task 2: BaF X–A no-M validation script + resolve the §3.3 hyperfine residual
 
-**Goal:** A runnable script that asserts the spec §6 discriminators — X²Σ⁺(N=0,J=1/2) F-splitting ≈ 65.6 MHz, A²Π₁/₂(J=1/2,−) F-splitting ≈ 21.8 MHz (both ≤1 MHz) — and a sane no-M A→X branching table. The A-splitting assertion is the empirical gate for the spec §3.3 `'a'`/`'d'` mapping; iterate that mapping (within this task) until green.
+**Goal:** A runnable script asserting the spec §6 checks: (i) X²Σ⁺(N=0,J=½) F-split ≈ 65.6 MHz and A²Π₁/₂(J=½,−) F-split ≈ 21.8 MHz (both ≤1 MHz; the §3.3 `'a'`/`'d'` gate); (ii) the 3 Table II (−)-line components line-by-line, matched F_X→F_A, ≤2 MHz; (iii) the parity-closed cooling-line BR A²Π₁/₂(J=½,+)→X N=1 (Σ→N=1=1.0, Σ→N=0≤1e-3, spreads over the N=1 hf manifold). **Status: implemented + green 2026-05-16** — §3.3 passed first try (21.928 MHz); freqs +0.6/+0.8/+1.4 MHz; parity closure exact (→N=0 ~1e-34).
 
 **Files:**
 - Create: `Jupyter Notebooks/RaX/baf_xa_validate.py`
@@ -116,7 +116,9 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 
 **Steps:**
 
-- [ ] **Step 1: Write the validation script (the failing test)**
+- [x] **Steps 1–5: DONE 2026-05-16.** The committed `Jupyter Notebooks/RaX/baf_xa_validate.py` is the source of truth — refocused to the cooling-line scope (spec §1/§6): the two splitting gates (65.6/21.8 ≤1 MHz), the 3 Table II (−)-line components line-by-line (≤2 MHz; got +0.6/+0.8/+1.4), and the parity-closed cooling BR A²Π₁/₂(J=½,+)→X N=1 (Σ→N=1=1.0, Σ→N=0~1e-34, spreads over the N=1 hf manifold). §3.3 passed first try (`'a'`=29.32, `'d'`=−3.58 → 21.928 MHz; no mapping change needed). The original (−)→N=0,1 script + Steps 2–5 below are **superseded historical scaffolding** (kept for trace; do not re-execute).
+
+<details><summary>superseded original Step 1 script + Steps 2–5 (historical)</summary>
 
 Create `Jupyter Notebooks/RaX/baf_xa_validate.py`:
 
@@ -216,11 +218,13 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 "$GIT" add "Jupyter Notebooks/RaX/baf_xa_validate.py" "Source Code/molecule_parameters.py" && "$GIT" commit -m "test(BaF): Table II 21.8/65.6 MHz validation; resolve A2Pi1/2 hyperfine mapping" && "$GIT" log -1 --oneline
 ```
 
+</details>
+
 ---
 
-### Task 3: BaF X–A analysis notebook (deliverable, mirrors RaF X-A.ipynb)
+### Task 3: BaF X–A analysis notebook (deliverable, cooling-line)
 
-**Goal:** A notebook producing the hyperfine-resolved energies + no-M branching table for the BaF cooling transition, with the three Table II frequencies printed for comparison.
+**Goal:** A notebook producing hyperfine-resolved energies, the **parity-closed cooling-line BR table** (A²Π₁/₂ v=0,J=½,+ → X²Σ⁺ v=0,N=1), and the 3 Table II (−)-line components line-by-line (F_X→F_A). Mirrors the committed `baf_xa_validate.py` structure/scope (not the superseded (−)→N=0,1 form).
 
 **Files:**
 - Create: `Jupyter Notebooks/RaX/BaF X-A.ipynb` (zone has its own CLAUDE.md — analysis artifact, not `Source Code/`)
@@ -233,8 +237,8 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 
 **Acceptance Criteria:**
 - [ ] `BaF X-A.ipynb` exists and executes end-to-end on a fresh kernel with no error
-- [ ] It prints: X(N=0) & A²Π₁/₂(J=1/2,−) F-splittings, the no-M A→X BR table, and the three arXiv:2511.06986 Table II reference frequencies (348666402.6 / 424.4 / 490.0 MHz) alongside computed relative spacings
-- [ ] Generator script `make_baf_xa_nb.py` reproduces the notebook
+- [ ] It prints: X(N=0,J=½) & A²Π₁/₂(J=½,−) F-splittings (65.6/21.8); the 3 Table II (−)-line components computed-vs-reference line-by-line (F1→F0 402.6, F1→F1 424.4, F0→F1 490.0; F0→F0 forbidden); and the parity-closed cooling-line BR table A²Π₁/₂(J=½,+)→X N=1 (showing Σ→N=0≈0)
+- [ ] Generator script `make_baf_xa_nb.py` reproduces the notebook (its cells mirror the committed `baf_xa_validate.py` cooling-line logic; the embedded generator below is to be rewritten to that scope during execution)
 
 **Verify:** `conda run -n Structure jupyter execute "Jupyter Notebooks/RaX/BaF X-A.ipynb"` → exit code 0
 

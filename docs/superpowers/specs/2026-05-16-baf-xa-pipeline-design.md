@@ -12,8 +12,14 @@ RaF-style X–A workflow to produce, for the laser-cooling / eEDM transition:
 - Hyperfine-resolved level energies for **X²Σ⁺(v=0), N=0,1** and
   **A²Π₁/₂(v=0), J=1/2** (both Λ-doublet parities; the spectroscopically
   observed one is the `(−)` component, per paper §IV).
-- Zero-field (`M_values='none'`, "no-M") **branching-ratio table** for
-  A²Π₁/₂(v=0, J=1/2, −) → X²Σ⁺(v=0, N=0,1).
+- Zero-field (`M_values='none'`, "no-M") **branching-ratio table** for the
+  laser-cooling transition **A²Π₁/₂(v=0, J=1/2, +) → X²Σ⁺(v=0, N=1)** — the
+  rotationally-closed system (A `+`-parity decays E1 only to X `−`-parity =
+  odd N=1; N=0/N=2 are `+`-parity, forbidden). *(Scope correction 2026-05-16,
+  validated: the earlier "(−)→N=0,1" target was physically wrong — the (−)/N=0
+  system the paper measured is parity-decoupled from N=1 and is not the cooling
+  cycle. Frequencies are still cross-checked on the (−)/N=0 line, which is what
+  Table II measured.)*
 - A **frequency cross-check** against the measured absolute frequencies in
   arXiv:2511.06986 Table II.
 
@@ -284,10 +290,16 @@ J=1/2 (−):
 **Acceptance:**
 1. No-M pipeline reproduces both splittings to **≤1 MHz** (paper's stated
    absolute accuracy; exp. uncertainties 0.3 MHz).
-2. Absolute frequency within the documented Origin offset (generous; relative
-   structure is the real test).
-3. BRs sum to 1 and are physically sensible (no quantitative intensity match
-   expected — §3.6).
+2. The three Table II (−)-line components reproduced **line-by-line, matched
+   F_X→F_A** (F1→F0, F1→F1, F0→F1; F0→F0 is E1-forbidden), each ≤ ~1.5 MHz
+   (paper abs. acc. ~1 MHz, fixed non-refit literature constants). *Validated
+   2026-05-16: +0.6 / +0.8 / +1.4 MHz.* (Supersedes the old "centroid /
+   documented-offset" check — a centroid that includes the forbidden F0→F0
+   line is not apples-to-apples with Table II's 3 components.)
+3. Cooling-line BR A²Π₁/₂(v=0,J=1/2,+) → X: **parity-closed** — Σ→X N=1 = 1.0,
+   Σ→X N=0 ≤ 1e-3 (rotational closure, the defining property), normalized to
+   1, spread over the X N=1 hyperfine manifold. Magnitudes are idealized
+   single-state values — no quantitative intensity match expected (§3.6).
 4. Sanity: computed A²Π₁/₂ J=1/2 Λ-splitting ≈ 7723 MHz (paper §IV).
 5. Verification gate (CLAUDE.md): tutorial notebook runs end-to-end on a
    fresh kernel — `conda run -n Structure jupyter execute "Jupyter
