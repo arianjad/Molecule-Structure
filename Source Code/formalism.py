@@ -37,12 +37,15 @@ DEFAULT_C_CM = 29979.2458
 # verified pairs only (spec §4.1): add a pair here, no code change. The
 # converter applies the X-row to every pair in this map present in the dict —
 # this map is the sole limit on "convert everything convertible".
-# Candidate NOT added pending physics confirmation: 'ASO' ↔ 'A_D'
-# (BaF A0 carries 'A_D'); needs a B&C-grounded check before inclusion.
+# Every entry is B&C-verified: the parameter enters the effective Hamiltonian
+# as (X + X_D·N²) and is "any molecular parameter other than G, B or D", so it
+# obeys Table 7.2's generic-X row X(N²)=X(R²)−Λ²·X_D (B&C p.376/Table 7.2;
+# operator eqs. p.374). Eq. numbers below are the (X + X_D·N²) operator forms.
 CENTRIFUGAL_PARTNERS = {
-    'p+2q':     'p2q_D',
-    'Gamma_SR': 'Gamma_D',
-    'q_lD':     'q_lD_D',
+    'p+2q':     'p2q_D',     # Λ-doubling p,    B&C eq. 7.190
+    'Gamma_SR': 'Gamma_D',   # spin-rotation γ, B&C eq. 7.189
+    'q_lD':     'q_lD_D',    # Λ-doubling q,    B&C eq. 7.190
+    'ASO':      'A_D',       # spin-orbit A,    B&C eq. 7.187 (verified 2026-05-16)
 }
 
 # Sextic (H-order) keys: unsupported (quartic truncation; codebase has no H).

@@ -184,12 +184,22 @@ def test_roundtrip_involution():
     for k in ('Be', 'D', 'p+2q', 'p2q_D', 'Origin', 'ASO'):
         assert abs(back[k] - src[k]) < 1e-9, (k, back[k], src[k])
 
+def test_aso_ad_partner():
+    # Spin-orbit A obeys the generic-X row (B&C eq. 7.187 / Table 7.2 p.376).
+    out = convert_formalism(
+        {'formalism': 'N2', 'Lambda': 1, 'ASO': 5.0e6, 'A_D': 0.9})
+    assert out['ASO'] == 5.0e6 + 1 * 0.9, out      # A(R²)=A(N²)+Λ²·A_D
+    assert out['A_D'] == 0.9, out                   # X_D unchanged at quartic
+    back = convert_formalism(out)
+    assert abs(back['ASO'] - 5.0e6) < 1e-9, back    # round-trips to N²
+
 if __name__ == '__main__':
     check('r2_to_n2', test_r2_to_n2)
     check('absent_formalism_is_identity', test_absent_formalism_is_identity)
     check('r2_without_lambda_raises', test_r2_without_lambda_raises)
     check('n2_to_r2_flips_tag', test_n2_to_r2_flips_tag_keeps_lambda)
     check('roundtrip_involution', test_roundtrip_involution)
+    check('aso_ad_partner', test_aso_ad_partner)
     check('unknown_formalism_raises', test_unknown_formalism_raises)
     check('n2_without_lambda_raises', test_n2_without_lambda_raises)
     check('caller_dict_not_mutated', test_caller_dict_not_mutated)

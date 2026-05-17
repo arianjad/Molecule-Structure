@@ -2,8 +2,26 @@
 
 **Date:** 2026-05-15
 **Branch:** `fix-for-distrib`
-**Status:** Draft for review (brainstorming → spec gate)
+**Status:** SUPERSEDED (implemented, then redesigned 2026-05-16)
 **Depends on:** `ef06b86` (RaF A0 Be sign fix — the bug this feature makes structurally impossible)
+
+---
+
+> **⚠️ Superseded — read this first.** This spec describes the *as-designed*
+> converter: one-directional (N²→R² only), defaulting absent/`'R2'` to a
+> pass-through, and **stripping** `formalism`/`Lambda` so the engine never saw
+> them. The shipped module diverged on user direction (2026-05-16, commit
+> `fc20867`) and is now **bidirectional** (`convert_formalism`: N²→R² *and*
+> R²→N², exactly invertible), **tag-following** (`formalism` flipped to follow
+> the data, never popped), with `Lambda` read-not-popped and absent-`formalism`
+> → identity. Load call sites convert only when `formalism=='N2'` so the engine
+> stays R²-fed. `CENTRIFUGAL_PARTNERS` gained the B&C-verified `ASO`/`A_D`
+> pair. The §4 Table 7.2 math and §4.1 partner-map design below remain
+> accurate; the §3/§5/§6 contract (strip, default-R2-passthrough,
+> one-directional) does **not**. Authoritative now:
+> [`docs/n2_r2_formalism_converter.md`](../../n2_r2_formalism_converter.md) and
+> the `Source Code/formalism.py` module docstring. This file is kept as the
+> historical design record, not rewritten.
 
 ---
 

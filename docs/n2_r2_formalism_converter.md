@@ -124,9 +124,11 @@ fermion constants. Constants verbatim in
 Table 7.2 (PDF p. 376; book p. 344). Origin is stored in cm⁻¹ while B and D are
 in MHz, so the G-row carries a 1/c factor, c = 29979.2458 MHz/cm⁻¹.
 
-[^partners]: The verified pairs are `p+2q`/`p2q_D`, `Gamma_SR`/`Gamma_D`,
-`q_lD`/`q_lD_D`, declared in `CENTRIFUGAL_PARTNERS`. `ASO`/`A_D` is a candidate
-(BaF A0 carries `A_D`) but is *not* added — it needs a Brown-&-Carrington-grounded
-check before it earns a place in the map. The 2026-05-15 design spec describes
-the earlier one-directional, metadata-stripping contract and is superseded by
-the bidirectional, tag-following module documented here.
+[^partners]: The verified pairs in `CENTRIFUGAL_PARTNERS` are `p+2q`/`p2q_D`
+(B&C eq. 7.190), `Gamma_SR`/`Gamma_D` (eq. 7.189), `q_lD`/`q_lD_D` (eq. 7.190),
+and `ASO`/`A_D` (spin–orbit, eq. 7.187 — verified against B&C 2026-05-16). Each
+enters the effective Hamiltonian as (X + X_D·N²) and is "any molecular parameter
+other than G, B or D", so each obeys Table 7.2's generic-X row, X(N²) =
+X(R²) − Λ²·X_D (B&C Table 7.2, PDF p. 376 / book p. 344). The 2026-05-15 design
+spec describes the earlier one-directional, metadata-stripping contract; it now
+carries a superseded banner pointing to the bidirectional module documented here.
