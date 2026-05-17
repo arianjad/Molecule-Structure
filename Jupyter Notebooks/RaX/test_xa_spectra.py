@@ -53,4 +53,41 @@ n0_mask = avg_df['g_N'].astype(float) == 0
 assert avg_df.loc[n0_mask, 'BR'].sum() <= 1e-3, avg_df.loc[n0_mask, 'BR'].sum()
 print("T3 OK  sum(BR)=%.6f  N0=%.1e" % (avg_df['BR'].sum(),
       avg_df.loc[n0_mask, 'BR'].sum()))
+# ---- T4: broaden / doppler_fwhm / plot_spectrum ----
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+fw = xs.doppler_fwhm(T=4.0, mass_amu=157.0, nu0=348.66e12)
+ref = 2*np.sqrt(2*np.log(2)) * (348.66e12/299792458.0) * np.sqrt(
+    1.380649e-23*4.0/(157.0*1.66053906660e-27))
+assert abs(fw - ref)/ref < 1e-6, (fw, ref)
+
+# area-normalized Gaussian: integral ~ total strength
+lines = xs.line_list(g, e, g.select_q({'N': 1}), e.select_q({'J': 0.5}, parity='+'),
+                     origin=e.parameters['Origin'])
+x, y, (cp, cs) = xs.broaden(lines, shape='gaussian', fwhm=5.0,
+                            norm='area', cluster=False)
+area = np.trapz(y, x)
+assert abs(area - lines['strength'].sum()) / lines['strength'].sum() < 0.01, area
+# peak-normalized single line peaks at its strength
+one = lines.iloc[[0]]
+xx, yy, _ = xs.broaden(one, shape='gaussian', fwhm=5.0, norm='peak', cluster=False)
+assert abs(yy.max() - one['strength'].iloc[0]) / one['strength'].iloc[0] < 1e-3
+# clustering merges co-frequent lines
+import pandas as pd
+dup = pd.DataFrame({'freq': [100.0, 100.0, 300.0], 'strength': [1.0, 2.0, 4.0]})
+_, _, (mp, ms) = xs.broaden(dup, shape='lorentzian', fwhm=10.0,
+                            cluster=True, cluster_thresh=1.0)
+assert len(mp) == 2 and abs(ms[0] - 3.0) < 1e-9 and abs(ms[1] - 4.0) < 1e-9, (mp, ms)
+# plot_spectrum smoke (sticks + broadened + experimental)
+fig, ax = plt.subplots()
+expt = dict(freq=np.array([0.0, 50.0]), signal=np.array([1.0, 2.0]),
+            err=np.array([0.1, 0.1]), offset=0, tweak=0, yscale=1.0)
+ax2 = xs.plot_spectrum(lines=lines, ax=ax, sticks=True,
+                       broaden_kw=dict(shape='voigt', fwhm=5.0, lorentz_fwhm=2.0),
+                       experimental=expt, label='Sim')
+assert ax2 is ax and len(ax.lines) >= 1
+plt.close(fig)
+print("T4 OK  doppler=%.3f MHz" % (fw/1e6))
 print("T2 OK", len(ll), "rows; hits", hits)

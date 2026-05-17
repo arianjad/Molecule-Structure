@@ -159,3 +159,128 @@ def averaged_branching(Ground, Excited, e_select, *,
     for lab, col in zip(labels, cols):
         per_df[lab] = col
     return avg_df, per_df
+
+
+_FWHM_SIG = 2.0 * np.sqrt(2.0 * np.log(2.0))     # FWHM = sigma * this (Gaussian)
+_KB = 1.380649e-23
+_AMU = 1.66053906660e-27
+_C_SI = 299792458.0
+
+
+def doppler_fwhm(T, mass_amu, nu0):
+    """Doppler FWHM (thesis Eq.3.15). Returned in nu0's frequency unit."""
+    sigma = (nu0 / _C_SI) * np.sqrt(_KB * T / (mass_amu * _AMU))
+    return _FWHM_SIG * sigma
+
+
+def _cluster(pos, s, thr):
+    pos = np.asarray(pos, float); s = np.asarray(s, float)
+    o = np.argsort(pos); pos, s = pos[o], s[o]
+    if len(pos) == 0:
+        return pos, s
+    cut = np.where(np.diff(pos) >= thr)[0] + 1
+    gp, gs = np.split(pos, cut), np.split(s, cut)
+    return (np.array([p.mean() for p in gp]),
+            np.array([q.sum() for q in gs]))
+
+
+def broaden(lines, *, shape='gaussian', fwhm=None, lorentz_fwhm=None,
+            T=None, mass_amu=None, nu0=None, x=None, norm='area',
+            cluster=True, cluster_thresh=None, n_per_fwhm=20, pad=5):
+    """Convolve a line list to a curve.
+
+    shape : 'gaussian' | 'lorentzian' | 'voigt'
+    fwhm  : explicit FWHM, OR omit and pass (T, mass_amu, nu0) for Doppler.
+            For 'voigt', `fwhm` is the Gaussian (Doppler) FWHM and
+            `lorentz_fwhm` the Lorentzian FWHM.
+    norm  : 'area' (int g dnu = 1) | 'peak' (g_hat(0)=1)   (thesis p.111)
+    cluster : merge lines closer than cluster_thresh (default fwhm/2).
+    Returns (x, y_total, (component_pos, component_strength)).
+    """
+    if isinstance(lines, pd.DataFrame):
+        pos = lines['freq'].to_numpy(float)
+        s = lines['strength'].to_numpy(float)
+    else:
+        pos, s = np.asarray(lines[0], float), np.asarray(lines[1], float)
+    if fwhm is None:
+        if None in (T, mass_amu, nu0):
+            raise ValueError("pass fwhm, or all of (T, mass_amu, nu0)")
+        fwhm = doppler_fwhm(T, mass_amu, nu0)
+    if len(pos) == 0:
+        xx = np.array([]) if x is None else np.asarray(x, float)
+        return xx, np.zeros_like(xx), (pos, s)
+    if cluster:
+        thr = fwhm / 2.0 if cluster_thresh is None else cluster_thresh
+        pos, s = _cluster(pos, s, thr)
+    if x is None:
+        lo, hi = pos.min() - pad * fwhm, pos.max() + pad * fwhm
+        n = max(int(np.ceil((hi - lo) / fwhm * n_per_fwhm)) + 1, 2)
+        x = np.linspace(lo, hi, n)
+    x = np.asarray(x, float)
+
+    sig = fwhm / _FWHM_SIG
+    if shape == 'gaussian':
+        def k(d):
+            g = np.exp(-0.5 * (d / sig) ** 2)
+            return g / (sig * np.sqrt(2 * np.pi)) if norm == 'area' else g
+    elif shape == 'lorentzian':
+        hw = fwhm / 2.0
+        def k(d):
+            L = hw ** 2 / (d ** 2 + hw ** 2)             # peak = 1
+            return (L / (np.pi * hw)) if norm == 'area' else L
+    elif shape == 'voigt':
+        from scipy.special import voigt_profile
+        lf = fwhm if lorentz_fwhm is None else lorentz_fwhm
+        gam = lf / 2.0
+        v0 = voigt_profile(0.0, sig, gam)
+        def k(d):
+            v = voigt_profile(d, sig, gam)               # area-normalized
+            return v if norm == 'area' else v / v0
+    else:
+        raise ValueError("shape must be gaussian|lorentzian|voigt")
+
+    y = np.zeros_like(x)
+    for p, a in zip(pos, s):
+        y = y + a * k(x - p)
+    return x, y, (pos, s)
+
+
+def plot_spectrum(lines=None, *, Ground=None, Excited=None,
+                  g_idx=None, e_idx=None, ax=None, sticks=True,
+                  broaden_kw=None, normalize=True, experimental=None,
+                  label='Simulation', **line_list_kw):
+    """Plot sticks and/or a broadened curve, with an optional experiment.
+
+    experimental : dict(freq, signal, err=None, offset=0, tweak=0, yscale=1)
+        generalizes the BaF_spectrum_plot.py offset/tweak/yscale overlay.
+    """
+    import matplotlib.pyplot as plt
+    if lines is None:
+        lines = line_list(Ground, Excited, g_idx, e_idx, **line_list_kw)
+    if ax is None:
+        ax = plt.gca()
+    if len(lines):
+        smax = lines['strength'].max()
+        norm_s = (lambda v: v / smax) if (normalize and smax > 0) else (lambda v: v)
+        if broaden_kw:
+            x, y, _ = broaden(lines, **broaden_kw)
+            if normalize and y.size and y.max() > 0:
+                y = y / y.max()
+            ax.plot(x, y, label=label)
+        if sticks:
+            ax.vlines(lines['freq'].to_numpy(),
+                      0.0, norm_s(lines['strength'].to_numpy()),
+                      color='0.4', alpha=0.7, linewidth=1)
+    if experimental is not None:
+        ex = experimental
+        xd = np.asarray(ex['freq'], float) + ex.get('tweak', 0)
+        sg = np.asarray(ex['signal'], float)
+        yd = sg / sg.max() * ex.get('yscale', 1.0)
+        if ex.get('err') is not None:
+            er = np.asarray(ex['err'], float) / sg.max() * ex.get('yscale', 1.0)
+            ax.errorbar(xd, yd, yerr=er, linestyle='none', marker='o',
+                        label='Data')
+        else:
+            ax.plot(xd, yd, linestyle='none', marker='o', label='Data')
+    ax.legend(loc='best')
+    return ax
