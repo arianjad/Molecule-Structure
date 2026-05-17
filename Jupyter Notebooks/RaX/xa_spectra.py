@@ -117,12 +117,16 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
 
 def averaged_branching(Ground, Excited, e_select, *,
                         field=(0.0, 0.0), normalize=True):
-    """Branching ratio averaged over every excited sublevel in `e_select`.
+    """Branching ratio averaged over every excited M_F sublevel in `e_select`.
 
-    Thesis Eq.3.4 generalized to hyperfine: for each excited eigenstate
-    (every F and, in an M basis, every M_F) take the BR distribution over
-    the ground manifold, normalize it, then average with EQUAL weight per
-    excited sublevel (the (2J'+1)^-1 / N_excited orientation average).
+    Thesis Eq.3.4 orientation average, hyperfine-generalized: each excited
+    level's normalized BR distribution is averaged with EQUAL weight per
+    excited M_F sublevel. In an M-resolved build every M_F is its own
+    eigenstate (weight 1 each); in a no-M build each selected eigenstate is
+    a whole F' level carrying weight (2F'+1) (its M_F multiplicity), so F'
+    enters (2F'+1)-weighted -- the (2J'+1)(2I+1)^-1 isotropic average, NOT
+    equal-per-F'. branching_ratios columns are F'-independent in total
+    (each ~Gamma), so the (2F'+1) must be applied explicitly here.
 
     Returns
     -------
@@ -132,18 +136,23 @@ def averaged_branching(Ground, Excited, e_select, *,
     Ez, Bz = field
     BR = branching_ratios(Ground, Excited, Ez, Bz)              # (nG, nE)
     e_select = np.asarray(e_select, dtype=int)
-    cols, labels = [], []
+    mres = _has_M(Excited)            # M-resolved: each M_F is its own eigenstate
+    cols, labels, wts = [], [], []
     for ie in e_select:
         col = BR[:, ie].astype(float)
         tot = col.sum()
         if tot <= 0:
             raise ValueError(f"excited idx {ie} has zero total decay")
         cols.append(col / tot if normalize else col)
+        Fp = float(_dom(Excited, ie, 'F'))
+        wts.append(1.0 if mres else (2.0 * Fp + 1.0))           # M_F multiplicity
         labels.append("e[J=%s,F=%s,%s]" % (
             _dom(Excited, ie, 'J'), _dom(Excited, ie, 'F'),
             _PARITY[Excited.parities[ie]]))
     P = np.vstack(cols).T                                       # (nG, nSel)
-    avg = P.mean(axis=1)                                        # equal weight
+    w = np.asarray(wts, float)
+    w = w / w.sum()
+    avg = P @ w                            # equal weight per M_F sublevel (Eq.3.4)
 
     g_all = np.arange(Ground.size)
     avg_df = pd.DataFrame({

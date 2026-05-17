@@ -1,6 +1,6 @@
 # X–A spectra + averaged-BR toolkit — design
 
-Status: implemented & validated 2026-05-17 (plan docs/superpowers/plans/2026-05-17-xa-spectra-toolkit.md; gates: test_xa_spectra/baf_xa_validate/tutorial all exit 0).
+Status: implemented & validated 2026-05-17 (plan docs/superpowers/plans/2026-05-17-xa-spectra-toolkit.md; gates: test_xa_spectra/baf_xa_validate/tutorial all exit 0). Post-review fix 2026-05-17: averaged_branching now M_F-degeneracy ((2F′+1)) weighted — see §3 implementation note.
 Supersedes nothing. Builds on the validated BaF X–A pipeline
 (`docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md`).
 
@@ -100,6 +100,17 @@ both dropped. The explicit M-sum / reduced-ME path replaces them.
 The (2J′+1)⁻¹ is the average over initial (excited) orientations. `averaged_
 branching` generalizes this to hyperfine: average the per-excited-sublevel
 normalized BR over every excited F and M_F with equal weight per sublevel.
+
+> **Implementation note (corrected 2026-05-17, post-review).** "Equal weight
+> per *sublevel*" means per M_F sublevel. `branching_ratios` no-M columns are
+> F′-independent in total (each excited level decays at ~Γ), so equal weight
+> per *F′ eigenstate* is WRONG — it drops the (2F′+1) M_F multiplicity. The
+> implementation now weights each selected excited eigenstate by its M_F
+> count: (2F′+1) in a no-M build, 1 when M-resolved (the 2F′+1 is then
+> realized by 2F′+1 separate eigenstates). This is the (2J′+1)(2I+1)⁻¹
+> isotropic orientation average. For BaF A²Π₁/₂(J=½,+) the J=3/2 F=1 repump
+> branching changes 0.308 → 0.155 (factor ~2). Guarded by test_xa_spectra T3
+> (independent (2F′+1)-weighted recompute + anti-regression assert).
 
 **Lineshape.** Thesis Eq. 3.12: σ(Δ) ∝ r_ij·D_ge²·g(Δ) — strength × normalized
 lineshape. Doppler (Eqs. 3.14–3.15): Γ_std,D = (ω₀/c)·√(k_BT/M),

@@ -45,9 +45,19 @@ with warnings.catch_warnings(record=True) as w:
 exp = e.select_q({'J': 0.5}, parity='+')                # cooling excited state
 avg_df, per_df = xs.averaged_branching(g, e, exp)
 assert abs(avg_df['BR'].sum() - 1.0) < 1e-9, avg_df['BR'].sum()
-# equal-weight mean of per-sublevel columns reproduces the average
-mean_cols = per_df[[col for col in per_df.columns if col != 'ground']].mean(axis=1)
-assert np.allclose(avg_df['BR'].values, mean_cols.values, atol=1e-12)
+# averaged BR == M_F-degeneracy-weighted mean of per-sublevel normalized cols
+# (thesis Eq.3.4 orientation avg; no-M build -> weight (2F'+1) per F' eigenstate)
+_BRm = branching_ratios(g, e, 0, 0)
+_nc = np.array([_BRm[:, k] / _BRm[:, k].sum() for k in exp])
+_Fv = np.array([float(xs._dom(e, k, 'F')) for k in exp])
+_w = (2 * _Fv + 1); _w = _w / _w.sum()
+_expected = _nc.T @ _w
+assert np.allclose(avg_df['BR'].values, _expected, atol=1e-12), \
+    np.abs(avg_df['BR'].values - _expected).max()
+# guard against regression to the equal-per-F' bug
+_plain = _nc.mean(axis=0)
+assert not np.allclose(avg_df['BR'].values, _plain, atol=1e-6), \
+    "averaged_branching regressed to equal-per-F' (must be (2F'+1)-weighted)"
 # parity closure: X N=0 gets ~0
 n0_mask = avg_df['g_N'].astype(float) == 0
 assert avg_df.loc[n0_mask, 'BR'].sum() <= 1e-3, avg_df.loc[n0_mask, 'BR'].sum()
