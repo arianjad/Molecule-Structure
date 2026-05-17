@@ -41,4 +41,16 @@ with warnings.catch_warnings(record=True) as w:
     empty = xs.line_list(g, e, np.array([], dtype=int), exm)
     assert len(empty) == 0 and list(empty.columns) == xs.LINE_COLUMNS
     assert any(issubclass(x.category, UserWarning) for x in w)
+# ---- T3: averaged_branching == thesis Eq.3.4 generalization ----
+exp = e.select_q({'J': 0.5}, parity='+')                # cooling excited state
+avg_df, per_df = xs.averaged_branching(g, e, exp)
+assert abs(avg_df['BR'].sum() - 1.0) < 1e-9, avg_df['BR'].sum()
+# equal-weight mean of per-sublevel columns reproduces the average
+mean_cols = per_df[[col for col in per_df.columns if col != 'ground']].mean(axis=1)
+assert np.allclose(avg_df['BR'].values, mean_cols.values, atol=1e-12)
+# parity closure: X N=0 gets ~0
+n0_mask = avg_df['g_N'].astype(float) == 0
+assert avg_df.loc[n0_mask, 'BR'].sum() <= 1e-3, avg_df.loc[n0_mask, 'BR'].sum()
+print("T3 OK  sum(BR)=%.6f  N0=%.1e" % (avg_df['BR'].sum(),
+      avg_df.loc[n0_mask, 'BR'].sum()))
 print("T2 OK", len(ll), "rows; hits", hits)

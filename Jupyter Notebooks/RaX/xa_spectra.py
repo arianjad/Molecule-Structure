@@ -113,3 +113,49 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
         return pd.DataFrame(columns=LINE_COLUMNS)
     return pd.DataFrame(rows, columns=LINE_COLUMNS).sort_values(
         'freq').reset_index(drop=True)
+
+
+def averaged_branching(Ground, Excited, e_select, *,
+                        field=(0.0, 0.0), normalize=True):
+    """Branching ratio averaged over every excited sublevel in `e_select`.
+
+    Thesis Eq.3.4 generalized to hyperfine: for each excited eigenstate
+    (every F and, in an M basis, every M_F) take the BR distribution over
+    the ground manifold, normalize it, then average with EQUAL weight per
+    excited sublevel (the (2J'+1)^-1 / N_excited orientation average).
+
+    Returns
+    -------
+    avg_df : DataFrame [g_N, g_J, g_F, g_par, BR, g_idx]  (sum BR == 1)
+    per_df : DataFrame ['ground' label + one column per excited sublevel]
+    """
+    Ez, Bz = field
+    BR = branching_ratios(Ground, Excited, Ez, Bz)              # (nG, nE)
+    e_select = np.asarray(e_select, dtype=int)
+    cols, labels = [], []
+    for ie in e_select:
+        col = BR[:, ie].astype(float)
+        tot = col.sum()
+        if tot <= 0:
+            raise ValueError(f"excited idx {ie} has zero total decay")
+        cols.append(col / tot if normalize else col)
+        labels.append("e[J=%s,F=%s,%s]" % (
+            _dom(Excited, ie, 'J'), _dom(Excited, ie, 'F'),
+            _PARITY[Excited.parities[ie]]))
+    P = np.vstack(cols).T                                       # (nG, nSel)
+    avg = P.mean(axis=1)                                        # equal weight
+
+    g_all = np.arange(Ground.size)
+    avg_df = pd.DataFrame({
+        'g_N': [_dom(Ground, i, 'N') for i in g_all],
+        'g_J': [_dom(Ground, i, 'J') for i in g_all],
+        'g_F': [_dom(Ground, i, 'F') for i in g_all],
+        'g_par': [_PARITY[Ground.parities[i]] for i in g_all],
+        'BR': avg, 'g_idx': g_all})
+    per_df = pd.DataFrame({'ground': [
+        "X N=%s J=%s F=%s%s" % (_dom(Ground, i, 'N'), _dom(Ground, i, 'J'),
+                                _dom(Ground, i, 'F'),
+                                _PARITY[Ground.parities[i]]) for i in g_all]})
+    for lab, col in zip(labels, cols):
+        per_df[lab] = col
+    return avg_df, per_df
