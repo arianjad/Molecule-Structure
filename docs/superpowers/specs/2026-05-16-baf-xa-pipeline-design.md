@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-16
 **Branch:** `fix-for-distrib`
-**Status:** design — awaiting user review before `writing-plans`
+**Status:** implemented & validated 2026-05-16 (Tasks 1–4 complete; baf_xa_validate.py + tutorial gate green; re-verified against the refactored bidirectional converter)
 
 ## 1. Goal & scope
 
@@ -261,14 +261,24 @@ ship. `muE` values are now resolved (Steimle [24] Table V).
 
 ## 5. The `Origin` key
 
-RaF A0 `'Origin'` = `Π₁/₂ electronic origin + 0·ASO + Be_X/c` ("B offset due
-to code being R²"). The paper itself flags (§V) a **0.21 cm⁻¹** deviation of
-T₀,₀ from Steimle [24] "attributed to different definitions in the effective
-Hamiltonian" — i.e. the absolute origin is convention-sensitive at ~B. Build
-`'Origin'` on the RaF A0 template using arXiv:2511.06986 T₀,₀; **document the
-known absolute offset**; validate on **relative** splittings (§6), with a
-generous absolute-origin tolerance. Exact construction resolved during
-implementation against the RaF A0 formula + the Table II absolute frequency.
+**RESOLVED 2026-05-16 (paper-verified, user decision).** Reading
+arXiv:2511.06986 directly: Eq. (3) writes `H_rot = B·R²` *symbolically*, but
+the fit (Table III, "This work") is **pgopher-default N²** — corroborated by
+the p.8 statement that this work's T₀,₀ differs from Steimle [24] by
+**0.21 cm⁻¹ ≈ B_A** ("different definitions in the effective Hamiltonian"),
+the signature of the N²↔R² band-origin (Λ²B) convention difference. The code's
+rotational operator is R²-form (`B·(N²−Λ²)`), so:
+
+`Origin = T₀,₀ + Be_A·Λ²/c = 11946.109609 + 6347.847/c`
+
+— the G-row written **by hand** with **this state's own B** (Be_A=6347.847),
+**not** `formalism:'N2'` (a whole-dict switch would mis-apply −2Λ²D to the
+R²-form Be/p+2q, §3.4), and **not** Be_X=6473.9588 (Be_X was the +126 MHz bug
+class the converter/RaF-migration eliminated). The earlier "document a known
+offset / build on the RaF +B/c template" framing was a *misread* of the p.8
+paper-vs-Steimle note — there is no offset to document; the construction is
+exact. Validated end-to-end against Table II: the three (−)/N=0 components
+reproduce to **+0.6 / +0.8 / +1.4 MHz** line-by-line (§6.2).
 
 ## 6. Verification plan
 
@@ -311,18 +321,28 @@ do not tune blindly.
 
 ## 7. Open items / risks
 
-1. **§3.3 A²Π₁/₂ `'a'` scalar** — RaF-pattern candidate `a−½(b+c)=29.32`;
-   confirmed only by the 21.8 MHz Table II check. *Highest-risk item.*
+1. **§3.3 A²Π₁/₂ `'a'` scalar — RESOLVED 2026-05-16.** RaF-pattern
+   `a−½(b+c)=29.32` (+ `d=−3.58`) reproduced the Table II 21.8 MHz splitting
+   **on the first try** (computed 21.928 MHz, Δ0.13 ≤1 MHz) — no `'a'`/`'d'`
+   mapping change needed. The flagged highest-risk item passed clean.
 2. **`muE` — RESOLVED.** Steimle [24] Table V (read citation-grade):
    μ(X²Σ⁺)=**3.170(3) D**, μ(A²Π₁/₂)=**1.50(2) D** (A²Π₃/₂=1.31(2) D, out of
    scope). Entered as `<D>*0.503412`. Not exercised by the freq/BR validation;
    required for field-on use.
-3. **`'Origin'` construction** — convention offset documented (§5); resolve
-   exact formula vs RaF A0 during implementation.
-4. **YbOH-backend routing** — confirm BaF dispatch keys
-   (`molecule_library_class.py`) follow the RaF boson path.
-5. **`A_D`, `p2q_D` consumption** — confirm the boson A²Π builder consumes
-   these keys (builder shows `p2q_D` and `D`; verify `A_D`).
+3. **`'Origin'` construction — RESOLVED 2026-05-16.** Paper-verified N²
+   convention → `11946.109609 + 6347.847/c` (Be_A G-row by hand, not
+   `formalism:'N2'`, not Be_X). See §5; validated +0.6/+0.8/+1.4 MHz vs
+   Table II.
+4. **YbOH-backend routing — CONFIRMED.** BaF boson uses the generic
+   `'174X000'/'174A000'` dispatch; Task 1 added only the two dicts, no
+   `molecule_library_class.py` change, and the verify + tutorial gate pass.
+5. **`A_D`, `p2q_D` consumption — partial.** Pipeline is green with both
+   present (`p2q_D=−0.00699`, `A_D=0.93`); `p2q_D` is consumed (builder shows
+   it). `A_D` builder-consumption *not independently audited* — N≤1 does not
+   exercise centrifugal `A_D`; kept for high-J completeness (§3.5), low risk.
+   Note: the parallel converter refactor (`a5c8573`) added an ASO↔A_D
+   centrifugal partner to the converter — **irrelevant to BaF A0** (no
+   `formalism` key ⇒ pass-through; re-verified green post-refactor).
 6. **Unit-entry style — RESOLVED (user).** Use the arXiv:2511.06986 Table III
    **MHz column directly**, cm⁻¹ in comment; `muE` keeps `<D>*0.503412`.
    Diverges from RaF's `<cm⁻¹>*c` style by explicit user choice.

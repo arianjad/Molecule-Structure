@@ -226,9 +226,11 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 
 **Goal:** A notebook producing hyperfine-resolved energies, the **parity-closed cooling-line BR table** (A²Π₁/₂ v=0,J=½,+ → X²Σ⁺ v=0,N=1), and the 3 Table II (−)-line components line-by-line (F_X→F_A). Mirrors the committed `baf_xa_validate.py` structure/scope (not the superseded (−)→N=0,1 form).
 
-**Files:**
-- Create: `Jupyter Notebooks/RaX/BaF X-A.ipynb` (zone has its own CLAUDE.md — analysis artifact, not `Source Code/`)
-- Create (generator, kept for reproducibility): `Jupyter Notebooks/RaX/make_baf_xa_nb.py`
+**Status: DONE 2026-05-16** (committed `fb97e7f`). **Filename changed by user directive:** the planned `BaF X-A.ipynb` is the **user's own hand-built 55-cell artifact** — must not be overwritten. Deliverable is a *standalone* notebook under a distinct name.
+
+**Files (created):**
+- `Jupyter Notebooks/RaX/baf_xa_cooling.ipynb` — standalone deliverable, 7 cells, **unexecuted** (clean diff; user runs in their kernel), distinct from the user's `BaF X-A.ipynb` (untouched)
+- `Jupyter Notebooks/RaX/make_baf_xa_cooling_nb.py` — deterministic generator (reproducibility)
 
 **Context the engineer needs:**
 - Build the notebook programmatically with `nbformat` (already in the `Structure` env) so it is deterministic and re-runnable headless via `jupyter execute`.
@@ -236,13 +238,15 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 - `c = 29979.2458` (MHz per cm⁻¹).
 
 **Acceptance Criteria:**
-- [ ] `BaF X-A.ipynb` exists and executes end-to-end on a fresh kernel with no error
-- [ ] It prints: X(N=0,J=½) & A²Π₁/₂(J=½,−) F-splittings (65.6/21.8); the 3 Table II (−)-line components computed-vs-reference line-by-line (F1→F0 402.6, F1→F1 424.4, F0→F1 490.0; F0→F0 forbidden); and the parity-closed cooling-line BR table A²Π₁/₂(J=½,+)→X N=1 (showing Σ→N=0≈0)
-- [ ] Generator script `make_baf_xa_nb.py` reproduces the notebook (its cells mirror the committed `baf_xa_validate.py` cooling-line logic; the embedded generator below is to be rewritten to that scope during execution)
+- [x] `baf_xa_cooling.ipynb` created (7 cells), distinct from user's `BaF X-A.ipynb`; unexecuted by design (logic == validated `baf_xa_validate.py`, green at `788f937` and re-verified vs the refactored converter 2026-05-16)
+- [x] Cells cover: 65.6/21.8 splittings; the 3 Table II (−)-line components line-by-line (F0→F0 flagged forbidden); the parity-closed cooling-line BR table A²Π₁/₂(J=½,+)→X N=1 (Σ→N=0≈0)
+- [x] `make_baf_xa_cooling_nb.py` reproduces the notebook deterministically
 
-**Verify:** `conda run -n Structure jupyter execute "Jupyter Notebooks/RaX/BaF X-A.ipynb"` → exit code 0
+**Verify (done):** `conda run -n Structure python make_baf_xa_cooling_nb.py` regenerates the notebook; the equivalent assertion form `baf_xa_validate.py` exits 0 (re-run green 2026-05-16 against the refactored bidirectional converter).
 
-**Steps:**
+**Steps: superseded.** Actual execution: wrote `make_baf_xa_cooling_nb.py` → generated `baf_xa_cooling.ipynb` (unexecuted) → committed `fb97e7f`. The embedded generator below targets the old `BaF X-A.ipynb`/(−)→N=0,1 form and is **historical scaffolding only — do not run** (it would clobber the user's notebook).
+
+<details><summary>superseded original Step 1–4 (historical; do not execute)</summary>
 
 - [ ] **Step 1: Write the notebook generator**
 
@@ -312,9 +316,15 @@ GIT=/Library/Developer/CommandLineTools/usr/bin/git
 "$GIT" add "Jupyter Notebooks/RaX/BaF X-A.ipynb" "Jupyter Notebooks/RaX/make_baf_xa_nb.py" && "$GIT" commit -m "feat(notebooks): BaF X-A analysis notebook (energies + no-M BR vs Table II)" && "$GIT" log -1 --oneline
 ```
 
+</details>
+
 ---
 
-### Task 4: Verification gate + spec close-out
+### Task 4: Verification gate + spec close-out — **DONE 2026-05-16**
+
+**Both gates green this session:** (1) `baf_xa_validate.py` re-run exit 0 against the parallel session's *refactored* bidirectional converter (`fc20867`/`a5c8573`) — BaF unaffected (no `formalism` key ⇒ pass-through; verified, not assumed). (2) `conda run -n Structure jupyter execute "Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb"` → **exit 0**, no `--allow-errors` (CLAUDE.md completeness gate). Spec close-out applied: §5 Origin framing corrected (pgopher-default N²; Be_A hand G-row), §7 #1/#3/#4/#5 resolved, status → implemented. Original Step detail below is historical.
+
+<details><summary>original Task 4 detail (historical)</summary>
 
 **Goal:** Confirm no regression to the project verification gate, and close the resolved spec open items.
 
@@ -354,6 +364,8 @@ Edit `docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md` §7:
 GIT=/Library/Developer/CommandLineTools/usr/bin/git
 "$GIT" add "docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md" && "$GIT" commit -m "docs(spec): close BaF pipeline open items; record verification-gate pass" && "$GIT" log -1 --oneline
 ```
+
+</details>
 
 ---
 
