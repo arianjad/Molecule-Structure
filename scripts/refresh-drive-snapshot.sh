@@ -11,9 +11,13 @@
 #   scripts/refresh-drive-snapshot.sh        # preview (rsync -n), writes nothing
 #   scripts/refresh-drive-snapshot.sh --go   # apply
 #
-# --delete mirrors deletions, but excluded paths are NEVER deleted on the
-# receiver (no --delete-excluded), so the Drive-only heavies survive:
-# Figures/ (~539 MB), thinking/ (scratch), *.zip archives, README.SNAPSHOT.md.
+# ADDITIVE ONLY — no --delete. The refresh overwrites tracked code with the
+# working-copy version and adds new files. It NEVER deletes anything on Drive,
+# so all gitignored Drive-only content (Old Code/, Figures/, RaX figures &
+# reports, baselines, *.zip, thinking/, this README) is untouched. Files you
+# removed/renamed in the repo will linger as stale copies on the snapshot —
+# prune those by hand if you ever want a clean mirror (deliberately not
+# automated: a wrong --delete here is irreversible Drive data loss).
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/"
@@ -33,10 +37,12 @@ echo "DST (Drive snapshot): $DST"
 if [[ -n "$DRYRUN" ]]; then
   echo ">>> DRY RUN — nothing will be written. Re-run with --go to apply."
 else
-  echo ">>> APPLYING (--go)."
+  echo ">>> APPLYING (--go). Additive only; no deletions on Drive."
 fi
 
-rsync -a --delete $DRYRUN --itemize-changes \
+# No --delete by design. Excludes below only skip pointless-to-copy cruft;
+# they have no destructive effect since nothing is ever removed on the receiver.
+rsync -a $DRYRUN --itemize-changes \
   --exclude='.git' \
   --exclude='.DS_Store' \
   --exclude='**/.DS_Store' \
@@ -46,14 +52,11 @@ rsync -a --delete $DRYRUN --itemize-changes \
   --exclude='.ipynb_checkpoints/' \
   --exclude='**/.ipynb_checkpoints/' \
   --exclude='.claude/' \
-  --exclude='Figures/' \
-  --exclude='thinking/' \
-  --exclude='*.zip' \
   --exclude='README.SNAPSHOT.md' \
   "$SRC" "$DST"
 
 if [[ -n "$DRYRUN" ]]; then
   echo ">>> DRY RUN complete. Re-run with --go to apply."
 else
-  echo ">>> Snapshot refreshed."
+  echo ">>> Snapshot refreshed (additive; no Drive files deleted)."
 fi
