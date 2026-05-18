@@ -2,6 +2,12 @@
 
 Personal fork (`arianjad/Molecule-Structure`). The codebase at `~/Documents/Molecular-Structure/` is a historical lab fork (HutzlerLab) — separate codebase, not authoritative here. Don't import from it or cross-reference unprompted.
 
+## Working copy & Drive snapshot
+
+Git working copy (day-to-day): **`~/Code/Molecule-Structure`** — clone of `arianjad/Molecule-Structure`; GitHub is the source of truth. Do all edits and git here.
+
+The Google Drive path (`…/EMA-data-server/RaX/Personal/ArianJadbabaie/Code/Molecule-Structure`) is a **git-less snapshot** of known-good code, decoupled 2026-05-18 — no `.git/`. Never run git there: it falls through to the `~/.git` home-config repo (which ignores the Drive tree, so it's inert, but it's still the wrong repo). Refresh the snapshot from the working copy with `scripts/refresh-drive-snapshot.sh` (dry-run by default; `--go` to apply). `Data/` and `From Others/` are gitignored and live in both; `Figures/`, `thinking/`, and `*.zip` are Drive-only and preserved across refreshes.
+
 ## Working frame
 
 Define a molecule Hamiltonian → diagonalize → explore properties. Spectra, Stark/Zeeman maps, level diagrams, and PT-violating shifts are all downstream.
