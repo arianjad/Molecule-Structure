@@ -140,3 +140,36 @@ assert ax2 is ax and len(ax.lines) >= 1
 plt.close(fig)
 print("T4 OK  doppler=%.3f MHz" % (fw/1e6))
 print("T2 OK", len(ll), "rows; hits", hits)
+
+# ---- Tclose: excited-state decay normalization over ALL E1 paths ----
+#   Sum the emission observable over the COMPLETE E1-allowed ground manifold.
+#   no-M : per-excited colsum == 1 (branching already normalized; thesis
+#          Eq.3.6) -> a SUBSET of paths therefore sums to <1.
+#   M=all: per-excited-M' colsum == 1/(2F'+1) (the average over the excited
+#          (2F'+1)); the (2F'+1) M' of a given F' sum back to 1. Both bases
+#          give unit closure after /colsum. Single vibronic band only
+#          (vibrational/FCF branching is separate, thesis Eq.3.6).
+def _cl(Msub):
+    # X N=0..3 spans every E1-allowed final level of A(N=1, J=1/2&3/2):
+    # truncating to N<=2 loses ~30% (-> sum 0.70) for the J=3/2->N=3 paths.
+    gC = MoleculeLevels.initialize_state(molecule_name='BaF', elec_state='X',
+        vib_state=0, N_list=np.array([0, 1, 2, 3]), fermion_or_boson='boson',
+        M_sublevels=Msub, I_nuclei=[0, 1/2], isotope=138, round=8,
+        params=None, P_values=[1/2])
+    eC = MoleculeLevels.initialize_state(molecule_name='BaF', elec_state='A',
+        vib_state=0, N_list=np.array([1]), fermion_or_boson='boson',
+        M_sublevels=Msub, I_nuclei=[0, 1/2], isotope=138, round=8,
+        params=None, P_values=[1/2, 3/2])
+    gC.eigensystem(0, 0); eC.eigensystem(0, 0)
+    Lc = xs.line_list(gC, eC, np.arange(gC.size), np.arange(eC.size),
+                      origin=eC.parameters['Origin'], initial='excited',
+                      initial_reduction='average', thresh=0.0)
+    cs = Lc.groupby('e_idx')['strength'].sum()
+    twoFp1 = np.array([2 * float(xs._dom(eC, k, 'F')) + 1 for k in cs.index])
+    return cs.values, twoFp1
+_csn, _ = _cl('none')
+assert np.allclose(_csn, 1.0, atol=1e-6), ('no-M decay not normalized', _csn)
+_csm, _twoFp1 = _cl('all')
+assert np.allclose(_csm, 1.0 / _twoFp1, atol=1e-6), \
+    ("M=all colsum != 1/(2F'+1)", np.c_[_csm, 1.0 / _twoFp1])
+print("Tclose OK  no-M sum_paths=1 ; M=all sum_paths=1/(2F'+1)")
