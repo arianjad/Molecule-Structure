@@ -1,6 +1,6 @@
 """BaF X-A simulated spectrum vs the 08/27/2025 fluorescence scan.
 
-Simulation is generated from molecular structure via xa_spectra
+Simulation is generated from molecular structure via gen_spectra
 (no pasted arrays). Freq offset is 348.66 THz.
 """
 from config_path import add_to_sys_path
@@ -9,7 +9,7 @@ add_to_sys_path()                       # walk up to "Source Code"
 import numpy as np
 import matplotlib.pyplot as plt
 from Energy_Levels import MoleculeLevels
-import xa_spectra as xs
+import gen_spectra as xs
 
 # --- measured data (unchanged: [freq(MHz)-offset, counts, stdev]) ---
 # Data format is [freq (MHz) - offset, fluorescence counts (arb), and count stdev]

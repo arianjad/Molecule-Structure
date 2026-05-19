@@ -1,4 +1,4 @@
-# xa_spectra — copy-paste cell for `RaF X-A.ipynb` / `BaF X-A.ipynb`
+# gen_spectra — copy-paste cell for `RaF X-A.ipynb` / `BaF X-A.ipynb`
 
 These two notebooks hold your own uncommitted work and were intentionally
 not edited. Paste the cell below where the old `simulate_spectra` /
@@ -6,9 +6,12 @@ not edited. Paste the cell below where the old `simulate_spectra` /
 helpers with the shared module.
 
 ```python
-import xa_spectra as xs   # config_path.add_to_sys_path() must have run already
+import gen_spectra as xs   # config_path.add_to_sys_path() must have run already
 
-# spectrum (auto: no-M -> TDM^2; M-resolved -> line strength S; no Boltzmann)
+# spectrum: line strength S (= LIF excitation signal) by default; same
+# observable whether the states are M-resolved or not. For the emission
+# branching add initial='excited', initial_reduction='average'; for the
+# per-molecule absorption cross section initial='ground', ='average'.
 gidx = g.select_q({'N': 1})
 eidx = e.select_q({'J': 0.5}, parity='+')
 lines = xs.line_list(g, e, gidx, eidx, origin=e.parameters['Origin'])

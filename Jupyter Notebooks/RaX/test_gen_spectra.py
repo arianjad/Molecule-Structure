@@ -1,10 +1,10 @@
-"""Hard-assert tests for xa_spectra (exit 0 iff all pass)."""
+"""Hard-assert tests for gen_spectra (exit 0 iff all pass)."""
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'Source Code'))
 sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np
 from Energy_Levels import MoleculeLevels, branching_ratios
-import xa_spectra as xs
+import gen_spectra as xs
 
 c = 29979.2458
 
@@ -15,14 +15,23 @@ def build(elec, N_list):
         M_sublevels='none', I_nuclei=[0, 1/2], isotope=138,
         round=8, params=None, P_values=[1/2])
 
+def build_M(elec, N_list):
+    return MoleculeLevels.initialize_state(
+        molecule_name='BaF', elec_state=elec, vib_state=0,
+        N_list=np.array(N_list), fermion_or_boson='boson',
+        M_sublevels='all', I_nuclei=[0, 1/2], isotope=138,
+        round=8, params=None, P_values=[1/2])
+
 g = build('X', [0, 1]); e = build('A', [1, 2])
 g.eigensystem(0, 0); e.eigensystem(0, 0)
 
-# Physics A: no-M strength == branching_ratios entry exactly
+# Physics A: no-M emission strength == branching_ratios entry exactly
+#   (initial='excited', initial_reduction='average' IS the branching observable)
 BR = branching_ratios(g, e, 0, 0)                       # (nG, nE)
 gx0 = g.select_q({'N': 0, 'J': 0.5})
 exm = e.select_q({'J': 0.5}, parity='-')
-ll = xs.line_list(g, e, gx0, exm, origin=e.parameters['Origin'])
+ll = xs.line_list(g, e, gx0, exm, origin=e.parameters['Origin'],
+                  initial='excited', initial_reduction='average')
 for _, r in ll.iterrows():
     assert abs(r['strength'] - BR[int(r['g_idx']), int(r['e_idx'])]) < 1e-12, r
 # Regression: the 3 Table II (-)/N=0 components within 2 MHz
@@ -34,6 +43,36 @@ for _, r in ll.iterrows():
         assert abs(r['freq'] - TBL2[key]) <= 2.0, (key, r['freq'], TBL2[key])
         hits += 1
 assert hits == 3, hits
+
+# ---- Tobs: modular observables, no-M <-> M='all' agreement ----
+# Same molecule/params both ways (BaF DB, iso 138) -- only M_sublevels differs.
+gN, eN = build('X', [0, 1]), build('A', [1, 2])
+gMr, eMr = build_M('X', [0, 1]), build_M('A', [1, 2])
+for _s in (gN, eN, gMr, eMr):
+    _s.eigensystem(0, 0)
+giN = gN.select_q({'N': 0}); eiN = eN.select_q({'J': 0.5}, parity='-')
+giM = gMr.select_q({'N': 0}); eiM = eMr.select_q({'J': 0.5}, parity='-')
+def _grp(L):
+    return (L.groupby(['g_F', 'e_F'], as_index=False)
+             .agg(s=('strength', 'sum'))
+             .sort_values(['g_F', 'e_F']).reset_index(drop=True))
+# line strength S (default sum): no-M == M='all' clustered
+S_no = _grp(xs.line_list(gN, eN, giN, eiN, origin=eN.parameters['Origin']))
+S_M = _grp(xs.line_list(gMr, eMr, giM, eiM, origin=eMr.parameters['Origin']))
+assert np.allclose(S_no['s'].values, S_M['s'].values, rtol=1e-6, atol=1e-9), \
+    np.c_[S_no['s'].values, S_M['s'].values]
+# emission branching: no-M == M='all'
+br_no = _grp(xs.line_list(gN, eN, giN, eiN, origin=eN.parameters['Origin'],
+                          initial='excited', initial_reduction='average'))
+br_M = _grp(xs.line_list(gMr, eMr, giM, eiM, origin=eMr.parameters['Origin'],
+                         initial='excited', initial_reduction='average'))
+assert np.allclose(br_no['s'].values, br_M['s'].values, rtol=1e-6, atol=1e-9)
+# S == branching x (2F'+1)  (F' = excited dominant F)
+Fp = S_no['e_F'].values * 2 + 1
+assert np.allclose(S_no['s'].values, br_no['s'].values * Fp,
+                   rtol=1e-6, atol=1e-9), \
+    np.c_[S_no['s'].values, br_no['s'].values * Fp]
+print("Tobs OK  S(no)==S(M); br(no)==br(M); S==br*(2F'+1)")
 # Empty selection -> empty df + warning, no crash
 import warnings
 with warnings.catch_warnings(record=True) as w:

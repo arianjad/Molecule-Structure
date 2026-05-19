@@ -99,6 +99,7 @@ molecules['BaF']['boson']['A0'] = {
     'A_D': 0.93,            # Steimle2011 [24]; consumed iff A2Pi builder reads it (plan Task 2 confirms)
     'muE': 1.50*0.503412,   # 1.50(2) D A2Pi1/2, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
     'g_S': 2.0023,
+    'g_lp': (-7713.96 + 2*(-2.52)) / (2*6347.847),  # =-0.6080; pure-precession/Curl estimate g_l' = (p+2q)/(2*Be), mirroring the validated RaF A0 precedent (RaF boson A0 g_lp below). 138Ba19F A2Pi1/2; dimensionless g-factor; from this dict's own p+2q (Effantin1990 [18]) & Be (Steimle2011 [24]). Zeeman-only term -> ZERO effect on B=0 spectra. (BaF X-A.ipynb used an unsourced -0.536.) Precise finite-B mapping is OPEN -> docs/superpowers/specs/2026-05-19-raf-hamiltonian-constants-reference-design.md.
     'Origin': 11946.109609,  # PHYSICAL N^2 band origin T0,0 [cm^-1] (arXiv:2511.06986 Tbl III, "This work"; pgopher-DEFAULT N^2 fit). The +Be_A/c R^2 G-row is now applied by the converter (formalism:'N2' below), NOT by hand. Verified deltas vs the old hand path: Origin -0.006, Be -0.012, p+2q -0.007, ASO +0.93 MHz (on ~1.9e7) -- all << 1-2 MHz validation tols. Spec docs/superpowers/specs/2026-05-16-xa-spectra-toolkit-design.md §2; thesis App A.3.1.
     'formalism': 'N2',        # paper fit is pgopher-default N^2; converter -> engine R^2 (adds Be*Lam^2/c G-row + Table 7.2 terms)
     'Lambda': 1,              # A^2Pi: |Lambda|=1 (REQUIRED whenever 'formalism' set)

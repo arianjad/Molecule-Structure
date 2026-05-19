@@ -1,5 +1,19 @@
 # X–A spectra + averaged-BR toolkit — design
 
+> **Update 2026-05-19 (supersedes the two-path design in §3):** module renamed
+> `xa_spectra` → `gen_spectra`. The no-M / M='all' branch no longer switches
+> the observable — both bases now yield the *same* line strength S, and the
+> physical observable is selected by two orthogonal knobs:
+> `initial ∈ {ground(default), excited}` × `initial_reduction ∈ {sum(default),
+> average}`. `sum` → S (line strength = LIF excitation signal, default);
+> `average`+`initial='excited'` → the old `branching_ratios` entry (emission
+> branching, thesis Eq. 3.4); `average`+`initial='ground'` → per-molecule
+> absorption cross section (thesis Eq. 3.11). Investigation concluded the
+> original behaviour was *not a bug* (no-M = emission γ̃, validated by
+> `validate_noM_zerofield.py`); the change makes the observable explicit
+> rather than an implicit function of the M-basis. Tests: `test_gen_spectra`.
+> §3 below documents the original design for history.
+
 Status: implemented & validated 2026-05-17 (plan docs/superpowers/plans/2026-05-17-xa-spectra-toolkit.md; gates: test_xa_spectra/baf_xa_validate/tutorial all exit 0). Post-review fix 2026-05-17: averaged_branching now M_F-degeneracy ((2F′+1)) weighted — see §3 implementation note.
 Supersedes nothing. Builds on the validated BaF X–A pipeline
 (`docs/superpowers/specs/2026-05-16-baf-xa-pipeline-design.md`).

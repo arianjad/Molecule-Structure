@@ -178,7 +178,7 @@ hyperfine-generalized). Σ over X N=1 = 1, Σ over X N=0 ≈ 0 (parity closure).
 """
 
 CELL_AVG = """\
-import xa_spectra as xs
+import gen_spectra as xs
 avg_df, per_df = xs.averaged_branching(g, e, e.select_q({'J': 0.5}, parity='+'))
 _n1 = avg_df['g_N'].astype(float) == 1
 view = avg_df.loc[_n1, ['g_J', 'g_F', 'BR']].copy()

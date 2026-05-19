@@ -1,15 +1,29 @@
-"""Molecule-agnostic X-A spectrum / branching toolkit.
+"""Molecule-agnostic spectrum / line-strength toolkit (gen_spectra).
 
-Generalizes the copy-pasted simulate_spectra / simulate_spectra_noM /
-plot_gaussian_spectrum helpers (RaF X-A.ipynb, BaF X-A.ipynb,
-BaF_spectrum_plot.py) into one physics-correct module.
+One primitive -- the line strength
+  S = sum_{M'',M',p} |<g,i|T^1_p(d)|e,j>|^2          (thesis Eq.3.1 / p.109)
+computed identically whether the states were built M-resolved or not. Two
+orthogonal knobs select the physical observable:
 
-Physics (thesis §3.2.4.1, pp.107-115; spec
-docs/superpowers/specs/2026-05-16-xa-spectra-toolkit-design.md §3):
-  line strength S = sum_{M'',M',p} |<g,i|T^1_p(d)|e,j>|^2   (thesis p.109)
-  averaged BR  r~ = |<g,J''||d||e,J'>|^2 / [(2J'+1) D_ge^2]  (thesis Eq.3.4)
-omega_0^3 is dropped (cancels in any branching ratio; <1e-5 across one band).
-NO Boltzmann population weight, NO ad-hoc J_adjust.
+  initial            : 'ground' (default) | 'excited'   -- the initial state
+  initial_reduction  : 'sum'     -> S                    line strength = LIF
+                                    excitation signal (the thermal (2F''+1)
+                                    ground population is already inside S)
+                       'average' -> S / (2F_initial+1):
+                          initial='excited' -> emission branching ratio
+                                    (== Energy_Levels.branching_ratios)
+                          initial='ground'  -> per-molecule absorption cross
+                                    section (thesis Eq.3.11)
+
+cross_section and branching are the SAME operation (divide by the initial-state
+degeneracy) with the initial state swapped; line strength is the un-reduced
+sum. M-resolution is only a basis choice, not an observable switch -- the same
+(initial, initial_reduction) gives the same physics in either basis.
+
+Within a band omega_0^3 is dropped (cancels in any ratio; <1e-5 across one
+band) -- bare |d|^2; weight='rate' restores x nu^3 for the cross-band case.
+NO Boltzmann factor (hyperfine << kT). F is good at zero field, so the
+(2F+1) reductions are exact there; for finite field use an M-resolved build.
 
 Callers put "Source Code" on sys.path first (notebooks: config_path).
 This module never reimplements a matrix element -- it calls
@@ -42,27 +56,56 @@ def _dom(state, i, key):
     return state.q_numbers[key][qd]
 
 
-def _strength_matrix(Ground, Excited, Ez, Bz, pol):
-    """(nG, nE) line-strength matrix.
+def _twoF1(state):
+    """(size,) array of (2F+1) per eigenstate (dominant F; F is good at B=0)."""
+    return np.array([2.0 * float(_dom(state, i, 'F')) + 1.0
+                     for i in range(state.size)])
 
-    no-M  : branching_ratios entry = |<g,J''|d|e,J'>|^2.
-    M-res : S[g,e] = sum_{p in pol} |Calculate_TDMs(p)|^2  (thesis p.109 S,
-            the M'' / M' sum is realized by clustering the degenerate
-            M-components downstream in broaden()).
+
+def _strength_matrix(Ground, Excited, Ez, Bz, pol,
+                     initial='ground', initial_reduction='sum'):
+    """(nG, nE) matrix whose cluster-sum is the line strength S, reduced over
+    the chosen initial state.
+
+    One primitive: S = sum_{M_g,M_e,p} |<g|T^1_p(d)|e>|^2  (thesis p.109),
+    computed the same way in either basis:
+      no-M  : branching_ratios = S/(2F_excited+1); rescaled by (2F_excited+1)
+              -> S per (F'',F') level pair.
+      M-res : sum_{p in pol} |Calculate_TDMs(p)|^2 per (M'',M') eigenstate
+              pair; the M sums are realised by clustering downstream -> S.
+
+    initial            : 'ground' | 'excited'
+    initial_reduction  : 'sum'     -> S
+                         'average' -> S / (2F_initial+1)
+                             initial='excited' -> branching_ratios (emission)
+                             initial='ground'  -> cross section (Eq.3.11)
     """
+    if initial_reduction not in ('sum', 'average'):
+        raise ValueError("initial_reduction must be 'sum' or 'average'")
+    if initial not in ('ground', 'excited'):
+        raise ValueError("initial must be 'ground' or 'excited'")
+    eF1 = _twoF1(Excited)                                        # (nE,)
     if not _has_M(Ground):
-        return branching_ratios(Ground, Excited, Ez, Bz)        # (nG, nE)
-    S = None
-    for pp in _POL[pol]:
-        Tp = Calculate_TDMs(pp, Ground, Excited, Ez, Bz, q=[-1, 0, 1])  # (nE,nG)
-        S = np.abs(Tp) ** 2 if S is None else S + np.abs(Tp) ** 2
-    return S.T                                                  # -> (nG, nE)
+        # branching_ratios[g,e] = S(g,e)/(2F'_e+1); undo -> S per level pair.
+        S = branching_ratios(Ground, Excited, Ez, Bz) * eF1[None, :]
+    else:
+        S = None
+        for pp in _POL[pol]:
+            Tp = Calculate_TDMs(pp, Ground, Excited, Ez, Bz, q=[-1, 0, 1])  # (nE,nG)
+            S = np.abs(Tp) ** 2 if S is None else S + np.abs(Tp) ** 2
+        S = S.T                                                 # -> (nG, nE)
+    if initial_reduction == 'sum':                              # line strength
+        return S
+    if initial == 'excited':                                    # / (2F'+1)
+        return S / eF1[None, :]
+    return S / _twoF1(Ground)[:, None]                          # initial='ground'
 
 
 def line_list(Ground, Excited, g_idx, e_idx, *,
               origin=None, units='MHz', field=(0.0, 0.0),
-              pol='all', weight='dipole2', thresh=1e-9):
-    """Tidy DataFrame of X-A transitions between selected level sets.
+              pol='all', weight='dipole2', thresh=1e-9,
+              initial='ground', initial_reduction='sum'):
+    """Tidy DataFrame of transitions between selected level sets.
 
     Parameters
     ----------
@@ -74,6 +117,14 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
     pol              : 'all'|'z'|'+'|'-'|'x'  (sums |TDM|^2 over chosen p)
     weight           : 'dipole2' (bare |d|^2, in-band) or 'rate' (x nu^3)
     thresh           : drop rows with strength < thresh (absolute)
+    initial          : 'ground' (default) | 'excited' -- the initial state
+    initial_reduction: 'sum' (default) -> line strength S (LIF signal);
+                       'average' -> S/(2F_initial+1):
+                         initial='excited' -> emission branching ratio
+                         initial='ground'  -> absorption cross section
+                       (the strength column carries this AFTER clustering in
+                       broaden(); in an M-resolved build each row is one
+                       (M'',M') component and the cluster-sum realises S.)
 
     Returns a DataFrame with columns LINE_COLUMNS. Empty selection ->
     empty DataFrame (same columns) + UserWarning.
@@ -85,7 +136,8 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
         origin = Excited.parameters['Origin']
     g_idx = np.asarray(g_idx, dtype=int)
     e_idx = np.asarray(e_idx, dtype=int)
-    S = _strength_matrix(Ground, Excited, Ez, Bz, pol)          # (nG, nE)
+    S = _strength_matrix(Ground, Excited, Ez, Bz, pol,
+                         initial, initial_reduction)             # (nG, nE)
 
     rows = []
     for ig in g_idx:
@@ -260,6 +312,7 @@ def plot_spectrum(lines=None, *, Ground=None, Excited=None,
                   label='Simulation', **line_list_kw):
     """Plot sticks and/or a broadened curve, with an optional experiment.
 
+    Forwards **line_list_kw to line_list (incl. initial / initial_reduction).
     experimental : dict(freq, signal, err=None, offset=0, tweak=0, yscale=1)
         generalizes the BaF_spectrum_plot.py offset/tweak/yscale overlay.
     """

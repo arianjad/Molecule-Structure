@@ -1,5 +1,10 @@
 # X–A Spectra + Averaged-BR Toolkit Implementation Plan
 
+> **Update 2026-05-19:** delivered module renamed `xa_spectra` → `gen_spectra`;
+> observable now selected by `initial ∈ {ground,excited}` × `initial_reduction
+> ∈ {sum,average}` (default `sum` = line strength S = LIF signal). See the
+> superseding note in `docs/superpowers/specs/2026-05-16-xa-spectra-toolkit-design.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** One reusable, physics-correct X–A spectrum/branching module, driven off the N²→R² converter for BaF A0.
