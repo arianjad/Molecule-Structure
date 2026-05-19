@@ -63,7 +63,9 @@ These come directly from the user and override convenience:
 
 \*g-factors and μ_E are Stark/Zeeman parameters, **not** field-free effective-Hamiltonian terms. They are grouped separately and the distinction is stated explicitly in the document, not lumped silently.
 
-**Out of scope (non-goals):** ²²⁵RaF / fermion branch; Ra hyperfine; nuclear electric-quadrupole machinery (eQq); other isotopologues (²²³, etc.); polyatomic structure (Renner-Teller, K-resonance, ℓ); spectral simulation / fitting workflow; any change to the codebase or its constants.
+**Deferred but structurally reserved — ²²⁵RaF / fermion branch.** Not written in this pass, but the document architecture must leave room so a later pass adds it *without restructuring* entries or appendices. ²²⁵Ra has I=½ (no nuclear electric quadrupole; eQq slot exists but is zero). The reserved future-extension constant set, enumerated now from the `molecules['RaF']['fermion']` X0/A0 dicts `[molecule_parameters.py:109-133]` (names/slots only — no values asserted): heavy-nucleus (²²⁵Ra) hyperfine `b_F`, `c` (codebase keys `bFYb`/`cYb` — generic-heavy-nucleus naming wart), `a`, `d`, `h₁/₂` (`h1/2Yb`, `dYb`); ¹⁹F-in-fermion `b_F`/`c`/`a`/`d`/`h₁/₂` (`bFH`/`cH`/`aH`/`dH`/`h1/2H`); `e2Qq0` (=0 for I=½, slot reserved); and the coupling-scheme change (two-spin case (b_βS) vs (b_βJ) when E_Hyp ≷ E_SR — see `about-arian-physics`). How room is left is specified in §4.2/§4.3/§4.4.
+
+**True non-goals (excluded entirely):** other isotopologues (²²³Ra, etc.); polyatomic structure (Renner-Teller, K-resonance, ℓ); spectral simulation / fitting workflow; any change to the codebase or its constants.
 
 ## 4. Document architecture
 
@@ -82,12 +84,15 @@ These come directly from the user and override convenience:
 5. **Conventions — three-column table** `B&C │ N²-paper (Udrescu/codebase-stored) │ PGopher` with explicit transformation/sign map (PGopher minus-flips on `d`, `p+2q`; N²→R² converter row; phase, prefactor, interpretation notes). Every cell cited.
 6. **→ Appendix N.x** — cross-reference to the numbered appendix entry holding the background/derivation for this constant.
 
+**Reserved for ²²⁵RaF.** Each entry's Header (item 1) and three-column conventions table (item 5) are laid out with a reserved, currently-empty **"²²⁵RaF / fermion"** provenance line / table block, rendered as `⚠[OPEN — ²²⁵RaF, future pass]`. This fixes the entry geometry now so the later pass fills cells rather than reflowing the schema. For constants that gain a *second* hyperfine nucleus in ²²⁵RaF (heavy-Ra vs ¹⁹F), the reserved block already names both slots.
+
 ### 4.3 Appendices (the "layered" depth target)
 - **A. Formalism** — full N²↔R² transformation derivation and the engine's converter rows `[Thesis App A.3.1]`, `[n2r2-spec]`.
 - **B. Contact-transformation sketches** — γ⁽²⁾ and Λ-doubling p,q origins `[B&C Ch 7]`.
 - **C. PGopher LinearMolecule Hamiltonian reference** — relevant operator definitions and sign conventions, from the online doc `[PGopher: Linear §…]`.
 - **D. Known divergences & their resolution** — every point where sources disagreed and how it was resolved (`[per Arian, …]` or `⚠[OPEN]`).
 - **E. Bibliography** — full source list with Zotero keys / paths.
+- **F. ²²⁵RaF / fermion extension — reserved.** Heading and skeleton present, body `⚠[OPEN — future pass]`: enumerates the §3 reserved constant set (heavy-Ra + ¹⁹F two-nucleus hyperfine, eQq=0 slot) and flags the case-(b_βS)/(b_βJ) coupling-scheme decision as the first question for that pass. No physics written now.
 
 ### 4.4 Known divergences to resolve with the user (seed list; expanded at build)
 Surfaced, never silently reconciled:
@@ -126,9 +131,14 @@ Per `physics-verification.md`: state isotope (²²⁶Ra¹⁹F) and units (MHz; c
 - [ ] All §4.4 divergences resolved as `[per Arian, …]` or rendered as visible `⚠[OPEN]`.
 - [ ] `RaF-effective-hamiltonian-constants.tex` compiles clean on Overleaf (`pdflatex`, standard packages).
 - [ ] `RaF-effective-hamiltonian-constants.html` renders in a browser with MathJax SVG; equations survive browser→OneNote copy as images.
+- [ ] ²²⁵RaF/fermion reserved structure present (per-entry `⚠[OPEN — ²²⁵RaF]` block, Appendix F skeleton); adding it later needs no schema/appendix reflow.
 - [ ] Both files in `~/obsidian-vault/04-resources/`; vault committed.
 - [ ] No change to any codebase file or constant.
 
 ## 8. Non-goals / explicitly deferred
 
-²²⁵RaF, Ra hyperfine, eQq quadrupole, other isotopologues, polyatomic effective Hamiltonians, spectral simulation, fitting, codebase edits. Detailed task breakdown deferred to the writing-plans phase (this spec is scaffolding; per code-style rule, durable physics conclusions that emerge land in the vault, not here).
+**Deferred, structure reserved (§3, §4.2, §4.3-F, §4.4):** ²²⁵RaF / fermion branch (heavy-Ra + ¹⁹F two-nucleus hyperfine, eQq=0 slot, coupling-scheme choice). Written in a later pass; this pass only reserves geometry.
+
+**Excluded entirely:** other isotopologues (²²³Ra, etc.), polyatomic effective Hamiltonians, spectral simulation, fitting, codebase edits.
+
+Detailed task breakdown deferred to the writing-plans phase (this spec is scaffolding; per code-style rule, durable physics conclusions that emerge land in the vault, not here).
