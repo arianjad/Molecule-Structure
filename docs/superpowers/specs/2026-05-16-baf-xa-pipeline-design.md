@@ -4,6 +4,16 @@
 **Branch:** `fix-for-distrib`
 **Status:** implemented & validated 2026-05-16 (Tasks 1–4 complete; baf_xa_validate.py + tutorial gate green; re-verified against the refactored bidirectional converter)
 
+> **Addendum 2026-05-19:** `molecules['BaF']['boson']['A0']` now also carries
+> `'g_lp'` = **−0.536** — the *measured* parity-dependent anisotropic g-factor
+> g_l′(A²Π,v=0) for ¹³⁸BaF, −0.536(23), from Steimle *et al.* PRA **84** 012508
+> (2011) [24] Table V (the same Ref [24] used above for μ_E/Be). It was added
+> so `molecule_name='BaF', isotope=138, params=None` builds M='all' natively
+> (the M-resolved A²Π Zeeman term requires it). Zeeman-only ⇒ **no effect on
+> the field-free frequencies/branching this spec validates**; the §-tables
+> here remain authoritative for the field-free set. See the `gen_spectra`
+> toolkit work and `2026-05-19-gen-spectra-observable-design` (vault).
+
 ## 1. Goal & scope
 
 Add `¹³⁸Ba¹⁹F` to `Source Code/molecule_parameters.py` and run the existing
