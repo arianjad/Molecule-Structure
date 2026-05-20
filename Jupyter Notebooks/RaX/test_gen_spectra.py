@@ -173,3 +173,41 @@ _csm, _twoFp1 = _cl('all')
 assert np.allclose(_csm, 1.0 / _twoFp1, atol=1e-6), \
     ("M=all colsum != 1/(2F'+1)", np.c_[_csm, 1.0 / _twoFp1])
 print("Tclose OK  no-M sum_paths=1 ; M=all sum_paths=1/(2F'+1)")
+
+# ---- Tboltz: optional Boltzmann weighting on line strengths -----------
+# boltzmann_T=None (default) returns the unweighted strength; boltzmann_T=T
+# scales each row by exp(-E_g[MHz] * h/kB / T[K]).  Verify against an
+# independent recompute and that boltzmann_T=None matches the default.
+gB = build('X', [0, 1, 2]); eB = build('A', [1, 2])
+gB.eigensystem(0, 0); eB.eigensystem(0, 0)
+gB_idx = np.arange(gB.size); eB_idx = np.arange(eB.size)
+L_none = xs.line_list(gB, eB, gB_idx, eB_idx,
+                      origin=eB.parameters['Origin'], thresh=0.0)
+T_test = 4.0
+L_warm = xs.line_list(gB, eB, gB_idx, eB_idx,
+                      origin=eB.parameters['Origin'], thresh=0.0,
+                      boltzmann_T=T_test)
+# Default of None must match boltzmann_T omitted
+assert L_none['strength'].equals(
+    xs.line_list(gB, eB, gB_idx, eB_idx,
+                 origin=eB.parameters['Origin'], thresh=0.0,
+                 boltzmann_T=None)['strength']), "boltzmann_T=None != default"
+# Per-row check: L_warm.strength == L_none.strength * exp(-Eg*h/kB/T)
+H_OVER_KB = 4.799243073e-5  # K/MHz
+matched = 0
+for (_, rn), (_, rw) in zip(L_none.iterrows(), L_warm.iterrows()):
+    Eg = gB.evals0[int(rn['g_idx'])]
+    expected = rn['strength'] * np.exp(-Eg * H_OVER_KB / T_test)
+    assert abs(rw['strength'] - expected) < 1e-12 * max(abs(expected), 1e-30), \
+        f"row {rn['g_idx']}: {rw['strength']} vs {expected}"
+    matched += 1
+assert matched > 0
+# Negative T raises
+try:
+    xs.line_list(gB, eB, gB_idx, eB_idx, origin=eB.parameters['Origin'],
+                 boltzmann_T=-1.0)
+    raise AssertionError("boltzmann_T=-1.0 should have raised")
+except ValueError:
+    pass
+print(f"Tboltz OK  T={T_test}K factor applied per-row ({matched} rows checked); "
+      f"None=default; negative T raises")

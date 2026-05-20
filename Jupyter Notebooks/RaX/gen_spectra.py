@@ -35,6 +35,7 @@ import pandas as pd
 from Energy_Levels import branching_ratios, Calculate_TDMs
 
 C_CM = 29979.2458                       # MHz per cm^-1 (== molecule_parameters.c)
+_H_OVER_KB_K_PER_MHZ = 4.799243073e-5   # h/kB [K/MHz]; Boltzmann arg = E[MHz]*this/T[K]
 _PARITY = {1: '+', -1: '-'}
 _POL = {'all': [-1, 0, 1], 'z': [0], '+': [1], '-': [-1], 'x': [-1, 1]}
 LINE_COLUMNS = ['freq', 'strength',
@@ -104,7 +105,8 @@ def _strength_matrix(Ground, Excited, Ez, Bz, pol,
 def line_list(Ground, Excited, g_idx, e_idx, *,
               origin=None, units='MHz', field=(0.0, 0.0),
               pol='all', weight='dipole2', thresh=1e-9,
-              initial='ground', initial_reduction='sum'):
+              initial='ground', initial_reduction='sum',
+              boltzmann_T=None):
     """Tidy DataFrame of transitions between selected level sets.
 
     Parameters
@@ -125,6 +127,13 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
                        (the strength column carries this AFTER clustering in
                        broaden(); in an M-resolved build each row is one
                        (M'',M') component and the cluster-sum realises S.)
+    boltzmann_T      : if not None, scale each row's strength by the
+                       Boltzmann population factor exp(-E_g/(kB*T)) with T
+                       in Kelvin. E_g is taken from Ground.evals0 in MHz;
+                       internally h/kB is applied so the dimensionless arg
+                       is E_g[MHz] * 4.799e-5 / T[K]. Default None (no
+                       thermal weighting; the unweighted strength is what
+                       the gen_spectra design spec calls for).
 
     Returns a DataFrame with columns LINE_COLUMNS. Empty selection ->
     empty DataFrame (same columns) + UserWarning.
@@ -138,12 +147,16 @@ def line_list(Ground, Excited, g_idx, e_idx, *,
     e_idx = np.asarray(e_idx, dtype=int)
     S = _strength_matrix(Ground, Excited, Ez, Bz, pol,
                          initial, initial_reduction)             # (nG, nE)
+    if boltzmann_T is not None and boltzmann_T <= 0:
+        raise ValueError("boltzmann_T must be positive (Kelvin)")
 
     rows = []
     for ig in g_idx:
         Eg = Ground.evals0[ig]
+        boltz = (np.exp(-Eg * _H_OVER_KB_K_PER_MHZ / boltzmann_T)
+                 if boltzmann_T is not None else 1.0)
         for ie in e_idx:
-            strength = float(S[ig, ie])
+            strength = float(S[ig, ie]) * boltz
             if strength < thresh:
                 continue
             nu_MHz = (Excited.evals0[ie] - Eg) + C_CM * origin

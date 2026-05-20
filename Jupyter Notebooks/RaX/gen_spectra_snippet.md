@@ -6,7 +6,7 @@ not edited. Paste the cell below where the old `simulate_spectra` /
 helpers with the shared module.
 
 ```python
-import gen_spectra as xs   # config_path.add_to_sys_path() must have run already
+import gen_spectra as gs   # config_path.add_to_sys_path() must have run already
 
 # spectrum: line strength S (= LIF excitation signal) by default; same
 # observable whether the states are M-resolved or not. For the emission
@@ -14,17 +14,25 @@ import gen_spectra as xs   # config_path.add_to_sys_path() must have run already
 # per-molecule absorption cross section initial='ground', ='average'.
 gidx = g.select_q({'N': 1})
 eidx = e.select_q({'J': 0.5}, parity='+')
-lines = xs.line_list(g, e, gidx, eidx, origin=e.parameters['Origin'])
-xs.plot_spectrum(lines=lines, sticks=True,
+lines = gs.line_list(g, e, gidx, eidx, origin=e.parameters['Origin'])
+gs.plot_spectrum(lines=lines, sticks=True,
                  broaden_kw=dict(shape='voigt', fwhm=40.0, lorentz_fwhm=10.0))
 
 # excited-state-averaged branching (A hyperfine often unresolved)
-avg_df, per_df = xs.averaged_branching(g, e, eidx)
+avg_df, per_df = gs.averaged_branching(g, e, eidx)
 display(avg_df)
 ```
 
+Notes:
+- FWHM units in `broaden_kw` match the `units` kwarg on `line_list`
+  (default `units='MHz'`; pass `units='cm-1'` for the cm⁻¹ branch).
+- Boltzmann population is off by default. Pass `boltzmann_T=<T_K>` to
+  `line_list` to scale strengths by `exp(-E_g/(kB*T))`; T in Kelvin.
+- For BR observable (matches legacy `simulate_spectra_noM`):
+  `gs.line_list(..., initial='excited', initial_reduction='average')`.
+
 Old → new map:
-`simulate_spectra(...)`           → `line_list` + `plot_spectrum`
-`simulate_spectra_noM(...)`       → `line_list` (no-M auto-detected)
-`plot_gaussian_spectrum(...)`     → `broaden(shape='gaussian')` / `plot_spectrum`
-manual offset/tweak/yscale block  → `plot_spectrum(experimental=dict(...))`
+`simulate_spectra(..., T=)`        → `line_list(..., boltzmann_T=)` + `plot_spectrum`
+`simulate_spectra_noM(...)`        → `line_list(..., initial='excited', initial_reduction='average')`
+`plot_gaussian_spectrum(...)`      → `broaden(shape='gaussian')` / `plot_spectrum`
+manual offset/tweak/yscale block   → `plot_spectrum(experimental=dict(...))`
