@@ -50,6 +50,13 @@ Module edits leave the user's running kernel stale — fresh-kernel re-execution
 
 **Library API currency.** Before nontrivial SymPy, QuTiP, or SciPy-linalg work, consult the context7 MCP (`mcp__context7__*`) for the installed version's API — these are version-volatile. Not for stable NumPy/stdlib.
 
+## RaF-specific notes (per Arian, 2026-05-20)
+
+- `molecule_parameters.py:58` `RaF.boson.A0 'ASO': 1350` is **stale**; canonical = 2067.6 cm⁻¹ (matches `~/Downloads/225_RaF.pgo` Excited `A`). The codebase value works as a held-fixed input but isn't the right spin-orbit constant.
+- `molecule_parameters.py:72` `'Origin': 13284.427` cm⁻¹ is **T_Π1/2** (Udrescu Tbl I fit). PGopher convention is **T_e** (electronic origin); they differ by ½·A_SO. `225_RaF.pgo` Excited `Origin=14318.33` is T_e — same physical ²Π₁/₂ origin, different convention. Reference: `~/obsidian-vault/04-resources/references/raf-effective-hamiltonian/source.md` Appendix D.
+- `'bF':96.3`, `'c':19` (X0); `'a':19/2` (A0); `'muE':3.91 D` (X0), `1.0 D` (A0) are **Skripnikov ab initio**, personal/unpublished communication — there is no paper to cite.
+- `~/Downloads/225_RaF.pgo` is the **²²⁵RaF (fermion) file**; its single `<LinearNucleus>` block is **Ra hyperfine, not ¹⁹F** (magnitudes ~16 GHz vs codebase F-hyperfine ~100 MHz; signs opposite). Apples-to-oranges trap if mistaken for an ¹⁹F cross-check.
+
 ## References
 
 Brown & Carrington, *Rotational Spectroscopy of Diatomic Molecules* is the canonical reference for diatomic structure (matrix elements, sign conventions, basis transformations, coupling cases). Two copies, same edition:
