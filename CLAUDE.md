@@ -40,6 +40,8 @@ conda run -n Structure jupyter execute "Jupyter Notebooks/RaF_Calcs_Tutorial.ipy
 
 Module edits leave the user's running kernel stale — fresh-kernel re-execution is the verification, not autoreload.
 
+**Windows encoding dep:** `jupyter execute` (nbclient) re-saves the notebook on completion. On Windows requires `PYTHONUTF8=1` user-wide (see `~/.claude/rules/repl.md`) — without it, nbclient reads the file under the cp1252 locale, then writes UTF-8, silently baking mojibake into source. Repair: per-cell `text.encode('cp1252').decode('utf-8')` roundtrip.
+
 ## Source Code rules
 
 **`molecule_parameters.py` integrity.** When adding or changing a constant: inline-comment the source (paper / NIST / theory note), name the isotope, confirm units. Most entries are MHz; constants given in cm⁻¹ are multiplied by `c` inline. Don't propagate a value across isotopes/states without flagging it.
