@@ -73,50 +73,54 @@ energy diagram and a branching matrix computed under *different* A-state params.
 `dYb`, `h1/2Yb` are **unpublished Skripnikov ab-initio** A-state params (no paper to
 cite; per `Molecule-Structure/CLAUDE.md`).
 
-**Resolution (no guessing):** compute branching **both** ways and compare the leak
-fractions.
-- If insensitive (expected — leaks are set by rotational/G mixing, not the small A
-  hyperfine params), use the **cell-3-modified** set **consistently** for energies *and*
-  branching (so the figure is internally consistent and the A energies match the image),
-  and report the with/without comparison.
-- If the modification **materially** changes the branching → **STOP and ask** which set
-  is canonical before rendering.
+**RESOLVED (2026-06-05, by computation):**
+- **Branching is insensitive** to the A-state d/h1/2 choice: default ≡ experimental ≡
+  physical to 4 sig figs (leaks set by rotational/G recoupling, not the small A hyperfine).
+  So the heatmap is valid regardless; the param choice only moves the **A energies**.
+- **Sign of d:** negative (225Ra μ_I<0, opposite ¹⁷¹Yb; the +0.076·c default is a
+  borrowed "Wilkins" ¹⁷¹Yb placeholder). Per Arian: trust the flip.
+- **h1/2:** keep the **real Skripnikov −1426** (the cell-3 `h1/2=0` was scratch).
+  Confirmation: physical (d<0, h1/2=−1426) gives A J=½ F₁=0 at **2.456 GHz** above F₁=1,
+  matching the image splitting (4.25−1.8 = 2.45 GHz); h1/2=0 gives 1.36 GHz (no match).
+- **Canonical = "physical"** set; frozen in `data_225_level_diagram.py`.
 
 ## 4. Physics content of the figure
 
-Selection-rule consequence (E1, ΔF₁=0,±1, 0↛0): **A(F₁=0) decays only to ground
-F₁=1 manifolds.** Therefore within X(N=1,G=1) the **F₁=0 and F₁=2 levels are dark**
-(not populated by spontaneous decay) — the hyperfine cycle is a closed **F₁=1 ↔ F₁=0**
-loop. This is *verified* against the computed matrix (those columns must be ≈0), not
-assumed.
+**CORRECTED (2026-06-05): F₁ is NOT a rigorous selection rule.** Only ΔF=0,±1 (0↛0)
+is rigorous; hyperfine recoupling distributes ~1% of the decay over the other F₁ of the
+SAME N=1,G=1. So there is **no closed F₁=1↔F₁=0 loop** — F₁=0 and F₁=2 are real
+(percent-level) decay targets, not dark. The one genuine dark state is the **F₁=2, F=5/2**
+sextet (ΔF=2 from the excited F=½, forbidden).
 
-Branching from the excited F₁=0 state, **grouped by ground (N,G,F₁)** (sum over F),
-*conditional on decay to v″=0*:
+Computed branching from the excited F₁=0 state, **grouped by ground (N,G,F₁)** (sum over
+F), *conditional on decay to v″=0* (`data_225_level_diagram.py`):
 
-| Decay target | grouped f (expected) | role |
+| Decay target | grouped f | role |
 |---|---|---|
-| X(N=1, G=1, F₁=1) | ≈ 0.99995 | main return (closed loop) |
-| X(N=1, G=1, F₁=0), F₁=2 | ≈ 0 | **dark** (selection rule) |
-| X(N=1, **G=0**, F₁=1) | ≈ 5×10⁻⁵ | leak (repump target) |
-| X(**N=3**, F₁=1) | < 10⁻⁸ | leak |
+| X(N=1, G=1, **F₁=1**) | 0.98996 | main return |
+| X(N=1, G=1, **F₁=2**) | 5.854×10⁻³ | leak (F=3/2; F=5/2 dark) |
+| X(N=1, G=1, **F₁=0**) | 4.131×10⁻³ | leak |
+| X(N=1, **G=0**, F₁=1) | 5.714×10⁻⁵ | leak (G=0 is ~16.8 GHz above G=1) |
+| X(**N=3**, …) | 8.6×10⁻¹¹ | negligible |
 
-Exact values come from the compute step; the table is the expectation to verify against.
-Total branching factorizes as **FCF_vib × (this hyperfine fraction)**; the figure states
-the "conditional on v″=0" caveat so it is not misread as an absolute BR.
+This is the "**12+2**" structure: 12 addressable ground sublevels [F₁=1 (6) + F₁=0 (2) +
+F₁=2 F=3/2 (4)] + 2 excited (F₁=0, F=½). Total branching factorizes as
+**FCF_vib × (this hyperfine fraction)**; the figure carries the "conditional on v″=0"
+caveat so it is not misread as an absolute BR.
 
 ## 5. Layout (energy *not* to scale; intra-manifold ordering honored)
 
 - **Top — A²Π₁/₂ (v=0, J′=½⁺):** the **F₁=0** cycling upper state, highlighted; F₁=1 of
-  the same J doublet shown faintly below it for context (F₁=1 ≈1.8 GHz < F₁=0 ≈4.25 GHz).
+  the same J doublet shown faintly below it (computed F₁=0 is **2.456 GHz** above F₁=1).
   J=3/2 omitted (not the cycling state).
-- **Bottom-center — X²Σ⁺ (v=0, N=1, G=1):** three F₁ bars, ordered F₁=1 < F₁=0 < F₁=2
-  (per the X image, ≈25/70 · 350 · 355/400 MHz). F₁=1 is the cycling level; F₁=0 and F₁=2
-  drawn but tagged *dark*.
-- **Bottom-side (faint) — leakage manifolds:** X(N=1, G=0, F₁=1) and X(N=3) as the decay
-  targets for the 5×10⁻⁵ and <10⁻⁸ leaks.
+- **Bottom-center — X²Σ⁺ (v=0, N=1, G=1):** three F₁ bars, ordered F₁=1 (0) < F₁=0 (317) <
+  F₁=2 (321/378 MHz). F₁=1 is the cycling level; **F₁=0 and F₁=2 are real decay targets**
+  (0.41% / 0.59%), not dark — mark only F₁=2 F=5/2 as the dark sextet.
+- **Bottom-side (faint) — leakage manifolds:** X(N=1, **G=0**, F₁=1) (~16.8 GHz above G=1;
+  5.7×10⁻⁵) and X(N=3) (8.6×10⁻¹¹) as the small/negligible leaks.
 - **Transitions:** solid up-arrow = cycling pump (X G=1 F₁=1 → A F₁=0), labeled
-  λ≈752.8 nm; wavy down-arrows = spontaneous decay — solid for the dominant return,
-  dashed for the two leaks, each labeled `f = …`.
+  λ≈752.8 nm; wavy down-arrows = spontaneous decay — solid for the 0.99 return, lighter
+  for the percent-level F₁=2/F₁=0 decays, dashed for the G=0/N=3 leaks, each labeled `f`.
 - **Labels:** `|G, F₁⟩` / `|J′, F₁⟩` mathtext matching the slide images; "energy not to
   scale" + "branching conditional on v″=0" notes.
 
