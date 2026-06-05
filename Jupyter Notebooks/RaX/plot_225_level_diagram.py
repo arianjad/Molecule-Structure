@@ -142,6 +142,20 @@ def main():
     ax.text(X_G0, Y_X_G0 - 0.95, rf'$\to N{{=}}3:\ f={_fmt_f(f_n3)}$',
             ha='center', va='top', fontsize=9, color=STYLE['c_dark'])
 
+    # ---- level-splitting annotations ----
+    # A J'=1/2: F1=1 -> F1=0 (2.46 GHz)
+    ax.annotate('', xy=(0.95, Y_A_F1_0 - 0.04), xytext=(0.95, Y_A_F1_1 + 0.04),
+                arrowprops=dict(arrowstyle='<->', color='0.45', lw=1.1))
+    ax.text(0.72, (Y_A_F1_1 + Y_A_F1_0) / 2, '2.46 GHz', color='0.35',
+            ha='center', va='center', fontsize=9, rotation=90)
+    ax.text(X_A_CTX, Y_A_F1_1 - 0.27, '(not addressed)', color=STYLE['c_dark'],
+            ha='center', va='top', fontsize=8.5)
+    # X G=1: F1=1 -> F1=0 (~317 MHz; F1=0 & F1=2 nearly degenerate)
+    ax.annotate('', xy=(2.78, Y_X_F1_0 - 0.03), xytext=(2.78, Y_X_F1_1 + 0.03),
+                arrowprops=dict(arrowstyle='<->', color='0.45', lw=1.1))
+    ax.text(2.92, (Y_X_F1_1 + Y_X_F1_0) / 2, r'$\approx$317 MHz', color='0.35',
+            ha='left', va='center', fontsize=9)
+
     # ---- state titles ----
     ax.text(-0.3, Y_A_F1_0 + 0.55, r"$A\,^2\Pi_{1/2}\ (v{=}0,\ J'{=}1/2,\ +)$",
             fontsize=STYLE['state_fs'], fontweight='bold', color=STYLE['c_cycle'])
