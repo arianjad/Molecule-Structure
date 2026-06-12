@@ -1,7 +1,9 @@
 # ²⁹SiO⁺ NSD-PV anapole operator C = (n̂×S)·I/I — case bβJ derivation note
 
-**Task 4, step 1 (pre-review).** Derivation only; no code in this note. The target is the
-matrix element of the dimensionless NSD-PV operator **C = (n̂×S)·I/I** in the codebase's
+**Task 4, step 1 (amended per spectroscopy-reviewer audit, 2026-06-11).** Derivation only;
+no code in this note. The target is the matrix element of the dimensionless NSD-PV operator
+**C = (n̂×S)·I/I** (literal `/I`: divide by the nuclear-spin quantum number; ×2 for I=1/2,
+see §2.1) in the codebase's
 case-bβJ basis `|K=0, N, J, F, M⟩` (S=1/2, I=1/2 in the last slot), in a form directly
 implementable as `NSDPV_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S,I)` matching the codebase's
 existing signatures, index convention, and Wigner-symbol style.
@@ -27,7 +29,9 @@ Conventions used throughout (per `docs/sio-conventions.md`, "B&C audit results")
 > levels … is given by **H_eff = κ′ W_A C**, where W_A … includes the expectation value of
 > H_PV over the electronic wave function … **C = (n×S)·I / I** contains the angular momentum
 > dependence of H_eff and its matrix elements can be calculated analytically using angular
-> momentum algebra [21]. (ref [21] = DeMille 2008.)
+> momentum algebra [21]. (Karthein's ref [21] = **Flambaum & Khriplovich, Phys. Lett. A 110,
+> 121 (1985)** — the original NSD-PV effective-operator paper, which is also DeMille's ref [9];
+> **DeMille 2008 is Karthein's ref [20]**, not [21]. Citation corrected per review.)
 
 The PV matrix element is defined (Karthein p. 2):
 
@@ -59,7 +63,7 @@ The two papers are the same operator with renamed electronic constants:
 | effective H | `H_eff = κ′ W_A C` | `H_eff_P = κ′ W_P C` | yes; `W_A ≡ W_P` (electronic m.e.) |
 | PV m.e. | `iW = κ′ W_A ⟨−|C|+⟩` | `iW = κ′ W_P ⟨−|C|+⟩` | yes, verbatim |
 | imaginary | Eq. B1: `iW` off-diagonal | "T-reversal ⇒ iW pure imaginary" | yes |
-| `⟨C⟩` at crossing | `C = 0.5` (p. 4) | `C̃` (max in F=0 channel) | yes (see §4b) |
+| `⟨C⟩` at crossing | `C = 0.5` **assumed** (Fig. 3 caption — single occurrence in the paper, alongside assumed κ′=0.05) | `C̃⁽ᵐ⁾` "at the level-crossing with the maximum value of m_F" (Table I caption, p. 4) | same operator; per-channel values in §4b |
 
 **No factor differences.** Karthein's `W_A` and DeMille's `W_P` are the same electronic
 reduced matrix element; only the subscript differs (`A` for anapole-inclusive, `P` for
@@ -73,15 +77,16 @@ function `NSDPV_bBJ` returns the **real number** `Im⟨bra|C|ket⟩`; the *build
 explicit `i`:
 
 ```
-⟨bra|C|ket⟩ = i · NSDPV_bBJ(bra, ket)          # the matrix element of C is pure imaginary
-H_PV_matrix[i,j] = κ′ W_A · i · NSDPV_bBJ(...)  # = iW, matching Karthein Eq. B1 / DeMille Eq. (1)
+⟨bra|C|ket⟩ = (i/I) · NSDPV_bBJ(bra, ket)            # pure imaginary; /I is the literal c-number (×2 for I=1/2)
+H_PV_matrix[i,j] = κ′ W_A · (i/I) · NSDPV_bBJ(...)   # = iW, matching Karthein Eq. B1 / DeMille Eq. (1)
 ```
 
 This mirrors `build_PTV_bBJ` (`hamiltonian_builders.py:302–313`), which builds the (real,
 Hermitian) EDM operator as `H_PTV[i,j] = -EDM*Sz_bBJ(**q_args)`; the EDM operator `Σ·n̂` is
 T,P-odd but **real** in this basis, whereas the NSD-PV `C` is T,P-odd and **imaginary** — so
-the analogue here is `H_PV[i,j] = -coeff * 1j * NSDPV_bBJ(**q_args)` (the `i` is the operator's,
-the overall `-`/coeff is the builder's). See §4a for why the matrix is imaginary-Hermitian.
+the analogue here is `H_PV[i,j] = coeff * 1j * NSDPV_bBJ(**q_args) / I` (the `i` is the
+operator's; the builder's overall sign is pinned to Karthein Eq. (B1), see §4d flag 2). See
+§4a for why the matrix is imaginary-Hermitian and §4d for two implementation traps.
 
 ---
 
@@ -106,7 +111,9 @@ B&C **p. 193** states the cross-product correspondence explicitly:
 The proportionality constant (the one factor the whole derivation hinges on) follows from
 B&C **Eqs. (5.113)–(5.118)** (PDF pp. 193–194), where `u_m`, `v_m` are the *spherical*
 components (B&C Table 5.2 / Eq. 5.108): e.g.
-`T¹_0(u,v) = (1/√2)(u₁v₋₁ + u₋₁v₁) = (1/√2)(u_X v_Y − u_Y v_X) = (i/√2)(u×v)_Z`
+`T¹_0(u,v) = (1/√2)(u₁v₋₁ − u₋₁v₁) = (1/√2)(u_X v_Y − u_Y v_X) = (i/√2)(u×v)_Z`
+(transcription corrected per review: the CG evaluation of (5.114)'s middle expression carries
+a **minus** between the two terms; the Cartesian endpoint is unchanged)
 (the final `i` enters because the spherical components `u_{±1} = ∓(u_X ± i u_Y)/√2` carry it).
 **Derived (≤3 steps) and numerically verified** (§4, 3 random vectors, machine precision):
 
@@ -118,16 +125,34 @@ Applied to C:
 
 where `T¹(n̂)` is the rank-1 direction-cosine tensor on the rotational space (`T¹_q(n̂) = C¹_q(θ,φ)`,
 the normalized rank-1 spherical harmonic; B&C Eq. (5.120) class, here k=1), `T¹(S)` acts on
-the electron spin, and **`T¹(I)` is the rank-1 spherical tensor of the nuclear-spin operator Î**
-(components `T¹_q(Î)`, reduced m.e. `√(I(I+1)(2I+1))`). **Normalization (resolved, §4b /
-former UNRESOLVED-3, settled by the data):** the validated operator is `(n̂×S)·Î` — the
-spin *operator* `Î` in the numerator, **no literal division by the c-number I**. Tested three
-readings against Karthein's quoted `⟨C⟩=0.5` at the F=0 crossing (verified): `(n̂×S)·Î` →
-**−0.5 i ✓**; literal `(n̂×S)·Î / (I=½)` → −1.0 i ✗ (off by 2×); `(n̂×S)·Î / √(I(I+1))` →
-−0.577 i ✗. So Karthein's notation `C = (n̂×S)·I/I` is read with the trailing `/I` as part of
-making `C` an O(1) dimensionless number whose F=0-crossing value is `½`; for I=1/2 the
-operator that reproduces their 0.5 is `(n̂×S)·Î` and that is what `NSDPV_bBJ` implements.
-(See §5 UNRESOLVED-3 for the I≠1/2 generalization caveat.)
+the electron spin, **`T¹(I)` is the rank-1 spherical tensor of the nuclear-spin operator Î**
+(components `T¹_q(Î)`, reduced m.e. `√(I(I+1)(2I+1))`), and the trailing **`/I` is the
+literal c-number division by the nuclear-spin quantum number** (I=1/2 ⇒ ×2).
+
+**Normalization (RESOLVED — literal `/I` adopted; supersedes this note's earlier "no-/I"
+reading).** Provenance, DeMille PRL 100, 023003 (verified at the local PDF):
+
+- p. 2 defines `C ≡ (n×S)·I/I` with the explicit `/I`, and Karthein's operator is verbatim
+  DeMille's (§1.1), so the same `/I` applies.
+- **Table I (p. 4) is decisive.** The tabulated `C̃⁽ᵐ⁾` values across eight nuclei spanning
+  **I = 9/2 → 1/2** are **flat in I**: ⁸⁷Sr −0.40, ⁹¹Zr −0.40, ¹³⁷Ba −0.44, ¹⁷¹Yb −0.52,
+  ²⁷Al −0.42, ⁶⁹Ga −0.43, ⁸¹Br −0.42, ¹³⁹La −0.43 (caption: "Superscript (m) indicates the
+  value at the level-crossing with the maximum value of m_F"). Only the literal-`/I` operator
+  is I-independent at the max-m_F crossing: there the q=0 nuclear factor is `m_I = I`, which
+  cancels the `/I` exactly, leaving the I-independent base `1/√6 ≈ 0.408` (verified, §4b;
+  hyperfine/spin-rotation admixtures move it to the −0.40…−0.52 spread). **Without** the `/I`
+  the column would scale ∝ I (e.g. ⁸⁷SrF, I=9/2: ≈ 9/2 × 0.41 ≈ **1.84**, not −0.40).
+
+**Why the earlier "no-/I" resolution was wrong (post-mortem).** It anchored on Karthein's
+"C = 0.5", treating it as a computed F=0-crossing matrix element. In fact "C = 0.5" occurs
+exactly **once** in Karthein, **assumed** in the Fig. 3 caption alongside the assumed
+κ′ = 0.05 — it is a representative round number, not a computed gate. And the zero-field
+F=0 singlet used in that check does not exist at the 1.5 T operating point: the crossing
+eigenstates there are **decoupled products** `|N,m_N⟩|S,m_S⟩|I,m_I⟩` (Karthein's own basis
+statement, p. 2) — the S-Zeeman destroys the F-coupling. The no-/I/coupled-F=0 match to 0.5
+was a coincidence of two wrong anchors. Consistency check with the literal `/I`:
+κ′W_A·|⟨C⟩| = (0.05 × 16 Hz) × (0.408…0.577) = **0.33–0.46 Hz** over Karthein's decoupled
+crossing channels, bracketing his quoted W/2π = 0.4 Hz within rounding.
 
 The **−i√2** is the standard cross-product compound-tensor factor (e.g. Zare, *Angular
 Momentum*, and matches DeMille's "iW pure imaginary"): it makes C intrinsically imaginary,
@@ -153,58 +178,83 @@ identical (verified, 0 mismatches over all J,J′,F) to the codebase `IS_bBJ` 6j
 
 **Step B — J-level decoupling (S from N) of the compound `T¹(n̂,S)`.** The reduced matrix
 element of a rank-1 compound tensor built from `T¹(n̂)` (on N) and `T¹(S)` (on S), between
-J=N+S coupled states, is a **9-j** (B&C Ch. 5 tensor algebra; the rank-1 analogue of the
-rank-2 9j in the audited `T2IS_bBJ`, `matrix_elements.py:131`):
+J=N+S coupled states, is a **9-j**, now fully analytically anchored (review-confirmed):
 
 > `⟨N S J‖T¹(C¹(n̂),S)‖N′ S J′⟩`
-> `= (−1)^{N′} · √2 · √((2J+1)(2J′+1)·3) · {N S J; N′ S J′; 1 1 1}(9j) · ⟨N‖C¹(n̂)‖N′⟩ · ⟨S‖T¹(S)‖S⟩`
+> `= √(3·(2J+1)(2J′+1)) · {N S J; N′ S J′; 1 1 1}(9j) · ⟨N‖C¹(n̂)‖N′⟩ · ⟨S‖T¹(S)‖S⟩`
 
-with `⟨N‖C¹(n̂)‖N′⟩ = √((2N+1)(2N′+1)) · (N 1 N′; 0 0 0)` (rank-1 direction-cosine reduced
-m.e., B&C Eq. (8.220)/(8.224) direction-cosine class, p. 472–473) and
-`⟨S‖T¹(S)‖S⟩ = √(S(S+1)(2S+1))`.
+per **B&C Eq. (5.139)** (PDF p. 198) — the compound-tensor reduced m.e., which carries
+**no phase factor** (the `√3` is `√(2k+1)` for the compound rank k=1). The direction-cosine
+reduced m.e. carries the phase of **B&C Eq. (5.148)** (PDF p. 199):
+
+> `⟨N K‖C¹(n̂)‖N′ K′⟩ = (−1)^{N−K} √((2N+1)(2N′+1)) (N 1 N′; −K 0 K′)`   (K=K′=0 here)
+
+and the scalar-product phase `(−1)^{J′+I+F}` of Step A is **B&C Eq. (5.140)** (PDF p. 198,
+the equation underlying (8.220)). `⟨S‖T¹(S)‖S⟩ = √(S(S+1)(2S+1))`. With these three anchors
+the previously-empirical `(−1)^{N′}·√2` is **derived**, not pinned: for K=0 and ΔN=±1,
+`(−1)^{N−K} = −(−1)^{N′}`, and the global `−√2` is the real factor of the cross-product
+`−i√2` (§2.1; the `i` goes to the builder). The empirically-validated form of the first
+draft and this canonical form are algebraically identical — **verified exactly (difference
+0.0) over every state pair in the N≤2 basis**. UNRESOLVED-1 is closed (§5).
 
 The `(N 1 N′; 0 0 0)` 3-j vanishes unless **N + 1 + N′ is even**, i.e. **ΔN = ±1** (and
 ΔN=0 forbidden) — this is the parity-odd, ΔN=±1 selection rule that makes H_PV connect
-opposite-parity (`P = (−1)^N`) rotational levels. The `√2` and the `(−1)^{N′}` (ket-N phase)
-are fixed empirically against the first-principles construction (§4) and absorb the
-normalization/sign of the compound-tensor reduction in the codebase's
-`(N0 1 N1; 0 0 0)`-with-`(−1)^{N−K}` convention; see §5 (UNRESOLVED-1) for the
-not-yet-closed analytic anchor of the `(−1)^{N′}` phase specifically.
+opposite-parity (`P = (−1)^N`) rotational levels.
 
 ---
 
-## 3. Final formula (codebase notation)
+## 3. Final formula (canonical, K-general, codebase notation)
 
-Combining Step A and Step B with `(★)` and folding the global `−i√2`, the `i` is carried by
-the builder and the function returns the real `Im⟨bra|C|ket⟩`. Index 1 = ket = primed.
+Combining Step A and Step B with `(★)`: the function returns the real factor; the operator
+`C` is `(i/I) ×` the function (the `i` and the `/I` are carried by the builder). Index 1 =
+ket = primed. This is the **reviewer's canonical K-general form** — algebraically identical
+to the first draft's empirically-pinned form (verified exactly, §4a), and letter-for-letter
+in the codebase's direction-cosine convention (cf. `Sz_bBJ`, `StarkZ_bBJ`, `T2IS_bBJ`:
+`(-1)**(N0-K0) * wigner_3j(N0,1,N1,-K0,0,K1)`).
 
 ```python
 def NSDPV_bBJ(K0,N0,J0,F0,M0, K1,N1,J1,F1,M1, S=1/2, I=1/2):
-    # C = (n_hat x S).I / I  is a rank-0 pseudoscalar: dF=0, dM=0, dK=0.
-    # The matrix element of C is i*NSDPV_bBJ (intrinsically imaginary; builder carries the i).
+    # Im< (n_hat x S) . I_operator >. The NSD-PV operator C = (n_hat x S).I/I has
+    # matrix element  <bra|C|ket> = (i/I) * NSDPV_bBJ  (builder carries the i and the /I).
+    # Rank-0 pseudoscalar: dK=0, dF=0, dM=0; dN=+-1 via the 3j (parity-odd channel).
     if not (kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    return (-1)**(J1 + I + F0) * wigner_6j(J0, I, F0, I, J1, 1) \
+    return -np.sqrt(2) \
+        * (-1)**(J1 + I + F0) * wigner_6j(J0, I, F0, I, J1, 1) \
         * np.sqrt(I*(I+1)*(2*I+1)) \
-        * np.sqrt(2) * np.sqrt((2*J0+1)*(2*J1+1)*3) \
-        * wigner_9j(N0, S, J0, N1, S, J1, 1, 1, 1) \
-        * (-1)**(N1) * np.sqrt((2*N0+1)*(2*N1+1)) * wigner_3j(N0, 1, N1, 0, 0, 0) \
+        * np.sqrt(3*(2*J0+1)*(2*J1+1)) * wigner_9j(N0, S, J0, N1, S, J1, 1, 1, 1) \
+        * (-1)**(N0-K0) * np.sqrt((2*N0+1)*(2*N1+1)) * wigner_3j(N0, 1, N1, -K0, 0, K1) \
         * np.sqrt(S*(S+1)*(2*S+1))
 ```
 
-Equivalently in closed form (bra unprimed = 0, ket primed = 1):
+**Per-factor B&C provenance** (all PDF pages; review-confirmed):
+- `(−1)^{J1+I+F0} · 6j · √(I(I+1)(2I+1))` — scalar-product F-reduction phase, **Eq. (5.140)**
+  (PDF p. 198); realized for this coupling order as **Eq. (8.220)** (PDF p. 472, = `IS_bBJ`).
+- `√(3(2J0+1)(2J1+1)) · 9j` — compound-tensor reduced m.e., **Eq. (5.139)** (PDF p. 198);
+  **no phase factor** in this equation.
+- `(−1)^{N0−K0} · √((2N0+1)(2N1+1)) · 3j(N0,1,N1,−K0,0,K1)` — direction-cosine reduced m.e.
+  phase, **Eq. (5.148)** (PDF p. 199).
+- global `−√2` — the real factor of the cross-product `−i√2` (§2.1, from Eqs. (5.113)–(5.118)).
 
-> **Im⟨N J F M| C |N′ J′ F′ M′⟩ = δ_{KK′} δ_{FF′} δ_{MM′}**
+Equivalently in closed form (bra unprimed, ket primed):
+
+> **I · Im⟨N J F M| C |N′ J′ F′ M′⟩ = δ_{KK′} δ_{FF′} δ_{MM′} × (−√2)**
 > **× (−1)^{J′+I+F} {J I F; I J′ 1} √(I(I+1)(2I+1))**
-> **× √2 · √((2J+1)(2J′+1)·3) · {N S J; N′ S J′; 1 1 1} · (−1)^{N′} √((2N+1)(2N′+1)) (N 1 N′; 0 0 0) · √(S(S+1)(2S+1))**
+> **× √(3(2J+1)(2J′+1)) · {N S J; N′ S J′; 1 1 1} · (−1)^{N−K} √((2N+1)(2N′+1)) (N 1 N′; −K 0 K′) · √(S(S+1)(2S+1))**
 
-and `⟨N J F M| C |N′ J′ F′ M′⟩ = i ·` (the above).
+and `⟨N J F M| C |N′ J′ F′ M′⟩ = (i/I) ·` NSDPV_bBJ.
+
+**Antisymmetry:** `NSDPV_bBJ(a,b) = −NSDPV_bBJ(b,a)` (verified exact over the full N≤2
+basis), so `(i/I)·NSDPV` is Hermitian, matching the `iW`/`−iW` pattern of Karthein Eq. (B1).
+**Verification depth:** identical to the first-principles decoupled construction over the
+full N≤2 basis (36 states, **46 nonzero matrix elements**, max|Δ| = 2.2×10⁻¹⁶ — re-run this
+session; reviewer's independent run 1.7×10⁻¹⁶).
 
 **Selection rules the formula enforces** (all verified, §4):
 - **ΔK = 0, ΔF = 0, ΔM = 0** — `C` is a total rank-0 (pseudo)scalar (kronecker guards +
   the F-level 6j with rank 1 contracted to F-scalar). M-independent within an F-multiplet.
-- **ΔN = ±1** — from `(N 1 N′; 0 0 0)`; ΔN even (incl. 0) forbidden. This is the parity-odd
-  channel (P = (−1)^N), the defining feature of H_PV.
+- **ΔN = ±1** — for K=0, from `(N 1 N′; 0 0 0)`; ΔN even (incl. 0) forbidden. This is the
+  parity-odd channel (P = (−1)^N), the defining feature of H_PV.
 - ΔJ = 0, ±1 — allowed by the 9j (J connects via rank-1); the F-conservation with ΔJ≠0 is
   carried by the `{J I F; I J′ 1}` 6j.
 
@@ -216,7 +266,7 @@ There is **no separate `√((2F+1)(2F′+1))` factor** (unlike the Zeeman/Stark 
 
 ## 4. Expected properties (the gates the implementation must pass)
 
-All gates below were checked by building `C = −i√2 T¹(n̂,S)·T¹(I)` in the fully decoupled
+All gates below were checked by building `C = −i√2 [T¹(n̂,S)·T¹(I)]/I` in the fully decoupled
 basis `|N,m_N⟩|S,m_S⟩|I,m_I⟩` from first principles (Gaunt/3j direction cosine + explicit
 spin-1/2 spherical tensors + Clebsch–Gordan compound coupling), transforming to bβJ with the
 codebase's own audited `decouple_b_even` (`matrix_elements.py`), and comparing against the
@@ -239,57 +289,60 @@ closed form of §3.
   `Σ·n̂` (registered via `PTV_builders` in `molecule_library_class.py:386–403`, the
   `build_PTV_bBJ`/`build_PTV_bBS` entries) is T,P-odd but **real** in this basis. The NSD-PV
   `C` differs: it is T,P-odd and **imaginary**, so its builder must carry an explicit `1j`
-  that the EDM builder does not. The PV shift `evec@H_PV@evec` (Energy_Levels.py:486) is then
-  real (Hermitian H_PV), as required.
-- **Full-matrix gate:** `NSDPV_bBJ` (×i) reproduces the first-principles `C` over the entire
-  N∈{0,1} bβJ block to **max|ΔC| = 2.2×10⁻¹⁶** (16×16, 14 nonzero entries) — **verified**.
+  that the EDM builder does not (see §4d flag 1 for the dtype trap this implies). For **real**
+  eigenvectors `v` (the field-on Hamiltonian here is real-symmetric), `v·(iA)·v ≡ 0`
+  identically for real antisymmetric `A` — so the diagonal PV expectation `evec@H_PV@evec`
+  (Energy_Levels.py:486) is **identically zero, as P-oddness demands** (wording corrected per
+  review; the earlier draft said "real"). The PV observable is the off-diagonal mixing `iW`
+  between near-degenerate opposite-parity states, never a diagonal shift.
+- **Full-matrix gate:** `(i/I)·NSDPV_bBJ` reproduces the first-principles `C` over the entire
+  **N≤2 bβJ basis (36 states, 46 nonzero matrix elements) to max|ΔC| = 2.2×10⁻¹⁶** —
+  **verified** (canonical form; also exactly equal to the first draft's pinned form, Δ = 0.0).
 
-### (b) ⟨C⟩ ≈ 0.5 at the Karthein crossing
+### (b) Gate values (literal `/I`; all verified this session, machine precision)
 
-Karthein (p. 4): "the calculated W_A/2π = 16 Hz … corresponding to W/2π = 0.4 Hz when
-assuming **κ′ = 0.05 and C = 0.5**."
+Karthein Fig. 3 caption (p. 4): W/2π = 0.4 Hz "when assuming **κ′ = 0.05 and C = 0.5**" —
+both are **assumed representative values** ("C = 0.5" occurs exactly once in the paper, in
+that caption; it is not a computed matrix element and is **not a gate**). Consistency: with
+the literal `/I`, κ′W_A·|⟨C⟩| = (0.05 × 16 Hz) × (0.408…0.577) = **0.33–0.46 Hz** over the
+decoupled crossing channels — Karthein's 0.4 Hz sits inside, within rounding.
 
-**Where 0.5 lives.** The maximal |⟨C⟩| in the bβJ basis is exactly **0.5**, attained at
+**The operating-point basis.** At the 1.5167 T crossings the eigenstates are **decoupled
+products** `|N,m_N⟩|S,m_S⟩|I,m_I⟩` (Karthein's basis statement, p. 2): **both S and I are
+decoupled** there (the earlier draft's "S decoupled but I not" mechanism was wrong, as was
+its no-/I normalization — see §2.1 post-mortem). The physically operative gates are the
+decoupled-channel matrix elements:
 
-> **⟨N=0, J=½, F=0, M=0| C |N=1, J=½, F=0, M=0⟩ = −0.5 i**  (**verified**, machine precision).
+**PRIMARY implementation gate — the canonical flip-flop crossing channel:**
 
-This is the F=0 (spin-singlet of S and I) crossing — the most strongly mixing pair, and the
-operating point Karthein quotes. The decoupled-basis arithmetic (assembled term by term from
-the first-principles decoupled matrix elements):
+> **⟨0, 0, +½, −½| C |1, 0, −½, +½⟩ = +i/√3**, i.e. **|⟨C⟩| = 1/√3 ≈ 0.57735** (**verified**)
 
-bra `|N=0,J=½,F=0,M=0⟩ = (1/√2)|0,0,−½,+½⟩ − (1/√2)|0,0,+½,−½⟩` (S–I singlet, N=0)
-ket `|N=1,J=½,F=0,M=0⟩ = −(1/√3)|1,−1,+½,+½⟩ + (1/√6)|1,0,−½,+½⟩ + (1/√6)|1,0,+½,−½⟩ − (1/√3)|1,+1,−½,−½⟩`
+(labels `|N, m_N, m_S, m_I⟩`; this is the task's named pair A/B — the ΔN=1, m_N-preserving,
+S–I flip-flop channel, m_F = 0 on both sides.)
 
-and the nonzero decoupled `⟨A|C|B⟩` building blocks (m_F-conserving, ΔN=1):
-`⟨0,0,∓½,±½|C|1,0,±½,∓½⟩ = ∓0.28868 i = ∓i/(2√3)` and
-`⟨0,0,∓½,±½|C|1,∓1 or ±1, …⟩ = ±0.20412 i = ±i/(2√6)`.
+**Stretched / max-m_F channel — DeMille's Table I base value:**
 
-Summing the six surviving cross-terms (verified arithmetic):
+> **⟨0, 0, +½, −½| C |1, +1, −½, −½⟩ = −i/√6**, i.e. **|⟨C⟩| = 1/√6 ≈ 0.40825** (**verified**)
 
-```
- (1/√2)(−1/√3)(+0.20412 i) + (1/√2)(1/√6)(−0.28868 i) + (1/√2)(−1/√3)(+0.20412 i)
-+(−1/√2)(−1/√3)(−0.20412 i) + (−1/√2)(1/√6)(+0.28868 i) + (−1/√2)(−1/√3)(−0.20412 i)
-= −0.5 i.
-```
+This is the I-independent base of DeMille's `C̃⁽ᵐ⁾` column (−0.40…−0.52 across I = 9/2…1/2):
+at max m_F the nuclear q=0 factor `m_I = I` cancels the `/I` exactly — the Table-I flatness
+that pins the literal-`/I` normalization (§2.1).
 
-So **⟨C⟩ = 0.5** (magnitude) at the F=0 crossing — reproduces Karthein exactly.
+**Zero-field coupled-basis cross-checks** (bβJ eigenstates of the B=0 Hamiltonian; useful as
+formula gates even though they are not the 1.5 T operating basis; all **verified**):
 
-**Caveat on the task's named decoupled pair.** The task names the crossing as
-A ≈ |N=0,m_N=0,m_S=+½,m_I=−½⟩, B ≈ |N=1,m_N=0,m_S=−½,m_I=+½⟩ at 1.5167 T. As **single
-decoupled products**, `⟨A|C|B⟩ = +0.28868 i = i/(2√3) ≈ 0.289 i`, **not 0.5 i** (**verified**).
-The 0.5 is the value between the **coupled F=0 eigenstates**, which is the physically correct
-operating point: at 1.5167 T the electron spin is strongly Zeeman-decoupled but I is not, so
-the near-degenerate eigenstates the experiment actually crosses are the F-coupled
-combinations, and ⟨C⟩→0.5 there. The single-product 0.289 is the bare-product limit; the
-0.5 is the coupled-state value Karthein quotes. **Both are reproduced by the same
-`NSDPV_bBJ`** (the bβJ matrix element is basis-independent of how one labels the crossing).
+| bra (N=0) | ket (N=1) | ⟨C⟩ | magnitude |
+|---|---|---|---|
+| J=½, F=0 | J=½, F=0 | **−1.0 i** | 1.0 |
+| J=½, F=1 | J=½, F=1 | **+i/3** (all M) | 0.33333 |
+| J=½, F=1 | J=1½, F=1 | **−i√2/3** | 0.47140 |
 
 ### (c) Sign pattern / selection rules across the 7 crossings
 
 **The decisive fact: C conserves m_F (ΔM_F = 0).** DeMille (p. 2): "C is a pseudoscalar,
 with non-zero m.e.'s between states with the same value of m_F." **Verified**: every nonzero
 decoupled and bβJ matrix element has m_F(bra) = m_F(ket); the element is M-independent within
-an F-multiplet (F=1→F=1 gives +0.16667 i for **all** M = −1, 0, +1 — verified).
+an F-multiplet (F=1→F=1 gives +i/3 ≈ +0.33333 i for **all** M = −1, 0, +1 — verified).
 
 The task lists six `(M_a, M_b)` crossing combinations:
 `(+1,−1), (0,+1), (+1,0), (+1,−2), (0,−1), (+1,+1)`. Applying ΔM_F = 0:
@@ -313,11 +366,11 @@ but deterministically in magnitude and sign between nearby level crossings") com
 from the **intrinsic sign of ⟨C⟩ for the M_F-conserving crossings**, which alternates by
 channel. The verified bβJ ⟨C⟩ values (the only nonzero ones, all with ΔM_F=0, ΔN=1):
 
-| bra (N=0) | ket (N=1) | ⟨C⟩ |
+| bra (N=0) | ket (N=1) | ⟨C⟩ (literal /I) |
 |---|---|---|
-| J=½, F=0 | J=½, F=0 | **−0.5 i** |
-| J=½, F=1 | J=½, F=1 | **+0.16667 i** (= +i/6) |
-| J=½, F=1 | J=1½, F=1 | **−0.23570 i** (= −i/(3√2)) |
+| J=½, F=0 | J=½, F=0 | **−1.0 i** |
+| J=½, F=1 | J=½, F=1 | **+i/3** (≈ +0.33333 i) |
+| J=½, F=1 | J=1½, F=1 | **−i√2/3** (≈ −0.47140 i) |
 
 (and the Hermitian conjugates N=1→N=0 with the sign flipped per `C_{ba} = −C_{ab}`.) The
 sign **alternates** between the F=0 (−), F=1/J=½ (+), and F=1/J=1½ (−) channels — this is the
@@ -325,30 +378,42 @@ deterministic per-crossing sign reversal DeMille relies on for systematics rejec
 is **entirely within ΔM_F=0** crossings. The implementation must reproduce these three signed
 magnitudes.
 
+### (d) Implementation flags (added per review — traps for the Task-4 coding step)
+
+1. **Complex dtype allocation.** `build_PTV_bBJ` allocates its matrix as `np.zeros((n,n))` —
+   **real** dtype. Copying that pattern for NSD-PV silently drops the physics: assigning
+   `1j * NSDPV` into a real array discards the imaginary part (numpy casts on assignment).
+   The NSD-PV builder must allocate `np.zeros((n,n), dtype=complex)` **before** multiplying
+   by `1j`.
+
+2. **W-sign convention — an internal tension in both papers; pin to Eq. (B1).** Karthein's
+   p. 2 definition `iW ≡ κ′W_A⟨Ψ⁻_↓|C|Ψ⁺_↑⟩` says `⟨−|H_PV|+⟩ = +iW`; but Eq. (B1) in the
+   (+,−) basis ordering places `−iW` in that slot (i.e. B1 ⟹ `⟨+|H_PV|−⟩ = +iW`,
+   `⟨−|H_PV|+⟩ = −iW`). The two statements differ by an overall sign. The **identical**
+   tension exists in DeMille (Eq. (1) layout vs his iW definition — verified at the PDF,
+   p. 2), so this is an inherited notational looseness, harmless for magnitudes and for the
+   asymmetry observable. The repo's conventions record (`docs/sio-conventions.md` +
+   `Source Code/test_sio_conventions.py`) anchors SiO⁺ conventions on Karthein's explicit
+   equations, so the implementation **pins to Eq. (B1)**: a **positive real coefficient** for
+   (bra = |+⟩ = even-N row, ket = |−⟩ = odd-N column) gives `⟨+|H_PV|−⟩ = +iW`.
+
 ---
 
-## 5. UNRESOLVED items
+## 5. Review items (status after the 2026-06-11 spectroscopy-reviewer audit)
 
-1. **The `(−1)^{N′}` ket-N phase in the J-level reduced matrix element is empirically fixed,
-   not yet analytically anchored to a B&C equation.** The magnitude (`√2 · √((2J+1)(2J′+1)·3)
-   · 9j · √((2N+1)(2N′+1)) (N 1 N′;000) · √(S(S+1)(2S+1))`) and the global `−i√2` are derived
-   from B&C (5.109)/(5.111)/(5.113–5.118) and the (8.220) F-reduction. But the specific
-   `(−1)^{N′}` (and the overall global sign that makes ⟨N=0,J½,F0|C|N=1,J½,F0⟩ come out **−**0.5 i
-   rather than +0.5 i) were pinned by matching the first-principles decoupled construction,
-   not transcribed from a single B&C equation number. The codebase's direction-cosine
-   convention uses `(−1)^{N−K}` (e.g. `Sz_bBJ`, `T2IS_bBJ`, `StarkZ_bBJ` all carry
-   `(−1)^{N0−K0} wigner_3j(N0,1,N1,-K0,0,K1)`); for K=0 and ΔN=±1, `(−1)^{N0} = (−1)^{N1±1} =
-   −(−1)^{N1}`, so the codebase-style `(−1)^{N0−K0}` and the validated `(−1)^{N1}` differ by an
-   overall sign that the global `−i√2`'s sign absorbs. **The reviewer should confirm (i) the
-   compound-rank-1 9j reduced-matrix-element normalization against B&C Ch. 5 (the analogue of
-   the `T2IS_bBJ` rank-2 derivation), and (ii) that the `(−1)^{N1}`+global-sign choice is the
-   one consistent with the codebase's `(−1)^{N0−K0}` direction-cosine convention** — i.e.
-   re-express the validated formula in `(−1)^{N0−K0} wigner_3j(N0,1,N1,−K0,0,K1)` form (it
-   should be algebraically identical for K=0) before implementation, so the new element
-   matches `Sz_bBJ`/`StarkZ_bBJ` letter-for-letter. The *numerics are not in doubt* (machine
-   precision against first principles); only the canonical citation form of the phase is open.
+1. **RESOLVED — the empirical `(−1)^{N′}` phase IS the B&C-derived one.** The reviewer
+   anchored every factor analytically: **Eq. (5.139)** (PDF p. 198) gives the compound
+   rank-1 9j reduced m.e. with **no phase**; **Eq. (5.140)** (PDF p. 198) gives the
+   scalar-product phase `(−1)^{J′+I+F}`; **Eq. (5.148)** (PDF p. 199) gives the
+   direction-cosine phase `(−1)^{N−K}`. For K=0, ΔN=±1, `(−1)^{N−K} = −(−1)^{N′}`, so the
+   first draft's `+√2·(−1)^{N′}` equals the canonical `−√2·(−1)^{N0−K0}` exactly. §3 now
+   states the formula in the canonical `(−1)^{N0−K0}·wigner_3j(N0,1,N1,−K0,0,K1)` form,
+   letter-for-letter the codebase's direction-cosine convention (`Sz_bBJ`, `StarkZ_bBJ`,
+   `T2IS_bBJ`). Equality of the two forms verified exactly (Δ = 0.0 over every N≤2 pair);
+   first-principles agreement 2.2×10⁻¹⁶ (46 nonzero MEs).
 
-2. **Karthein App. A/B layout vs the task description.** The task refers to "Karthein Eq. (B1)
+2. **LAYOUT NOTE (stays open; non-blocking) — Karthein App. A/B layout vs the task
+   description.** The task refers to "Karthein Eq. (B1)
    and Appendix B define … the C operator; Appendix A the basis." In the local copy
    (arXiv:2310.11192v1, Zotero LYF85P8C): **App. A** = "Effects of Time-Varying Electric
    Fields" (gives the decoupled basis `|N,mN⟩|S,mS⟩|I,mI⟩`, H_eff Eq. (A2), n̂ in spherical
@@ -358,31 +423,38 @@ magnitudes.
    differ; cited locations above are this local copy. (Non-blocking; the operator and Eq. (B1)
    are both quoted verbatim above.)
 
-3. **`1/I` normalization — RESOLVED for I=1/2; OPEN only for I≠1/2 generality.** Karthein
-   writes `C = (n̂×S)·I/I` with an explicit `/I`. The data settles the reading (§2.1, §4b):
-   the operator that reproduces Karthein's quoted `⟨C⟩=0.5` at the F=0 crossing is
-   **`(n̂×S)·Î`** (spin operator `Î`, eigenvalues m_I, reduced m.e. `√(I(I+1)(2I+1))`) with
-   **no literal `/I` division** — verified to give exactly −0.5 i, whereas the literal `/(I=½)`
-   gives −1.0 i (2× too big) and `/√(I(I+1))` gives −0.577 i. So for ²⁹SiO⁺ (I=1/2) the
-   normalization is closed and `NSDPV_bBJ` (which embeds `√(I(I+1)(2I+1))`) is correct and
-   verified. **Open only for generality:** for an I≠1/2 isotopologue, whether Karthein's `/I`
-   then means `/(quantum number I)`, `/√(I(I+1))`, or is again absorbed must be re-derived
-   before reuse — the I=1/2 coincidence (where several conventions can collapse to the same
-   0.5) does not fix the I>1/2 factor. Non-blocking for ²⁹SiO⁺; flagged for any future
-   heavier-nucleus port. The reviewer should still confirm the `√(I(I+1)(2I+1))` reduced-m.e.
-   placement against B&C Eq. (8.220)'s `{I(I+1)(2I+1)}^{1/2}` (it matches `IS_bBJ`).
+3. **RESOLVED — literal `/I` adopted (supersedes both of this note's earlier readings).**
+   The first draft kept `/I` symbolic; an interim revision wrongly concluded "no `/I`" by
+   anchoring on Karthein's `C = 0.5` — which turned out to be an **assumed** Fig.-3-caption
+   value evaluated against a zero-field F=0 singlet that does not survive at the 1.5 T
+   operating point (§2.1 post-mortem). The decisive evidence is **DeMille Table I flatness**
+   (verified at the PDF): `C̃⁽ᵐ⁾` is I-independent across I = 9/2…1/2, which only the
+   literal-`/I` operator produces (the max-m_F channel has nuclear factor `m_I = I`, exactly
+   cancelling `/I`; base 1/√6 ≈ 0.408 — verified). Without `/I`, SrF (I=9/2) would read
+   ≈1.84, not −0.40. So: `⟨C⟩ = (i/I)·NSDPV_bBJ`, i.e. **×2 for I=1/2**, and the
+   generalization to I≠1/2 is now unambiguous — divide by the quantum number I. The
+   `√(I(I+1)(2I+1))` reduced-m.e. placement inside `NSDPV_bBJ` matches B&C Eq. (8.220)'s
+   `{I(I+1)(2I+1)}^{1/2}` and the audited `IS_bBJ`.
 
 ---
 
-## Validation summary (executed in `Structure` conda env)
+## Validation summary (executed in `Structure` conda env; amended values use literal `/I`)
 
 - `(A×B)·C = −i√2 [T¹(T¹A,T¹B)]·T¹C` factor: verified to machine precision over 3 random
   vector triples (`(n̂×S)·I` real = `−i√2 [T¹(n̂,S)·T¹(I)]`).
 - Decoupled `C` purely imaginary: max|Re| = 0.
 - bβJ `C` Hermitian: max|C−C†| = 2.8×10⁻¹⁷.
 - Basis change `decouple_b_even` unitary: max|UᵀU−I| = 4.4×10⁻¹⁶.
-- `NSDPV_bBJ` (×i) vs first-principles `C`: **max|Δ| = 2.2×10⁻¹⁶** (full 16×16 block).
+- **Canonical §3 form ≡ first draft's empirically-pinned form: Δ = 0.0 (exact) over every
+  state pair of the N≤2 basis** (36 states, K=0).
+- `(i/I)·NSDPV_bBJ` vs first-principles `C`: **max|Δ| = 2.2×10⁻¹⁶ over the full N≤2 basis,
+  46 nonzero MEs** (reviewer's independent run: 1.7×10⁻¹⁶).
+- Antisymmetry `NSDPV(a,b) = −NSDPV(b,a)`: max|sum| = 0.0 (exact), N≤2.
 - F-coupling 6j ≡ audited `IS_bBJ` 6j: 0 mismatches over all (J,J′,F).
-- ⟨N=0,J½,F0|C|N=1,J½,F0⟩ = −0.5 i (Karthein C=0.5): verified, incl. hand arithmetic.
-- M-independence (F=1→F=1: +i/6 for all M): verified.
+- **PRIMARY gate** ⟨0,0,+½,−½|C|1,0,−½,+½⟩ = +i/√3 (|⟨C⟩| = 0.57735): verified.
+- Stretched gate ⟨0,0,+½,−½|C|1,+1,−½,−½⟩ = −i/√6 (0.40825, DeMille Table-I base): verified.
+- Zero-field coupled checks: F=0↔F=0 → −1.0 i; F=1(J½)↔F=1(J½) → +i/3 (all M);
+  F=1(J½)↔F=1(J1½) → −i√2/3: all verified.
+- DeMille Table I read at the PDF (p. 4): C̃⁽ᵐ⁾ flat (−0.40…−0.52) across I = 9/2…1/2;
+  caption "at the level-crossing with the maximum value of m_F": confirmed verbatim.
 - 5 of 6 task (M_a,M_b) crossings vanish by ΔM_F=0; only (+1,+1) survives: verified.
