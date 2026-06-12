@@ -131,6 +131,8 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanZ': me.ZeemanZ_bBJ,         # Zeeman interaction with lab z magnetic field
             'StarkZ': me.StarkZ_bBJ,            # Stark interaction with lab z electric field
+            'StarkX': me.StarkX_bBJ,            # Stark interaction with lab x (transverse, p=+-1) electric field
+            'ZeemanX': me.ZeemanX_bBJ,          # Zeeman interaction with lab x (transverse, p=+-1) magnetic field
             'ZeemanLZ': me.ZeemanLZ_bBJ,         # Including coupling to internuclear axis
             'ZeemanIZ': me.ZeemanIZ_bBJ,        #Nuclear spin coupling
             }

@@ -225,6 +225,28 @@ def StarkZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
         return (-1)**(F0-M0+J0+I+F1+1+N0+S+J1+1+N0-K0)*np.sqrt((2*F0+1)*(2*F1+1)*(2*J0+1)*(2*J1+1)*(2*N0+1)*(2*N1+1))*\
             wigner_3j(F0,1,F1,-M0,0,M1)*wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(N1,J1,S,J0,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
 
+def StarkX_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # Lab-frame TRANSVERSE (x) electric-dipole element for case b(beta-J).
+    # Built from StarkZ_bBJ (the p=0 axial element, verified-in-use by the 3.33 kHz
+    # crossing-drive oracle) by the SAME axial->transverse transform the codebase uses
+    # for the Zeeman channel (ZeemanZ_bBJ -> ZeemanX_bBJ, matrix_elements.py:169/196):
+    #   - selection rule M0=M1 (Delta M=0)  ->  |M0-M1|=1 (Delta M=+-1);
+    #   - the single lab Wigner factor wigner_3j(F0,1,F1,-M0,0,M1)  is replaced by the
+    #     real combination (1/sqrt2)*sum_{p=-1,+1} (-1)**(p/2+1/2) wigner_3j(F0,1,F1,-M0,p,M1),
+    #     i.e. d_x = (T^1_{p=-1}(d) - T^1_{p=+1}(d))/sqrt2  (the same p-combination and
+    #     (-1)**(p/2+1/2) phase as ZeemanX_bBJ: +T^1_{-1} for p=-1, -T^1_{+1} for p=+1).
+    # Every p-INDEPENDENT factor (overall phase (-1)**(...), the J and N reduced-matrix
+    # parts, and the molecule-frame q=0 direction cosine wigner_3j(N0,1,N1,-K0,0,K1)) is
+    # carried over UNCHANGED from StarkZ_bBJ -- only the lab F,M projection differs.
+    # Phase convention follows the codebase's existing Zeeman transverse operator exactly;
+    # gates depend only on |element|^2, Hermiticity, and parity structure (overall sign-free).
+    if not kronecker(abs(M0-M1),1)*kronecker(K0,K1):
+        return 0
+    else:
+        return (1/np.sqrt(2))*(-1)**(F0-M0+J0+I+F1+1+N0+S+J1+1+N0-K0)*np.sqrt((2*F0+1)*(2*F1+1)*(2*J0+1)*(2*J1+1)*(2*N0+1)*(2*N1+1))*\
+            sum([(-1)**(p/2+1/2)*wigner_3j(F0,1,F1,-M0,p,M1) for p in [-1,1]])*\
+            wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(N1,J1,S,J0,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
+
 #Check sign on -np.sqrt
 def p_lD_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
     if not kronecker(M0,M1)*kronecker(F0,F1)*kronecker(J0,J1)*kronecker(N0,N1)*(not kronecker(K0,K1)):
