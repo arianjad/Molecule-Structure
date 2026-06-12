@@ -527,13 +527,22 @@ def gate3_price(g2):
     om_lab_canon = omega_direct("canonical", E_LAB)
     if X2["E2"] > 0 and X2["E"] >= E_INFEASIBLE_VCM:
         om_codeg = omega_direct("canonical", X2["E"])
+        # W/2pi = 0.4721 Hz at kappa'=0.05, canonical crossing
+        # (test_nsdpv_operator.py G3). Ratios computed, not hardcoded: the
+        # earlier "~1e4x the PV signal" was a hardcoded misattribution -- 1e4
+        # is the LAB-field ratio (3.3 kHz / 0.472 Hz ~ 7e3), not the
+        # co-degeneracy-field ratio (1.9 MHz / 0.472 Hz ~ 4e6).
+        W_PV_HZ = 0.4721
         verdict = ("INFEASIBLE: the only opposite-sign pairing with a real root "
                    f"(X2) needs E={X2['E']:.0f} V/cm ({X2['E']/1e3:.1f} kV/cm), "
                    f"far above the ~1 kV/cm Penning-trap ceiling AND the "
                    f"manuscript's no-DC-E systematics constraint; there the "
                    f"direct sigma_x coupling is Omega={om_codeg:.0f} kHz "
-                   f"(vs {om_lab_canon:.1f} kHz at the lab 6 V/cm) -- a "
-                   f"static-dressing PV-mimicking systematic ~1e4x the PV signal. "
+                   f"= {om_codeg*1e3/W_PV_HZ:.0e}x the {W_PV_HZ} Hz PV signal "
+                   f"(vs {om_lab_canon:.1f} kHz = "
+                   f"{om_lab_canon*1e3/W_PV_HZ:.0e}x at the lab 6 V/cm) -- "
+                   f"the static-dressing sigma_x systematic burden the "
+                   f"field-free design avoids. "
                    f"X1 has NO real root at any E. Opposite-<C> co-degeneracy is "
                    f"NOT achievable with an accessible DC field.")
     else:
