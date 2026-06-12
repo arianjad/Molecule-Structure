@@ -84,9 +84,14 @@ E_NOISE_FRAC = 1e-3              # fractional E-field noise (1e-3) for shift-noi
 # PV-active crossing fields (test_nsdpv_operator.py G5 deliverable; NOT re-derived
 # constants -- the script LOCATES them and asserts it found these).
 CROSS = {
-    "canonical":          dict(Bc=15167.2, a=3, b=9, Csign=+1, label="(0,0) flip-flop"),
-    "stretched_partner":  dict(Bc=15017.0, a=3, b=5, Csign=-1, label="(0,0)' stretched-partner"),
-    "plus1plus1":         dict(Bc=15296.9, a=2, b=6, Csign=-1, label="(+1,+1) stretched"),
+    # dkA/dkB: decoupled kets (N, m_N, m_S, m_I) of the two partners -- the
+    # index-free seeding anchors (the near-pure high-field components, w ~ 0.999).
+    "canonical":          dict(Bc=15167.2, a=3, b=9, Csign=+1, label="(0,0) flip-flop",
+                               dkA=(0, 0, 0.5, -0.5), dkB=(1, 0, -0.5, 0.5)),
+    "stretched_partner":  dict(Bc=15017.0, a=3, b=5, Csign=-1, label="(0,0)' stretched-partner",
+                               dkA=(0, 0, 0.5, -0.5), dkB=(1, 1, -0.5, -0.5)),
+    "plus1plus1":         dict(Bc=15296.9, a=2, b=6, Csign=-1, label="(+1,+1) stretched",
+                               dkA=(0, 0, 0.5, 0.5), dkB=(1, 1, -0.5, 0.5)),
 }
 
 FIG_PATH = os.path.join(
@@ -280,13 +285,39 @@ def locate_crossings():
 
 
 def make_gap_tracker(Bgrid):
-    """Return gap(name) seeds and a gap(ra, rb, B, E) closure that tracks the
-    A and B partners by max-overlap with their E=0 tracked eigenvectors."""
-    EVg, VECg = zeeman_map(M, Bgrid)
+    """Return gap(name) seeds and a gap(ra, rb, B, E) closure.
+
+    FIXED 2026-06-12 (orchestrator): seeds were previously grabbed by tracked
+    COLUMN INDEX from a ZeemanMap starting at 14950 G -- a different index space
+    from the zero-field-tracked locate_crossings() map that validated the
+    (a, b) columns. The canonical pairing happened to map through; the (+1,+1)
+    pairing grabbed a wrong level (its figure trace crossed at ~15160 G instead
+    of 15296.9 G). Seeds are now selected INDEX-FREE: by maximum overlap with
+    each partner's decoupled ket (CROSS[name]['dkA'/'dkB']), evaluated 15 G
+    below each crossing's own Bc (off-crossing, conditioning-safe) -- the same
+    method as test_nsdpv_operator.py G5. Bgrid arg kept for call compatibility.
+    """
+    q = M.q_numbers
+    dq = M.alt_q_numbers['decoupled']
+    U = M.library.basis_changers['b_decoupled'](q, dq)   # (nd, n): decoupled <- bBJ
+
+    def dket(N, mN, mS, mI):
+        for k in range(U.shape[0]):
+            if (dq['N'][k] == N and dq['M_N'][k] == mN and
+                    dq['M_S'][k] == mS and dq['M_I'][k] == mI):
+                return np.asarray(U[k, :], dtype=float)
+        raise KeyError(f"decoupled ket {(N, mN, mS, mI)} not found")
+
     seeds = {}
     for name, c in CROSS.items():
-        j = int(np.argmin(np.abs(Bgrid - c["Bc"])))
-        seeds[name] = (VECg[j, c["a"]].copy(), VECg[j, c["b"]].copy())
+        ee, vv = M.eigensystem(0.0, c["Bc"] - 15.0)
+        oa = np.abs(vv @ dket(*c["dkA"]))
+        ob = np.abs(vv @ dket(*c["dkB"]))
+        ka, kb = int(np.argmax(oa)), int(np.argmax(ob))
+        if oa[ka] ** 2 < 0.5 or ob[kb] ** 2 < 0.5:
+            raise RuntimeError(f"{name}: seed overlap too low "
+                               f"(wA={oa[ka]**2:.3f}, wB={ob[kb]**2:.3f})")
+        seeds[name] = (vv[ka].copy(), vv[kb].copy())
 
     def gap(ra, rb, B, E):
         ee, vv = M.eigensystem(E, B)
@@ -295,6 +326,24 @@ def make_gap_tracker(Bgrid):
         return ee[kb] - ee[ka], vv[ka], vv[kb]
 
     return seeds, gap
+
+
+def check_seed_integrity(seeds, gap):
+    """Each pairing's tracked E=0 gap must cross zero within 2 G of its
+    recorded Bc -- the gate that would have caught the index-space bug."""
+    ok_all, details = True, []
+    for name, c in CROSS.items():
+        ra, rb = seeds[name]
+        Bw = np.linspace(c["Bc"] - 10.0, c["Bc"] + 10.0, 161)
+        gv = np.array([gap(ra, rb, B, 0.0)[0] for B in Bw])
+        i = int(np.argmin(np.abs(gv)))
+        Bzero = float(Bw[i])
+        ok = abs(Bzero - c["Bc"]) < 2.0 and np.min(np.abs(gv)) < 1.0
+        ok_all &= ok
+        details.append(f"{name}: zero at {Bzero:.1f} G (ref {c['Bc']:.1f})")
+    record("G2a seed integrity (each pairing crosses at its recorded Bc +/- 2 G)",
+           ok_all, "; ".join(details))
+    return ok_all
 
 
 def stark_rate(seeds, gap, name, Bfix, Efit=np.array([0., 100., 200., 400., 700., 1000.])):
@@ -324,6 +373,7 @@ def gate2_codegeneracy():
 
     Bgrid = np.linspace(14950.0, 15350.0, 41)
     seeds, gap = make_gap_tracker(Bgrid)
+    check_seed_integrity(seeds, gap)
 
     # Common Zeeman slope (E=0) for each crossing.
     slopes = {}
@@ -558,11 +608,26 @@ def make_figure(g2):
     ax2.plot([], [], "C2", lw=2.0,
              label=r"$\Delta_2=0$ (+1,+1), $\langle C\rangle<0$")
     if Ecd > 0:
-        ax2.plot(Bcd, E2cd, "k*", ms=18, zorder=5,
+        # Star = the TRUE full-model contour intersection at E = Ecd (gate),
+        # not the analytic-quadratic estimate. Root-find both contours' B.
+        ra1f, rb1f = seeds["canonical"]
+        ra2f, rb2f = seeds["plus1plus1"]
+        Bscan = np.linspace(Bcd - 60.0, Bcd + 60.0, 121)
+        d1s = np.array([gap(ra1f, rb1f, B, Ecd)[0] for B in Bscan])
+        d2s = np.array([gap(ra2f, rb2f, B, Ecd)[0] for B in Bscan])
+        B1s = float(Bscan[np.argmin(np.abs(d1s))])
+        B2s = float(Bscan[np.argmin(np.abs(d2s))])
+        star_ok = abs(B1s - B2s) < 3.0
+        Bstar = 0.5 * (B1s + B2s)
+        record("FIGa star = true contour intersection (Delta1=0 and Delta2=0 "
+               "within 3 G at E_codeg)", star_ok,
+               f"B(D1=0)={B1s:.1f} G, B(D2=0)={B2s:.1f} G at E={Ecd:.0f} V/cm; "
+               f"analytic Bcd={Bcd:.1f} G")
+        ax2.plot(Bstar, E2cd, "k*", ms=18, zorder=5,
                  label=f"co-degeneracy: E={Ecd/1e3:.1f} kV/cm\n"
-                       f"(B={Bcd:.0f} G; INFEASIBLE)")
+                       f"(B={Bstar:.0f} G; INFEASIBLE)")
         ax2.annotate(f"E = {Ecd/1e3:.1f} kV/cm",
-                     xy=(Bcd, E2cd), xytext=(Bcd - 180, E2cd * 0.78),
+                     xy=(Bstar, E2cd), xytext=(Bstar - 180, E2cd * 0.78),
                      fontsize=8, color="k",
                      arrowprops=dict(arrowstyle="->", color="k", lw=0.8))
     ax2.text(0.02, 0.96,
