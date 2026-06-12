@@ -171,10 +171,61 @@ def check_C5():
            f"[guard: params.get('g_l') is not None, hamiltonian_builders.py:54]")
 
 
+# ---------------------------------------------------------------------------
+# C3b - first-principles N-diagonality of the nuclear-spin Zeeman (added
+#   2026-06-12 after Arian challenged the delta_NN' fix: "shouldn't ZeemanIZ_bBJ
+#   be able to connect different N?").
+#   The operator is I_z = 1_rot (x) 1_S (x) I_z -- the identity on the
+#   rotational and electron-spin spaces -- so it is RIGOROUSLY diagonal in N
+#   (and J): the J-space reduced matrix element of an I-only operator is
+#   <(N'S)J'||1||(NS)J> = delta_NN' delta_JJ' sqrt(2J+1). The printed B&C
+#   F-decoupling formula carries no explicit N because it is derived WITHIN one
+#   rotational level; without the guard, S=1/2 states sharing J from different N
+#   (N=0,J=1/2 vs N=1,J=1/2) leak through -- and the resulting element is
+#   PARITY-VIOLATING (mu_I.B is P-even; <+|P-even|-> = 0 identically).
+#   Executable proof: build I_z in the DECOUPLED product basis (where its
+#   N-diagonality is true by construction, diag(m_I)), transform exactly to bBJ
+#   with the audited b_decoupled change of basis, and compare element-by-element
+#   against the formula. Also: the electron-spin analog ZeemanZ_bBJ has always
+#   carried delta_NN' -- ZeemanIZ was the codebase inconsistency.
+#   (What CAN connect different N: operators with genuine n-hat content --
+#   StarkZ rank-1 -> dN=+-1; dipolar T2(I,S) rank-2 -> dN=0,+-2; the anapole C
+#   rank-1 P-odd -> dN=+-1. Even the anisotropic nuclear-shielding correction
+#   to the nuclear Zeeman is rank-2 in n-hat: dN=0,+-2, P-even -- never N=0<->1.)
+# ---------------------------------------------------------------------------
+def check_C3b():
+    import matrix_elements as me
+    X = MoleculeLevels.initialize_state(
+        'SiO+', 'X', 0, N_list=[0, 1, 2], fermion_or_boson='boson',
+        I_nuclei=[0, 1 / 2], P_values=[1 / 2])
+    q, dq = X.q_numbers, X.alt_q_numbers['decoupled']
+    U = X.library.basis_changers['b_decoupled'](q, dq)
+    n = X.size
+    Iz_truth = U.T @ np.diag(np.array(dq['M_I'], dtype=float)) @ U
+    qs = ['K', 'N', 'J', 'F', 'M']
+    F = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            a = {k + '0': q[k][i] for k in qs}
+            b = {k + '1': q[k][j] for k in qs}
+            F[i, j] = me.ZeemanIZ_bBJ(**a, **b)
+    dev = float(np.max(np.abs(F - Iz_truth)))
+    # every different-N slot of the TRUE operator is exactly zero:
+    offN = max(abs(Iz_truth[i, j]) for i in range(n) for j in range(n)
+               if q['N'][i] != q['N'][j])
+    ok = dev < 1e-12 and offN == 0.0
+    record("C3b nuclear-Zeeman N-diagonality (first-principles decoupled-basis "
+           "proof; guard delta_NN' is physics, not convention)", ok,
+           f"max|formula - exact transform| = {dev:.2e} over all {n}x{n} "
+           f"elements; max|true I_z| on different-N slots = {offN:.1e} "
+           f"(pre-fix formula fabricated -0.5 there)")
+
+
 if __name__ == "__main__":
     check_C1()
     check_C2()
     check_C3()
+    check_C3b()
     check_C4()
     check_C5()
     n_pass = sum(1 for _, p, _ in _results if p)
