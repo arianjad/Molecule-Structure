@@ -136,6 +136,8 @@ def H_even_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
             N0 = np.zeros((size,size))
         if params.get('p2q_D') is not None:
             p2q0 = np.zeros((size,size))
+        if params.get('A_D') is not None:
+            SO0 = np.zeros((size,size))
         for i in range(size):
             for j in range(size):
                 state_out = {q+'0':q_numbers[q][i] for q in q_str}
@@ -160,11 +162,15 @@ def H_even_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
                     N0[i,j] += elements['N^2']
                 if params.get('p2q_D') is not None:
                     p2q0[i,j] += elements['Lambda Doubling p+2q']
+                if params.get('A_D') is not None:
+                    SO0[i,j] += elements['SO']
         # Need to add centrifugal terms
         if params.get('D') is not None:
             H0 = matadd(H0,(-params['D']*N0@N0))
         if params.get('p2q_D') is not None:
             H0 = matadd(H0,(params['p2q_D']/2*(p2q0@N0+N0@p2q0)))
+        if params.get('A_D') is not None:
+            H0 = matadd(H0,(params['A_D']/2*(SO0@N0+N0@SO0)))  # Mooij arXiv:2511.06986 Eq.(3): H_LS = A*LzSz + (A_D/2)*{LzSz, R^2}; pgopher-congruent. SO0 = <LzSz>, N0 = <N^2> (R^2-form when formalism:'N2' is set in dict).
         H_symbolic = sy.Matrix(H0)+Ez*sy.Matrix(V_E)+Bz*sy.Matrix(V_B)
         H0_num = np.array(H0).astype(np.float64)
         V_E_num = np.array(V_E).astype(np.float64)

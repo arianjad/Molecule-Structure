@@ -79,6 +79,7 @@ molecules['BaF']['boson']['X0'] = {
     'Lambda': 0,            # X^2Sigma+: |Lambda|=0
     'Be': 6473.9588,        # Ryzlewicz1980 [22]; 138Ba19F; 0.21594802 cm^-1
     'Gamma_SR': 80.984,     # Ryzlewicz1980 [22]; 0.0027013 cm^-1
+    'Gamma_D': -0.0584,     # Ryzlewicz1980 [22] (Mooij arXiv:2511.06986 Tbl III row "Centrifugal distortion of gamma"); -1.95e-6 cm^-1; consumed by H_even_X via Gamma_D builder slot ([hamiltonian_builders.py:33,81]: (Gamma_D/2){N.S,N^2})
     'bF': b_2_bF(63.509, 8.224),  # =66.2503; Frosch-Foley b,c Ernst1986 [23]; bF=b+c/3 (B&C Eq.8.511 p.605/p.845; Steimle PRA84 012508 TblIII bF(F)=66.25 direct)
     'c': 8.224,             # Ernst1986 [23]; 0.0002743 cm^-1
     'D': 0.0055250,         # Effantin1990 [18]; 1.84294e-7 cm^-1
@@ -96,7 +97,7 @@ molecules['BaF']['boson']['A0'] = {
     'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
     'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
     'D': 0.006007,          # Effantin1990 [18]; 2.0036e-7 cm^-1
-    'A_D': 0.93,            # Steimle2011 [24]; consumed iff A2Pi builder reads it (plan Task 2 confirms)
+    'A_D': 0.93,            # Steimle2011 [24] (Mooij arXiv:2511.06986 Tbl III row "Centrifugal distortion of A"); 3.1e-5 cm^-1; consumed by H_even_A via A_D slot ([hamiltonian_builders.py]: (A_D/2){LzSz,R^2}, Mooij Eq.(3))
     'muE': 1.50*0.503412,   # 1.50(2) D A2Pi1/2, Steimle PRA84 012508 Table V; Debye->MHz/(V/cm)
     'g_S': 2.0023,
     'g_lp': -0.536,         # MEASURED parity-dependent anisotropic g-factor g_l'(A2Pi,v=0), 138BaF: -0.536(23). Steimle, Frey, Le, DeMille, Rahmlow, Linton, Phys. Rev. A 84 012508 (2011) [24], Table V (read citation-grade; p.22: Curl-analog estimate -0.2575/(2*0.21954)=-0.587 "in very good agreement with the experimental value (=-0.536(23))"). Same p/(2B) convention as the validated RaF A0 g_lp (below) & H_even_A ZeemanParityZ. Dimensionless; Zeeman-only -> ZERO effect on B=0 spectra. (g_S fixed 2.002 and perp g_l constrained 0 in Steimle's A2Pi fit, consistent with this dict.)
