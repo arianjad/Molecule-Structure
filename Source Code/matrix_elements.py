@@ -984,6 +984,7 @@ def TDM_p_odd_aBJ(p,K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=
                 wigner_6j(F11,F1,iH,F0,F10,1)*(-1)**(F11+J0+I+1)*np.sqrt((2*F10+1)*(2*F11+1))*\
                 wigner_6j(J1,F11,I,F10,J0,1)*(-1)**(J0-P0)*np.sqrt((2*J0+1)*(2*J1+1))*wigner_3j(J0,1,J1,-P0,q,P1)
                 for q in range(-1,2)]) # If L is changing, can only get q=+-1 transitions
+        return TDM_p
 
 def TransitionDipole_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(Sigma0,Sigma1):
