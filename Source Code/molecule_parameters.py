@@ -34,7 +34,7 @@ c=params_general['c']
 
 # Dictionary to hold all molecule parameters
 
-species_names = ['YbOH','CaOH','BaOH','BaF','RaF','RaOH','YbF','DyO']
+species_names = ['YbOH','CaOH','BaOH','BaF','RaF','RaOH','YbF','DyO','SiO+']
 
 # Build nested structure with fermion/boson branches
 molecules = {molecule_name: {'boson': {}, 'fermion': {}} for molecule_name in species_names}
@@ -394,6 +394,22 @@ molecules['DyO']['boson']['A000'] = {
     }
 
 
+molecules['SiO+']['boson']['X0'] = {
+    # 29Si16O+ X2Sigma+, v=0. Effective SINGLE-STATE Hamiltonian constants
+    # (Karthein 2024 Eq. A2 model). All MHz.
+    'Be': 21243.5,   # B0 = 21.2435(12) GHz, direct exp, 29SiO+. Zhu et al., JMS 384, 111582 (2022), Tab. 2
+    'D': 3.2e-2,     # D0 = 3.2(7)e-5 GHz, same source
+    'Gamma_SR': 12., # gamma_eff = 0.012(25) GHz, single-state fit, Zhu Tab. 2.
+                     # WARNING: Cameron 1995 deperturbed gamma = 344.16(30) MHz is a
+                     # DIFFERENT MODEL (explicit A2Pi coupling) -- do not substitute. (Decision D1)
+    'bF': -797.,     # Fermi contact, 29Si, neon-matrix ESR: Knight et al., JACS 107, 2857 (1985)
+                     # via Zhu Tab. 2; gas-phase -600(220) MHz consistent
+    'c': -192.,      # = 3t, t = -64(1) MHz (Knight 1985). bF/c <-> b/c conversion gate runs in Task 2
+    'muE': 4.147*0.503412,  # 4.147 D ab initio MRDCI, UNMEASURED: Chattopadhyaya et al.,
+                            # THEOCHEM 639, 177 (2003); adopted by Karthein 2024 SM-A. [MHz/(V/cm)]
+    'g_N': -1.1106,  # 29Si: mu = -0.55529 mu_N, I=1/2 (Stone, ADNDT 90, 75 (2005));
+                     # sign convention vs code's nuclear-Zeeman operator gated in Task 2
+    }
 
 
 def get_molecule_params(molecule_name, elec_state,vib_state, fermion_or_boson=None,
