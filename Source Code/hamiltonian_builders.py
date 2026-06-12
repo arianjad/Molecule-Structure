@@ -2,7 +2,7 @@ import numpy as np
 import sympy as sy
 from functools import partial
 from molecule_parameters import params_general
-from matrix_elements import MQM_bBS,EDM_bBS,Sz_bBJ,T2QM_bBS,b2a_matrix,decouple_b_even,bBS_2_bBJ_matrix,recouple_J_even,decouple_b_I_even, NSM_bBS
+from matrix_elements import MQM_bBS,EDM_bBS,Sz_bBJ,T2QM_bBS,b2a_matrix,decouple_b_even,bBS_2_bBJ_matrix,recouple_J_even,decouple_b_I_even, NSM_bBS, NSDPV_bBJ
 
 def H_even_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all',precision=5,trap=False,theta_num=None):
     q_str = list(q_numbers)     # Get keys for quantum number dict
@@ -310,6 +310,36 @@ def build_PTV_bBJ(q_numbers):
             state_in = {q+'1':q_numbers[q][j] for q in q_str}
             q_args = {**state_out,**state_in}
             H_PTV[i,j] = -EDM*Sz_bBJ(**q_args)
+    return H_PTV
+
+def build_PTV_NSDPV(q_numbers):
+    # NSD-PV anapole operator C = (n_hat x S).I / I  in case b(beta-J).  Returns the operator
+    # MATRIX of C itself (per unit kappa' W_A); the caller scales by the scalar kappa' W_A to get
+    # H_eff = kappa' W_A C = iW (Karthein H_eff = kappa' W_A C; Eq. (B1) the 2x2 [[.,iW],[-iW,.]]).
+    #
+    # Flag 1 (note section 4d): allocate COMPLEX dtype. C is T,P-odd and IMAGINARY (unlike the
+    # real EDM operator Sz_bBJ in build_PTV_bBJ); assigning  1j*NSDPV  into a real np.zeros array
+    # would silently drop the imaginary part. So dtype=complex BEFORE the 1j multiply.
+    #
+    # Flag 2 (note section 4d): sign pinned to Karthein Eq. (B1). The stored element is
+    #     H_PTV[i,j] = (i / I) * NSDPV_bBJ(state_i, state_j)
+    # with NSDPV_bBJ antisymmetric, so the matrix is imaginary-Hermitian (iW upper / -iW lower).
+    # For bra = even-N |+> row i, ket = odd-N |-> column j, this gives <+|C|-> = +i*(positive real),
+    # i.e. <+|C|->/i > 0 -- the B1 ordering. I is the nuclear spin (literal /I; I=1/2 => x2).
+    q_str = list(q_numbers)
+    size = len(q_numbers[q_str[0]])
+    # I = nuclear-spin quantum number. The bBJ q_numbers dict carries only [K,N,J,F,M]
+    # (no 'I' key), so I is taken from NSDPV_bBJ's signature default (I=1/2 for 29SiO+).
+    # The literal /I divisor MUST match that same I, hence I=1/2 here (x2). For a future I!=1/2
+    # consumer, thread I through both NSDPV_bBJ(...,I=...) and this divisor together.
+    I = 1/2
+    H_PTV = np.zeros((size,size), dtype=complex)
+    for i in range(size):
+        for j in range(size):
+            state_out = {q+'0':q_numbers[q][i] for q in q_str}
+            state_in = {q+'1':q_numbers[q][j] for q in q_str}
+            q_args = {**state_out,**state_in}
+            H_PTV[i,j] = (1j/I)*NSDPV_bBJ(**q_args,I=I)
     return H_PTV
 
 def build_p_TDM_aBJ(p, qmol, q_in, q_out,TDM_matrix_element):

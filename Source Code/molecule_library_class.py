@@ -45,6 +45,7 @@ class Molecule_Library(object):
         self.cases = self.collect_all_cases()
         self.H_builders = self.collect_all_H_builders()
         self.PTV_builders = self.collect_all_PTV_builders()
+        self.NSDPV_builders = self.collect_all_NSDPV_builders()
         self.q_number_builders = self.collect_all_q_number_builders(I_spins, P_values)
         self.K = self.collect_all_K()
         self.basis_changers = self.collect_change_basis(I_spins)
@@ -403,6 +404,26 @@ class Molecule_Library(object):
                 '40X010': ham.build_PTV_bBJ,
             }
         return PTV_builders
+
+    def collect_all_NSDPV_builders(self):
+        # NSD-PV anapole operator C = (n_hat x S).I/I, case b(beta-J). Registered SEPARATELY
+        # from PTV_builders (which carries the EDM operator on the same '174X000' key) so the
+        # imaginary NSD-PV operator does not collide with / overwrite the real EDM path.
+        # SiO+ routes through the YbOH backend with iso_state '174X000' (boson, X state); that
+        # is the bBJ path build_PTV_NSDPV (complex dtype) is wired onto. Consumed by
+        # MoleculeLevels.NSDPV_operator() -> self.H_NSDPV (Energy_Levels.py).
+        NSDPV_builders = {}
+        if self.molecule_backend == 'YbOH':
+            NSDPV_builders = {
+                '174X000': ham.build_PTV_NSDPV,
+                '174X010': ham.build_PTV_NSDPV,
+            }
+        if self.molecule_backend == 'CaOH':
+            NSDPV_builders = {
+                '40X000': ham.build_PTV_NSDPV,
+                '40X010': ham.build_PTV_NSDPV,
+            }
+        return NSDPV_builders
 
     def collect_change_basis(self,I_spins):
         all_change_basis = {

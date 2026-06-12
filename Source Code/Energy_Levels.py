@@ -189,6 +189,10 @@ class MoleculeLevels(object):
         self.PTV0 = None
         self.PTV_type = None
 
+        # NSD-PV anapole operator C = (n_hat x S).I/I (complex, imaginary-Hermitian).
+        # Populated on demand by NSDPV_operator(); see molecule_library_class.NSDPV_builders.
+        self.H_NSDPV = None
+
         if self.metadata['isotope'] is not None:
             iso = self.metadata['isotope']
         else:
@@ -471,6 +475,19 @@ class MoleculeLevels(object):
         shifts = np.array(shifts)
         self.trap_shifts = shifts
         return shifts
+
+    def NSDPV_operator(self):
+        # Build (and cache on self.H_NSDPV) the NSD-PV anapole operator matrix
+        #   C = (n_hat x S).I / I   (complex, imaginary-Hermitian) in this object's bBJ basis,
+        # per unit kappa' W_A. H_eff = kappa' W_A * C (Karthein). The diagonal P-odd expectation
+        # evec@C@evec is identically zero for real eigenvectors; the PV observable is the
+        # off-diagonal iW mixing between near-degenerate opposite-parity states.
+        if self.iso_state not in self.library.NSDPV_builders:
+            raise KeyError(
+                f"No NSD-PV builder registered for iso_state '{self.iso_state}'. "
+                f"Available: {list(self.library.NSDPV_builders)}")
+        self.H_NSDPV = self.library.NSDPV_builders[self.iso_state](self.q_numbers)
+        return self.H_NSDPV
 
     def PTV_shift(self,EDM_or_MQM):
         if self.spin_statistics == 'boson':

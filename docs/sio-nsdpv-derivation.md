@@ -337,6 +337,48 @@ formula gates even though they are not the 1.5 T operating basis; all **verified
 | J=½, F=1 | J=½, F=1 | **+i/3** (all M) | 0.33333 |
 | J=½, F=1 | J=1½, F=1 | **−i√2/3** | 0.47140 |
 
+#### Addendum (2026-06-11, Task-4 implementation): field-dressed |⟨C⟩| at B_c — the "~0.5%" decoupling-correction estimate superseded
+
+Measured with the implemented operator (`test_nsdpv_operator.py`, gate G3) on eigenvectors of
+the full Hamiltonian at the canonical (0,0) flip-flop crossing, B_c = 15167.2 G:
+
+> **dressed |⟨C⟩| = 0.59015** — **+2.22% above the decoupled 1/√3 = 0.57735**, and
+> **offset-independent** (identical for off-crossing evaluation offsets 0.5–50 G, and equal
+> to the at-crossing tracked-evec value). This is the true, stable field-dressed matrix
+> element, not a numerical artifact.
+
+**Mechanism.** Partner A is 99.991% pure `|0,0,+½,−½⟩`; partner B is 99.887%
+`|1,0,−½,+½⟩` **plus a 0.105%-weight (≈3.2% amplitude) admixture of the stretched ket
+`|1,+1,−½,−½⟩`**, mixed by the dipolar `c` coupling across the **hyperfine-scale** gap
+inside the N=1, m_F=0, m_S=−½ manifold (the model has no rotational Zeeman term, so there is
+no Zeeman-scale suppression of this intra-manifold mixing). The dressed element is the
+coherent sum of the flip-flop and stretched channels, and the arithmetic closes:
+1/√3 + 0.032×(1/√6) ≈ 0.577 + 0.013 = 0.590.
+
+**Correction recorded:** this section's earlier "~0.5%" decoupling-correction estimate
+implicitly assumed Zeeman-scale suppression of the channel mixing and is **wrong by ~4×**;
+the actual correction at this crossing is +2.22%. Gate G3's magnitude tolerance is
+recalibrated 2% → 3% accordingly (sign pin unchanged and strict; the pure-decoupled gate
+values above remain exact at 1e-9). Consequence for the headline number:
+**W/2π = κ′W_A·|⟨C⟩| = 0.05 × 16 Hz × 0.59015 = 0.4721 Hz** at the canonical crossing
+(vs 0.462 Hz from the naive 1/√3), nudging the §2.1 consistency bracket's upper edge from
+0.46 to 0.47 Hz. Verified independently by Arian (re-ran gate, same numbers; decision A,
+2026-06-11).
+
+**Full PV-active crossing map** (gate G5, field-dressed, ΔM_F = 0 only; the five
+M_F(A) ≠ M_F(B) crossings of the Task-3 table at 15151.2 / 15155.9 / 15158.0 / 15160.4 /
+15162.4 G all have ⟨C⟩ = 0 to machine precision — the ΔM_F kill of §(c)):
+
+| B_c [G] | channel (partner B character) | dressed \|⟨C⟩\| | sign of ⟨+\|C\|−⟩/i | W/2π [Hz] (κ′=0.05, W_A/2π=16 Hz) |
+|---|---|---|---|---|
+| 15017.0 | (0,0)′ stretched-partner — B = `\|1,+1,−½,−½⟩` | 0.39282 | − | 0.3143 |
+| 15167.2 | (0,0) canonical flip-flop — B = `\|1,0,−½,+½⟩` | 0.59015 | **+** | 0.4721 |
+| 15296.9 | (+1,+1) stretched | 0.40411 | − | 0.3233 |
+
+(The 15017.0 G crossing is the **second (0,0)** crossing — same partner A, the
+hyperfine-shifted stretched partner of the same manifold; stretched-partner character
+confirmed by decoupled decomposition in G5.)
+
 ### (c) Sign pattern / selection rules across the 7 crossings
 
 **The decisive fact: C conserves m_F (ΔM_F = 0).** DeMille (p. 2): "C is a pseudoscalar,
