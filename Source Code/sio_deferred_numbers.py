@@ -363,6 +363,67 @@ def deliverable3_cross():
 
 
 # ===========================================================================
+# Deliverable 3b -- the SURVIVING stray cross channel: B_x x E_x (both transverse).
+#   D3 established that B_x x E_z is M_F-FORBIDDEN at linear order (axial drive
+#   keeps M_F, transverse Zeeman changes it by +-1). The manuscript's fakes-table
+#   row budgets the STRAY-field cross term, where the stray E has transverse
+#   components too: B_x changes M_F by +1 and E_x by -1 (or vice versa), so the
+#   bilinear pair coupling between the two M_F=0 members SURVIVES M_F selection.
+#   Effective 2x2 pair coupling at second order (degenerate PT, pair excluded):
+#     M_bilin = sum_s [<A|VEx|s><s|VBx|B> + <A|VBx|s><s|VEx|B>] / (E_pair - E_s)
+#   per (V/cm x G). GATE: the coupling is REAL (sigma_x-class) -- static fields
+#   keep H real, so this is a drive/contrast systematic, never a W-fake.
+# ===========================================================================
+def deliverable3b_cross_transverse():
+    VEx = -MUE * op_matrix(M, 'StarkX')   # MHz/(V/cm), transverse Stark (Task 5)
+    VBx = G_S * MU_B * ZX                 # MHz/G
+    H0 = M.H_function(0.0, BC)
+    ev0, U0 = np.linalg.eigh(H0)
+    va, vb = evec_offcrossing(M, BC, VEC[CANON['idx']], CANON['a'], CANON['b'], 15.0)
+    ov0 = np.abs(U0.T @ np.array([va, vb]).T)
+    ia = int(np.argmax(ov0[:, 0])); ib = int(np.argmax(ov0[:, 1]))
+    A0 = U0[:, ia].copy(); B0 = U0[:, ib].copy()
+    if A0 @ va < 0: A0 = -A0
+    if B0 @ vb < 0: B0 = -B0
+    E_pair = 0.5 * (ev0[ia] + ev0[ib])    # pair degenerate at B_c to ~1e-7 MHz
+
+    coef = 0.0 + 0.0j                      # MHz per (V/cm * G)
+    for s in range(M.size):
+        if s in (ia, ib):
+            continue
+        denom = E_pair - ev0[s]
+        if abs(denom) < 1e-6:
+            continue
+        S = U0[:, s]
+        coef += ((A0 @ VEx @ S) * (S @ VBx @ B0)
+                 + (A0 @ VBx @ S) * (S @ VEx @ B0)) / denom
+    coef_real = float(np.real(coef))
+    imag_ratio = abs(np.imag(coef)) / abs(coef) if abs(coef) > 0 else 0.0
+    coef_Hz_mG_Vcm = coef_real * 1e6 * 1e-3        # MHz/(V/cm.G) -> Hz/(mG.V/cm)
+
+    bx, ex = 10.0, 0.1                              # mG, V/cm (stray budget point)
+    budget_Hz = coef_Hz_mG_Vcm * bx * ex
+    drive_Hz = 3331.9                               # deliberate drive at 6 V/cm (Hz)
+    W_HZ = 0.4721
+
+    print(f"\n  --- D3b: surviving stray cross channel B_x x E_x (both transverse) ---")
+    print(f"  bilinear pair-coupling coeff d2M/dB_x dE_x = {coef_Hz_mG_Vcm:.4e} Hz/(mG.V/cm)")
+    print(f"  Im/|coef| = {imag_ratio:.2e}  (real sigma_x-class -> drive systematic, NOT a W-fake)")
+    print(f"  budget at B_x=10 mG, stray E_x=0.1 V/cm: {budget_Hz:.4e} Hz")
+    print(f"    vs deliberate drive 3331.9 Hz (6 V/cm): {budget_Hz/drive_Hz:.2e}")
+    print(f"    vs W = 0.4721 Hz:                       {budget_Hz/W_HZ:.2e}")
+
+    ok = (imag_ratio < 1e-10) and np.isfinite(coef_Hz_mG_Vcm)
+    record("D3b stray B_x x E_x channel (survives M_F selection; REAL sigma_x-class)",
+           ok,
+           f"coeff = {coef_Hz_mG_Vcm:.3e} Hz/(mG.V/cm); Im/|coef| = {imag_ratio:.1e} "
+           f"(<1e-10: real); budget(10 mG x 0.1 V/cm) = {budget_Hz:.3e} Hz "
+           f"= {budget_Hz/W_HZ:.1e} x W")
+    return dict(coef_Hz_mG_Vcm=coef_Hz_mG_Vcm, budget_Hz=budget_Hz,
+                imag_ratio=imag_ratio)
+
+
+# ===========================================================================
 # Deliverable 4 -- B_perp leakage table.
 #   At B_c, for both pair members, every spectator in N=0,1 with its spin-resonance
 #   matrix element |<spectator| g_S*mu_B*zx |pair member>| (per mG of B_x, kHz/mG)
@@ -491,8 +552,13 @@ if __name__ == "__main__":
     deliverable1_xi()
     deliverable2_budget()
     d3 = deliverable3_cross()
+    d3b = deliverable3b_cross_transverse()
     leak_nz = deliverable4_leakage()
     deliverable5_summary(d3, leak_nz)
+    print(f"  B_x x E_x stray coeff (surviving channel)            "
+          f"{d3b['coef_Hz_mG_Vcm']:>16.3e}  Hz/(mG.V/cm)")
+    print(f"  B_x x E_x budget (10 mG x 0.1 V/cm)                  "
+          f"{d3b['budget_Hz']:>16.3e}  Hz  ({d3b['budget_Hz']/0.4721:.1e} x W)")
 
     n_pass = sum(1 for _, p, _ in _results if p)
     n_fail = sum(1 for _, p, _ in _results if not p)
