@@ -8,9 +8,17 @@ with executable checks. Companion script: `Source Code/test_sio_conventions.py`
 conda run -n Structure python "Source Code/test_sio_conventions.py"
 ```
 
-**Target model** (Karthein, PRL 133, 033003 (2024), Eq. A2):
-`H_eff = B*N^2 + D*N^4 + gamma*N.S + b*I.S + c*(I.n)(S.n)`;
-`Hmag = -g_perp*mu_B*S.B - (g_par-g_perp)*mu_B*(S.n)(B.n) - g_I*mu_N*I.B`.
+> **STATUS 2026-06-11: AUDIT COMPLETE — SIGN-OFF.** All inline `PENDING-REVIEWER`
+> slots below are RESOLVED in the "B&C audit results" section at the end of this
+> file (citations filled; one code bug found and fixed; sole open item = Knight
+> 1985 / Decision D5). The inline slot text is kept as the original record.
+
+**Target model** (Karthein, PRL 133, 033003 (2024); local PDF = arXiv:2310.11192v1,
+Zotero LYF85P8C — published-PRL equation labels unverified from this copy):
+`H_eff = B*N^2 + gamma*N.S + b*I.S + c*(I.n)(S.n)` (Eq. A2, arXiv-v1 p7; the
+`D*N^4` centrifugal term appears in the unnumbered main-text `H_0` on p2, NOT in
+Eq. A2 — attribution corrected per B&C audit 2026-06-11);
+`Hmag = -g_perp*mu_B*S.B - (g_par-g_perp)*mu_B*(S.n)(B.n) - g_I*mu_N*I.B` (Eq. A2).
 Karthein Fig.1: positive-parity N=0 RISES with B; crossing with descending N=1 at
 B0 ~ 1.5 T.
 
@@ -219,9 +227,10 @@ is NOT on the SiO+ case-b path; SiO+ uses `H_even_X` only.)
 **g_l is deliberately not set for SiO+.** Confirmed: `'g_l' not in
 get_molecule_params('SiO+','X','0','boson')` returns True. The builder's
 `params.get('g_l') is not None` guard (`hamiltonian_builders.py:54`) therefore
-returns None -> the g_l term is never added. (`params_general` does carry `g_L=1`,
-the orbital g-factor for `ZeemanLZ`; for Lambda=0 this contributes through the
-K=0 3-j and is part of the validated baseline, not the anisotropic g_l term.)
+returns None -> the g_l term is never added. (CORRECTED per B&C audit 2026-06-11:
+`H_even_X` never multiplies `ZeemanLZ` by the `params_general` `g_L=1` — with `g_l`
+unset, the `ZeemanLZ` operator never enters the SiO+ model at all. The earlier
+"part of the validated baseline" reading here was wrong.)
 
 **Check (executed):**
 
@@ -246,10 +255,17 @@ currently OMITTED for SiO+ (no g_l / no g_par-g_perp entry). This is consistent
 with Karthein's own H_eff usage, where the anisotropic g-tensor enters only at the
 ~10^-4 level. Recorded as **pending (Decision D5, MIT library pull):** the Knight
 et al. 1985 (JACS 107, 2857) neon-matrix ESR g-tensor (g_par, g_perp) for 29Si16O+
-would supply `(g_par - g_perp)`. If added later, it would enter the case-b model
-via the `ZeemanLZ_bBJ` / g_l channel (the `H_even_X` line 54-55 term), the case-b
-analogue of Karthein's `(S.n)(B.n)` anisotropy. **Status: PENDING (citation +
-decision).**
+would supply `(g_par - g_perp)`. CORRECTED per B&C audit 2026-06-11: a future
+backfill must NOT land on the `ZeemanLZ_bBJ` / g_l channel — `ZeemanLZ_bBJ` is
+numerically identical to the direction cosine `<n_z>` (rank-1, molecule-frame q=0,
+acting on the ROTATIONAL space with S and I spectators; the skeleton of B&C's
+orbital Zeeman term (i) of Eq. (9.70), missing the Lambda weight that makes it
+vanish for Sigma states). Karthein's `(S.n)(B.n)` acts on S; the correct operator
+class is B&C Eq. (9.70) term (iv), the anisotropic spin-Zeeman
+`g_l mu_B B_Z sum_{q=+-1} D^(1)_{0q}(omega)* T^1_q(S)` (the case-a analogue is the
+codebase's `ZeemanPerpZ_even_aBJ`, "B&C eq. 7.221" — itself not audited). A case-b
+element would need to be written/transformed when D5 lands. **Status: PENDING
+(citation + decision D5).**
 
 ---
 
@@ -267,17 +283,69 @@ OK: 6 passed, 0 failed
 EXIT=0
 ```
 
-## Summary of PENDING-REVIEWER slots (Brown & Carrington pass)
+## B&C audit results (spectroscopy-reviewer pass, 2026-06-11) — slots RESOLVED
 
-1. **C1** -- dipolar hyperfine `T^2(I,S)` reduced matrix element / `T2_0(I,S) =
-   (3IzSz-I.S)/sqrt6` definition (`matrix_elements.py:T2IS_bBJ:131`), B&C eq. ____.
-2. **C3** -- nuclear-spin Zeeman matrix element + overall sign `-g_N mu_N I.B`
-   (`matrix_elements.py:ZeemanIZ_bBJ:176`), B&C eq. ____; cross-check vs Karthein
-   `-g_I mu_N I.B`.
-3. **C4** (literature side) -- Zhu et al. JMS 384, 111582 (2022) sign convention of
-   `gamma_eff = +12 MHz`, sec/eq ____.
-4. **C5** -- `ZeemanLZ_bBJ` (`matrix_elements.py:183`) as B&C's anisotropic Zeeman
-   form, eq. ____ (audit only; g_l omitted).
-5. **Knight 1985 backfill** -- `(g_par - g_perp)` g-tensor from Knight et al. JACS
-   107, 2857 (1985), pending MIT library pull (Decision D5); currently omitted,
-   consistent with Karthein at the 10^-4 level.
+Method: every element compared against an independent first-principles lab-frame
+construction (Gaunt integrals + Clebsch-Gordan, decoupled basis) over all N<=2
+pairs, PLUS targeted reads of the B&C page images (PDF page = book page + 32;
+sign-bearing equations checked on the printed pages, not text extraction).
+B&C copy: Zotero CKZKCGXY. Karthein copy: Zotero LYF85P8C (arXiv:2310.11192v1).
+
+1. **C1 RESOLVED — CONFIRMED.**
+   - `IS_bBJ` = B&C Eq. (8.220), p. 440 (restated Eq. (10.125), p. 803), bF-stripped,
+     with code index 1=ket=primed; 6j's equal under column/row-pair swaps. Numeric
+     max|dev| 2.8e-16.
+   - Builder line `bF*I.S + (c/3)*sqrt(6)*T2_0(I,S)` is literally B&C Eq. (9.152),
+     p. 662. `T2IS_bBJ` matches B&C Eqs. (8.229)-(8.233), pp. 440-441 /
+     (10.129)+(10.131)-(10.133), pp. 803-804 (9j transposition + 3 odd permutations;
+     phase residue (-1)^(N+N') = +1 by the 3j(N,2,N';0,0,0) parity rule). Numeric:
+     `(sqrt6/3)*T2IS == (I.n)(S.n) - I.S/3` to 2.2e-16 incl. N=1, N=2 diagonals.
+   - Which "c": B&C's c IS the Frosch-Foley c (Eqs. (10.133)/(8.237); B&C keeps g_S
+     symbolic — "agree with Jette and Cahill if g_S = 2"; 0.1% / ~0.2 MHz on c=-192,
+     sub-precision). `bF = b + c/3` verbatim at B&C p. 953.
+2. **C3 RESOLVED — convention CONFIRMED; element had a BUG, now FIXED.**
+   - Convention: code `-g_N*mu_N*ZeemanIZ` = B&C Eq. (9.70) term (v), p. 620
+     (`-g_N mu_N B_Z T^1_{p=0}(I)`; also Eq. (1.39)) = Karthein Eq. (A2)
+     `-g_I mu_N I.B`, g_N the SIGNED g-factor. Positive g_N puts m_I=+1/2 LOWER;
+     gate measured the converse for g_N=-1.1106. Entry sign correct.
+   - **BUG (STOP-the-line, found by the audit): `ZeemanIZ_bBJ` guard lacked
+     `kronecker(N0,N1)`.** T^1(I) is rigorously N-diagonal; the formula is
+     N-independent, so `<N=0,J=1/2,F=0,M|I_z|N=1,J=1/2,F=1,M>` returned -0.5
+     (physical: 0) — spurious OPPOSITE-PARITY couplings ~|g_N| mu_N B ~ 13 MHz at
+     1.5 T, a fake parity-violating Zeeman term ~6 orders above the PV signal at
+     the Karthein N=0+/N=1- crossing. Fixed 2026-06-11 (delta_NN' added,
+     `matrix_elements.py` ZeemanIZ_bBJ guard); repro: dN=1 element now exactly 0,
+     dN=0 element unchanged (-0.5). Committed N=0 gates were unaffected (suppressed
+     by 2B ~ 42.5 GHz). All gates re-run post-fix: conventions 6/6, Task-1
+     instantiation (16 states / 797.0 MHz), RaF tutorial notebook EXIT=0.
+3. **C4 RESOLVED — Zhu sign convention CONFIRMED at the source.** Zhu et al., JMS
+   384, 111582 (2022) (arXiv:2111.03832, read 2026-06-11 via pdf-mcp): their
+   Table 1 (p. 3) lists the case-(b)betaS matrix elements with the STRETCHED
+   diagonal `G=1, F=N+1` carrying `+gamma*N/2` — i.e. `+gamma*N.S` with
+   `<N.S> = +N/2` for the stretched state: SAME convention as the code's
+   `+Gamma_SR*N.S`. Their Eq. (6) (p. 3) defines `t = t0` (the case-(b)betaJ
+   dipolar constant), backing the entry's `c = 3t` conversion. Their N=0 note
+   (Table 1) gives exactly two elements, `G=1: +bF/4`, `G=0: -3bF/4` — literally
+   the Task-1 gate numbers (-199.25/+597.75 MHz). Note: Zhu describe 29SiO+ in
+   case (b)betaS (hyperfine >> spin-rotation; G = I+S good at zero field) — a
+   BASIS choice; eigenvalues are basis-independent, our bBJ build stands, but
+   zero-field labels are better read as (G, F) than (J, F). Their p. 5 refit of
+   Cameron's low-N lines with the single-state model gives gamma_X = 0.006(25) GHz,
+   consistent with the entry's 12(25) MHz and confirming the Decision-D1 warning
+   that Cameron's deperturbed 344.16 MHz is a different model.
+4. **C5 RESOLVED — identity established (audit-only).** `ZeemanLZ_bBJ` ==
+   direction cosine `<n_z>` exactly (numeric 3.3e-16): the skeleton of B&C
+   Eq. (9.70) term (i) (orbital Zeeman) MISSING the Lambda weight — NOT the
+   anisotropic spin term (iv) of Eq. (9.70)/(9.71), and not g_r (term iii).
+   Disabled for SiO+; backfill pointer corrected above (Knight (g_par-g_perp)
+   needs a term-(iv)-class case-b element, to be written when D5 lands).
+5. **Knight 1985 backfill — still OPEN (Decision D5,** MIT library pull): the
+   `(g_par - g_perp)` g-tensor from Knight et al. JACS 107, 2857 (1985); currently
+   omitted, consistent with Karthein at the ~10^-4 level.
+
+B&C citation cautions recorded by the reviewer: the printed closing line of B&C
+Eq. (10.123) omits the 1/2 (book typo — cite the 6j line); the apparent
+(8.232)/(10.129) phase mismatch resolves on the page images (equivalent forms).
+
+**Audit verdict: SIGN-OFF** (after the ZeemanIZ_bBJ fix and the note corrections
+above; sole open item = Knight 1985 / D5, non-blocking for Tasks 3-10).

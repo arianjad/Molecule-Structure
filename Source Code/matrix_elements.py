@@ -174,7 +174,12 @@ def ZeemanZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
             wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(S,J1,N0,J0,S,1)*wigner_3j(F0,1,F1,-M0,0,M1)
 
 def ZeemanIZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
-    if not kronecker(K0,K1)*kronecker(M0,M1)*kronecker(J0,J1):
+    # delta_NN' required: T1(I) acts on nuclear-spin space only, so it is rigorously
+    # diagonal in N (and K, J). Without it, S=1/2 states with the same J from different N
+    # (e.g. N=0,J=1/2 vs N=1,J=1/2) pick up spurious OPPOSITE-PARITY couplings ~|g_N| mu_N B
+    # (~13 MHz at 1.5 T) -- a fake parity-violating Zeeman term. Found by B&C audit 2026-06-11
+    # (B&C Eq. 9.70 term (v), p. 620).
+    if not kronecker(K0,K1)*kronecker(M0,M1)*kronecker(J0,J1)*kronecker(N0,N1):
         return 0
     else:
         return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*(-1)**(F0+J0+1+I)*np.sqrt((2*F0+1)*(2*F1+1))*\
