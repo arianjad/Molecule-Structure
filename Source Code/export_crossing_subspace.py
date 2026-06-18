@@ -87,8 +87,21 @@ from sympy.physics.wigner import wigner_3j, wigner_6j
 # ---------------------------------------------------------------------------
 # Constants / reference points
 # ---------------------------------------------------------------------------
-OUT_PATH = ("/Users/arianjadbabaie/Code-Local/three-level-toy-model/data/"
-            "sio_crossing_subspace.npz")
+def _resolve_out_path():
+    """Cross-machine: write to whichever three-level-toy-model/data exists."""
+    cands = [
+        "/Users/arianjadbabaie/Code-Local/three-level-toy-model/data/sio_crossing_subspace.npz",
+        os.path.expanduser("~/Code-Local/three-level-toy-model/data/sio_crossing_subspace.npz"),
+        os.path.expanduser("~/Code/three-level-toy-model/data/sio_crossing_subspace.npz"),
+        "C:/Users/Arian/Code/three-level-toy-model/data/sio_crossing_subspace.npz",
+    ]
+    for c in cands:
+        if os.path.isdir(os.path.dirname(c)):
+            return c
+    return cands[0]
+
+
+OUT_PATH = _resolve_out_path()
 BC_G = 15167.2                # canonical (0,0) crossing field, Gauss
 E_DRIVE = 6.0                 # V/cm, Karthein axial drive field
 KPRIME = 0.05                 # assumed mixing coefficient (Karthein Fig. 3)
@@ -227,6 +240,29 @@ C = M.NSDPV_operator()                      # complex 36x36
 # --- d_p stack (p = -1, 0, +1), unit muE ---
 d_p = np.array([d[-1], d[0], d[1]])         # (3, 36, 36)
 
+# --- bare nuclear spin operators I_x, I_y, I_z (29Si, I=1/2; dimensionless) ---
+# Built in the DECOUPLED product basis (1_rot (x) 1_S (x) I^(1/2), trivial) and
+# transformed to the coupled (N,J,F,M) basis via the audited b_decoupled change of
+# basis. The I_z so built equals ZeemanIZ_bBJ to machine precision (the C3b proof
+# in test_sio_conventions.py); I_x, I_y are the identical construction. These give
+# the toy repo the nuclear-spin vector the modulated-anapole (29Si NMR) route needs.
+_dq = M.alt_q_numbers['decoupled']
+_U = np.array(M.library.basis_changers['b_decoupled'](M.q_numbers, _dq), dtype=float)
+_K = np.array(_dq['K']); _N = np.array(_dq['N']); _MN = np.array(_dq['M_N'])
+_MS = np.array(_dq['M_S']); _MI = np.array(_dq['M_I'])
+_Izd = np.diag(_MI.astype(complex))
+_Ixd = np.zeros((SIZE, SIZE), dtype=complex)
+_Iyd = np.zeros((SIZE, SIZE), dtype=complex)
+for _i in range(SIZE):
+    for _j in range(SIZE):
+        if (_K[_i] == _K[_j] and _N[_i] == _N[_j] and _MN[_i] == _MN[_j]
+                and _MS[_i] == _MS[_j] and abs(_MI[_i] - _MI[_j]) == 1):
+            _Ixd[_i, _j] = 0.5
+            _Iyd[_i, _j] = -0.5j if _MI[_i] > _MI[_j] else 0.5j
+I_x = _U.T @ _Ixd @ _U
+I_y = _U.T @ _Iyd @ _U
+I_z = _U.T @ _Izd @ _U
+
 # --- parity diagonal ---
 parity = np.real(np.round(np.diag(np.array(M.Parity_mat)))).astype(int)
 
@@ -274,6 +310,8 @@ units = json.dumps({
     "phase": "Karthein Eq. B1: <+|C|->/i > 0, bra=even-N",
     "HPV": ("kappaPrime*W_A*C with W_A/2pi=16 Hz for 29SiO+ "
             "(kappaPrime=0.05 assumed); C dimensionless"),
+    "I_ops": ("I_x,I_y,I_z bare 29Si nuclear spin (I=1/2), dimensionless, in the "
+              "coupled (N,J,F,M) basis; I_z == ZeemanIZ_bBJ to machine precision"),
     "Bc_G": BC_G,
     "ref_points_E_B": REF_POINTS,
 })
@@ -340,6 +378,19 @@ def _dressed(offset):
     return va2 @ C @ vb2, va2, vb2
 
 
+def gate_E_nuclear_ops():
+    ZIZ = np.array(ham.build_operator(M.q_numbers, M.q_numbers,
+                                      me.ZeemanIZ_bBJ), dtype=complex)
+    d_iz = float(np.max(np.abs(I_z - ZIZ)))
+    d_comm = float(np.max(np.abs(I_x @ I_y - I_y @ I_x - 1j * I_z)))
+    d_i2 = float(np.max(np.abs(I_x @ I_x + I_y @ I_y + I_z @ I_z
+                               - 0.75 * np.eye(SIZE))))
+    ok = d_iz < 1e-12 and d_comm < 1e-12 and d_i2 < 1e-12
+    record("GATE E nuclear ops (I_z == ZeemanIZ; [Ix,Iy]=iIz; I^2 = 3/4)", ok,
+           f"I_z vs ZeemanIZ_bBJ = {d_iz:.1e}; [Ix,Iy]-iIz = {d_comm:.1e}; "
+           f"I^2 - 3/4 = {d_i2:.1e}")
+
+
 if __name__ == "__main__":
     print(f"\n  model: size={SIZE}, muE={muE:.6f} MHz/(V/cm), "
           f"g_S*mu_B={gS_muB:.6f} MHz/G")
@@ -351,6 +402,7 @@ if __name__ == "__main__":
     gate_B_linearity()
     gate_C_dp_consistency()
     gate_D_phase_pin()
+    gate_E_nuclear_ops()
 
     n_pass = sum(1 for _, p, _ in _results if p)
     n_fail = sum(1 for _, p, _ in _results if not p)
@@ -370,6 +422,9 @@ if __name__ == "__main__":
         V_Ex=np.asarray(V_Ex, dtype=complex),
         V_Bx=np.asarray(V_Bx, dtype=complex),
         C=np.asarray(C, dtype=complex),
+        I_x=np.asarray(I_x, dtype=complex),
+        I_y=np.asarray(I_y, dtype=complex),
+        I_z=np.asarray(I_z, dtype=complex),
         d_p=np.asarray(d_p, dtype=complex),
         parity=parity,
         qn=qn,
