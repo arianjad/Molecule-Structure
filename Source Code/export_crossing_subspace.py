@@ -90,8 +90,6 @@ from sympy.physics.wigner import wigner_3j, wigner_6j
 def _resolve_out_path():
     """Cross-machine: write to whichever three-level-toy-model/data exists."""
     cands = [
-        "/Users/arianjadbabaie/Code-Local/three-level-toy-model/data/sio_crossing_subspace.npz",
-        os.path.expanduser("~/Code-Local/three-level-toy-model/data/sio_crossing_subspace.npz"),
         os.path.expanduser("~/Code/three-level-toy-model/data/sio_crossing_subspace.npz"),
         "C:/Users/Arian/Code/three-level-toy-model/data/sio_crossing_subspace.npz",
     ]
