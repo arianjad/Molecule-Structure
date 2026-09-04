@@ -12,61 +12,96 @@ import torch
 from hamiltonian_builders import tensor_matrix
 from fractions import Fraction
 
+from molecule_parameters import get_molecule_params
+from formalism import convert_formalism
+
+
 class MoleculeLevels(object):
 
     '''This class is used to determine energy levels for a given vibronic state
-    in YbOH. As an input, the user must specify the isotope (string), the state
-    (string), and the range of N values (tuple: (Nmin, Nmax)).
+    in paramagnetic molecules. 
 
-    Example isotope formatting: '174'
-    Example state formatting: 'X000'
+    See the class method class.initialize_state for how to create a state object. 
 
     All calculations are done in MHz, with E in V/cm, and B in Gauss
     '''
 
     @classmethod
-    def initialize_state(cls,molecule,isotope,state,N_range,M_values='all',I=[0,1/2],S=1/2,P_values=[],M_range=[],round=6,trap=False,theta_num=None):
-        if molecule=='YbOH':
-            if isotope not in ['170','171','172','173','174','176']:
-                print(isotope, 'is not a valid isotope of Yb')
-                return None
-            if isotope not in ['173','174','171']:
-                print(isotope, 'is an isotope not yet supported by this code')
-                return None
-            if state not in ['X000','X010','A000']:
-                print('Your input state, ', state, ' is not currently supported by this code. \nAn example state string: X000')
-                return None
-        elif molecule=='CaOH':
-            if isotope not in ['40','42','43','44','46']:
-                print(isotope, 'is not a stable isotope of Ca')
-                return None
-            if isotope not in ['40']:
-                print(isotope, 'is an isotope not yet supported by this code')
-                return None
-            if state not in ['X010','X000','A000','B000']:
-                print('Your input state, ', state, ' is not currently supported by this code. \nAn example state string: X000')
-                return None
-        iso_state = isotope + state
-        if P_values == []:
-            print('No P values provided, using P=1/2 as default')
-            P_values=[1/2]
+    def initialize_state(cls,molecule_name,
+                         elec_state, vib_state,
+                         N_list, fermion_or_boson='boson',
+                         params=None,S_electron=1/2,
+                         M_sublevels='all',M_list = [],
+                         I_nuclei=[0,1/2],isotope=None,
+                         P_values=[],round=6,
+                         trap=False,theta_num=None):
+        '''
+        This is a method to initialize a molecule state object. 
 
-            # Properties contain information relevant to the isotope and state of interest
+        Args: 
+        molecule_name: string, name of molecule, e.g. 'YbOH'
+        elec_state: string, name of state, e.g. 'X' or 'A'
+        vib_state: string or integer, vibrational level, e.g. 0,1,... for diatomics or '000', '010', for triatomics
+        N_list: list of values of rotational quantum number N to include (e.g. [N for N in N_values])
+
+        Keyword Args:
+        fermion_or_boson: string, 'fermion' or 'boson' (default), determines spin statistics (i.e. F=half-integer or integer)
+        params: dictionary of molecular parameters, default None imports based on molecule and state
+        S_electron: electronic spin, default S=1/2 for doublet states
+        M_sublevels: 'none', 'all' (default), 'pos', or 'custom'. Specifying 'custom' means the input to M_list is used
+        M_list: list of M sublevels to include, only used if M_sublevels='custom'
+        I_nuclei: list of nuclear spins, must be len(2) e.g. [I_1, I_2], where I_1 = metal, I_2 = ligand
+        isotope: optional string to specify isotope label, e.g. 171 or 226, if None defaults to most common isotope on backend
+        P_values: absolute value of projection values (i.e. Omega) to include, e.g. [1/2] or [1/2,3/2] for 2Pi states
+        round: integer, how much to round eigenvalues and eigenvectors
+        trap: boolean, whether to include tensor AC Stark interaction for an ODT
+        theta_num: angle of ODT trapping field from lab z axis, in radians. If None, defaults to 0
+
+        '''
+        #TODO: implement state_model labeling vibronic symmetry of state, e.g. 'Sigma', 'Pi'... 
+
+        # input checks
+        if len(elec_state)>1:
+            raise ValueError('Electronic state name must be a single letter, e.g. X, A, B, C')   
+        
+        # Get parameters from molecule_parameters.py if not provided
+        if params is None:
+            params = get_molecule_params(molecule_name,elec_state,vib_state,fermion_or_boson)
+            # already converted inside get_molecule_params (hazard #3)
+        elif not isinstance(params,dict):
+            raise ValueError('Params must be a dictionary of molecular parameters, see molecule_parameters.py for examples')
+        else:
+            # user-supplied dict: engine wants R², so convert only an
+            # explicitly N²-tagged dict; R²/untagged passes through (copied).
+            params = (convert_formalism(params)
+                      if params.get('formalism') == 'N2' else dict(params))
+
+        # P_values are projections of the total angular momentum J onto the molecular axis
+        if P_values == []:
+            Nmin = min([abs(n_) for n_ in N_list])
+            S = S_electron
+            P_values=[min([abs(Nmin-S),abs(Nmin+S)])]
+            print(f'No projection values of J provided, using minimal projection {P_values[0]} as default')
+
+        # Properties contain information relevant to the state of interest
         properties = {
-            'molecule': molecule,
-            'iso_state': iso_state,
-            'isotope': isotope,
-            'state': state,
-            'N_range': N_range,
-            'M_values': M_values,
+            'molecule': molecule_name,
+            'spin_statistics': fermion_or_boson,
+            'electronic_state': elec_state,
+            'vibrational_state': vib_state,
+            'vibronic_state': f'{elec_state}{vib_state}',
+            'parameters': params,
+            'N_range': N_list,
+            'M_values': M_sublevels, #old notation
             'round': round,     #how much to round eigenvalues and eigenvectors
-            'e_spin': S,    #electronic spin number
-            'I_spins': I,    #spin of nuclei, [I_Yb, I_H]. I=0 means ignore
-            'M_range': M_range,
+            'e_spin': S_electron,    #electronic spin number
+            'I_spins': I_nuclei,    #spin of nuclei, [I_metal, I_ligand]. I=0 means ignore
+            'M_range': M_list, #old notation
             'P_values': P_values,
             'trap': trap,
             'theta_num':theta_num,
-        }
+            'metadata':{'isotope': isotope}
+            }
         return cls(**properties)
 
 
@@ -75,8 +110,30 @@ class MoleculeLevels(object):
         self.__dict__.update(properties)
 
         # Initialize a library with relevant functions and parameters for all states
+        
+        #TODO: Clean up the names from YbOH specific to general
+        # Right now this part is hacky in order to retain continuity with old code
+        if self.spin_statistics == 'boson':
+            # Need to distinguish X0 and X000, etc
+            if len(self.vibronic_state)>2: # Triatomic
+                self.iso_state = '174' + self.vibronic_state
+            else: 
+                self.iso_state = '174' + self.electronic_state + '000'
+        elif self.spin_statistics == 'fermion':
+            if self.metadata['isotope'] in [171,173]:
+                self.iso_state = self.metadata['isotope'] + self.vibronic_state
+            else:
+                # Default to 171 in backend
+                if len(self.vibronic_state)>2:
+                    self.iso_state = '171' + self.vibronic_state
+                else: 
+                    self.iso_state = '171' + self.electronic_state + '000'    
+            
+
         self.library = Molecule_Library(self.molecule,self.I_spins,self.M_values,self.P_values,self.trap)
-        self.parameters = self.library.parameters[self.iso_state] # Hamiltonian parameters relevant to state and isotope
+        # Old code:
+        # self.parameters = self.library.parameters[self.iso_state] # Hamiltonian parameters relevant to state and isotope
+
         self.matrix_elements = self.library.matrix_elements[self.iso_state]
         self.hunds_case = self.library.cases[self.iso_state]
         self.K= self.library.K[self.iso_state]
@@ -132,8 +189,15 @@ class MoleculeLevels(object):
         self.PTV0 = None
         self.PTV_type = None
 
+        # NSD-PV anapole operator C = (n_hat x S).I/I (complex, imaginary-Hermitian).
+        # Populated on demand by NSDPV_operator(); see molecule_library_class.NSDPV_builders.
+        self.H_NSDPV = None
 
-        self.state_str =  r'$^{{{iso}}}${mol} $\tilde{{{state}}}({vib})$'.format(iso=self.isotope,mol=self.molecule,state = self.state[:1],vib=self.state[1:])
+        if self.metadata['isotope'] is not None:
+            iso = self.metadata['isotope']
+        else:
+            iso=''
+        self.state_str =  rf'$^{{{iso}}}${self.molecule} ${{{self.electronic_state}}}({{{self.vibrational_state}}})$'
 
     def update_params(self,update_dict,recompute=True):
         if update_dict is None:
@@ -162,12 +226,10 @@ class MoleculeLevels(object):
         return
 
 
-    def eigensystem(self,Ez_val,Bz_val,method='torch',order=True, set_attr=True, Normalize=False,disable_trap=False,angle=None, chop=None):
+    def eigensystem(self,Ez_val,Bz_val,method='torch',order=True, set_attr=True, Normalize=False,angle=None, chop=None):
         if angle is not None:
             self.theta_trap = angle
-        if self.trap and not disable_trap:
-            evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val,self.I_trap,self.theta_trap),method=method,order=order, Normalize=Normalize,round=self.round)
-        elif self.trap and disable_trap:
+        if self.trap:
             evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val,self.I_trap,self.theta_trap),method=method,order=order, Normalize=Normalize,round=self.round)
         else:
             evals,evecs = diagonalize(self.H_function(Ez_val,Bz_val),method=method,order=order, Normalize=Normalize,round=self.round)
@@ -180,7 +242,7 @@ class MoleculeLevels(object):
 
     def AngleMap(self,angle_array, Ez_val, Bz_val, I_trap = None,output=False,write_attribute=True,method='torch',initial_evecs=None,**kwargs):
         if self.trap == False:
-            return none
+            return None
         if I_trap is not None:
             self.I_trap = I_trap
         self._Bz = Bz_val
@@ -397,11 +459,11 @@ class MoleculeLevels(object):
         if theta_trap is None:
             theta_trap = self.theta_trap
         evals,evecs = diagonalize(self.H_function(Ez,Bz,I_trap,theta_trap),round=self.round)
-        return self.trap_shift_evecs(evals,sevecs,I0,theta,Ez,Bz,step=step)
+        return self.trap_shift_evecs(evals,evecs,I_trap,theta_trap,Ez,Bz,step=step)
 
-    def trap_shift_evecs(self,evals,evecs,I0,theta,Ez,Bz,step=0.1):
+    def trap_shift_evecs(self,evals,evecs,I_trap,theta_trap,Ez,Bz,step=0.1):
         evals0,evecs0 = evals,evecs
-        evals1,evecs1 = diagonalize(self.H_function(Ez,Bz,I_trap*(1-step),theta_trap),round=self.round)
+        evals1,evecs1 = diagonalize(self.H_function(Ez,Bz, I_trap*(1-step),theta_trap),round=self.round)
         order = state_ordering(evecs0,evecs1,round=self.round)
         # evecs1_ordered = evecs1[order,:]
         evals1_ordered = evals1[order]
@@ -414,11 +476,24 @@ class MoleculeLevels(object):
         self.trap_shifts = shifts
         return shifts
 
+    def NSDPV_operator(self):
+        # Build (and cache on self.H_NSDPV) the NSD-PV anapole operator matrix
+        #   C = (n_hat x S).I / I   (complex, imaginary-Hermitian) in this object's bBJ basis,
+        # per unit kappa' W_A. H_eff = kappa' W_A * C (Karthein). The diagonal P-odd expectation
+        # evec@C@evec is identically zero for real eigenvectors; the PV observable is the
+        # off-diagonal iW mixing between near-degenerate opposite-parity states.
+        if self.iso_state not in self.library.NSDPV_builders:
+            raise KeyError(
+                f"No NSD-PV builder registered for iso_state '{self.iso_state}'. "
+                f"Available: {list(self.library.NSDPV_builders)}")
+        self.H_NSDPV = self.library.NSDPV_builders[self.iso_state](self.q_numbers)
+        return self.H_NSDPV
+
     def PTV_shift(self,EDM_or_MQM):
-        if '174' in self.iso_state or '40' in self.iso_state:
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif '173' or '171' in self.iso_state:
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         self.H_PTV = H_PTV
@@ -476,7 +551,7 @@ class MoleculeLevels(object):
         return
 
 
-    def write_state(self,eval_i,Ez=None,Bz=None,show_PTV=False):
+    def write_state(self,eval_i,Ez=None,Bz=None,show_energy = True, show_PTV=False):
         if Ez is None and Bz is None:
             pass
         else:
@@ -489,7 +564,8 @@ class MoleculeLevels(object):
             i = len(self.evals0)+i
         vector=self.evecs0[i]
         energy = self.evals0[i]
-        print('E = {} MHz\n'.format(energy))
+        if show_energy:
+            print('E = {} MHz\n'.format(energy))
         if self.PTV0 is not None and show_PTV:
             print('{} Shift = {}\n'.format(self.PTV_type,self.PTV0[i]))
         #sum_sq = 0
@@ -504,11 +580,11 @@ class MoleculeLevels(object):
                 print(' {} |K={},\u03A3={},P={},J={},F={},M={}> \n'.format(coeff,v['K'],v['Sigma'],v['P'],v['J'],v['F'],v['M']))
 
 
-    def PTV_Map(self,EDM_or_MQM,E_or_B='E', plot=False):
-        if '174' in self.iso_state or '40' in self.iso_state:
+    def PTV_Map(self,EDM_or_MQM,E_or_B='E', plot=False,**kwargs):
+        if self.spin_statistics=='boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif '173' or '171' in self.iso_state:
+        elif self.spin_states=='fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         self.H_PTV = H_PTV
@@ -541,7 +617,7 @@ class MoleculeLevels(object):
             PTV_vs_B = np.array(PTV_vs_B)
             self.PTV_B = PTV_vs_B
         if plot:
-            self.plot_PTV(E_or_B)
+            self.plot_PTV(E_or_B,**kwargs)
         return
 
 
@@ -570,7 +646,7 @@ class MoleculeLevels(object):
             return g_eff_vs_B
 
 
-    def plot_PTV(self,E_or_B='E',kV_kG=False):
+    def plot_PTV(self,E_or_B='E',kV_kG=False,idx=None):
 
         if self.PTV_E is None and E_or_B=='E':
             print('Need to run PTV_Map first')
@@ -588,6 +664,8 @@ class MoleculeLevels(object):
 
         field,shifts = {'E': [self.Ez,self.PTV_E], 'B':[self.Bz,self.PTV_B]}[E_or_B]
         shifts = shifts.T # change primary index from E field to eigenvector
+        if idx is not None:
+            shifts = shifts[idx]
 
         y_label = {
             'EDM': r'$\langle \Sigma \rangle$',
@@ -602,7 +680,7 @@ class MoleculeLevels(object):
         }[self.PTV_type]
 
 
-        title = state_str + ' ' + PTV_str + r', $N={}$'.format(str(self.N_range)[1:-1])
+        title = state_str + ' ' + PTV_str
 
         plt.figure(figsize=(10,7))
         for trace in shifts:
@@ -709,10 +787,10 @@ class MoleculeLevels(object):
         return fig
 
     def display_PTV(self,Ez,Bz,EDM_or_MQM,idx = None,width=0.75,figsize=(9,9),ylim=None,round=None):
-        if '174' in self.iso_state or '40' in self.iso_state:
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif '173' or '171' in self.iso_state:
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         if Ez==self.E0 and Bz==self.B0:
@@ -847,7 +925,7 @@ class MoleculeLevels(object):
             if 'bBS' in current_case:
                 basis_matrix = self.library.basis_changers['a_bBJ'](intermediate,output)@self.library.basis_changers['bBS_bBJ'](inputt,intermediate)
             else:
-                basis_matrix = self.library.basis_changers['bBS_bBJ'](inputt,intermediate)@self.library.basis_changers['a_bBJ'](intermediate,output)
+                basis_matrix = self.library.basis_changers['bBS_bBJ'](intermediate,output)@self.library.basis_changers['a_bBJ'](inputt,intermediate)
         elif ('bBS' in new_case and 'bBJ' in current_case) or ('bBJ' in new_case and 'bBS' in current_case):
             basis_matrix = self.library.basis_changers['bBS_bBJ'](inputt,output)
         converted_evecs = []
@@ -860,11 +938,129 @@ class MoleculeLevels(object):
         if verbose:
             print('Successfully converted eigenvectors from {} to {}'.format(current_case,new_case))
         return converted_evecs
+    
+    def gen_state_str(
+        self,
+        vector_idx,
+        evecs=None,
+        basis=None,
+        label_q=None,
+        parity=False,
+        single=False,
+        thresh=0.01,
+        show_coeff=True,
+        new_line=False,
+        round=None,
+        frac_cmd=r'\frac',   # choose r'\frac', r'\tfrac', or r'\dfrac'
+    ):
+        # pick q-number set and optional basis change
+        q_numbers = self.q_numbers
 
-    def gen_state_str(self,vector_idx,evecs=None,basis=None,label_q=None,parity=False,single=False,thresh=0.01,show_coeff=True,new_line=False,round=None,frac=''):
+        if round is None:
+            round = self.round
+        if evecs is None:
+            evecs = self.evecs0
+
+        if basis is not None and basis not in self.hunds_case:
+            if 'decoupled' in basis:
+                q_numbers = self.alt_q_numbers['decoupled']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['decoupled'])
+                evecs = self.convert_evecs('decoupled', evecs=evecs, verbose=False)
+            elif 'a' in basis:
+                q_numbers = self.alt_q_numbers['aBJ']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['aBJ'])
+                evecs = self.convert_evecs('aBJ', evecs=evecs, verbose=False)
+            elif 'bBJ' in basis:
+                q_numbers = self.alt_q_numbers['bBJ']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['bBJ'])
+                evecs = self.convert_evecs('bBJ', evecs=evecs, verbose=False)
+            elif 'recouple' in basis:
+                q_numbers = self.alt_q_numbers['recouple_J']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['recouple_J'])
+            elif 'decouple_I' in basis:
+                q_numbers = self.alt_q_numbers['decouple_I']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['decouple_I'])
+            elif 'bBS' in basis:
+                q_numbers = self.alt_q_numbers['bBS']
+                if label_q is None:
+                    label_q = list(self.alt_q_numbers['bBS'])
+                evecs = self.convert_evecs('bBS', evecs=evecs, verbose=False)
+        
+        if label_q is None:
+            label_q = list(self.q_str)
+        
+        # pretty names for some labels
+        latex_q = {'L': r'\Lambda', 'Sigma': r'\Sigma', 'Omega': r'\Omega'}
+
+        vec = deepcopy(evecs[vector_idx])
+        vec[np.abs(vec) < thresh] = 0
+        nz = np.nonzero(vec)[0]
+        if single and len(nz) > 0:
+            nz = [int(np.argmax(np.abs(vec)))]
+
+        parts = []  # collect ket terms (no $ here)
+
+        for i, idx in enumerate(nz):
+            coeff = float(np.round(vec[idx], round))
+            sgn = '+' if coeff >= 0 else '-'
+            if show_coeff:
+                sgn_to_show = '' if (i == 0 and sgn == '+') else sgn
+            else:
+                sgn_to_show = ''
+
+            # sign + (optional) coefficient + opening ket bar
+            if show_coeff:
+                term = rf'\,{sgn_to_show}\,{abs(coeff)}\,|'
+            else:
+                term = rf'\,{sgn_to_show}\,|'
+
+            if parity:
+                pm = '+' if self.parities[vector_idx] > 0 else '-'
+                term += rf'{pm},'
+
+            # q=val comma-separated; rational values rendered with frac_cmd
+            vals = {q: q_numbers[q][idx] for q in label_q}
+            for q in label_q:
+                qname = latex_q.get(q, q)
+                v = vals[q]
+                # robust fraction handling
+                try:
+                    frac = Fraction(v).limit_denominator()
+                except TypeError:
+                    frac = Fraction(float(v)).limit_denominator()
+
+                if frac.denominator == 1:
+                    v_tex = f'{int(frac.numerator)}'
+                else:
+                    # put the minus out front for nice typesetting
+                    sign = '-' if frac.numerator < 0 else ''
+                    if show_coeff == False:
+                        sign='' # no leading minus if no coeff shown
+                    v_tex = rf'{sign}{frac_cmd}{{{abs(frac.numerator)}}}{{{frac.denominator}}}'
+
+                term += rf'{qname}={v_tex},'
+
+            term = term[:-1] + r'\rangle\,'
+            parts.append(term)
+
+        body = ''.join(parts)
+        if new_line:
+            body = r'\\ ' + body
+
+        return r'$' + body + r'$'
+
+    def gen_state_str_old(self,vector_idx,evecs=None,basis=None,label_q=None,parity=False,single=False,thresh=0.01,show_coeff=True,new_line=False,round=None,frac=''):
         q_numbers = self.q_numbers
         if label_q == None:
-            label_q = self.q_str
+            if basis == self.hunds_case:
+                label_q = self.q_str
+            else:
+                label_q = self.library.alt_q_str[basis]
         if round is None:
             round=self.round
         if evecs is None:
@@ -970,10 +1166,10 @@ class MoleculeLevels(object):
             trap_shifts=False
         N_Bz = len(Bz)
         N_Ez = len(Ez)
-        if '174' in self.iso_state or '40' in self.iso_state:
+        if self.spin_statistics == 'boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif '173' or '171' in self.iso_state:
+        elif self.spin_statistics == 'fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         if trap_shifts:

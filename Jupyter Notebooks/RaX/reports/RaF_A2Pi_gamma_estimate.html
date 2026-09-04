@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="A. Jadbabaie (with Claude)" />
+  <meta name="dcterms.date" content="2026-05-07" />
+  <title>Estimate of \gamma in the A\,{}^2\Pi_{1/2} state of RaF</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Estimate of <span
+class="math inline">\(\gamma\)</span> in the <span
+class="math inline">\(A\,{}^2\Pi_{1/2}\)</span> state of RaF</h1>
+<p class="author">A. Jadbabaie (with Claude)</p>
+<p class="date">2026-05-07</p>
+</header>
+<h1 id="summary">Summary</h1>
+<p>The spin-rotation parameter <span
+class="math inline">\(\gamma\)</span> in the <span
+class="math inline">\(A\,{}^2\Pi_{1/2}\)</span> state of <span
+class="math inline">\({}^{226}\mathrm{RaF}\)</span> is estimated under
+one-electron pure precession, drawing on second-order perturbation
+theory of Brown &amp; Carrington and Veseth (1979), the measured <span
+class="math inline">\(\gamma(C\,{}^2\Sigma^+_{1/2})\)</span> from Conn
+et al. (2025), and the deperturbed <span
+class="math inline">\(A\,{}^2\Pi\)</span> / <span
+class="math inline">\(C\,{}^2\Sigma^+\)</span> analysis from the same
+source.</p>
+<p><strong>Best estimate:</strong> <span
+class="math inline">\(\gamma(A\,{}^2\Pi_{1/2}, \mathrm{RaF}) \approx
++6\)</span> to <span class="math inline">\(+8\)</span> GHz,
+<strong>positive</strong>.</p>
+<p>The dominant <span class="math inline">\(C\,{}^2\Sigma^+\)</span>
+channel (<span class="math inline">\(+6.2\)</span> GHz) is well-anchored
+to measured data; the <span
+class="math inline">\(B\,{}^2\Delta_{3/2}\)</span> channel (<span
+class="math inline">\(\sim+1\)</span> GHz) is more uncertain due to
+unknown configuration phases and a possibly worse Franck–Condon
+overlap.</p>
+<hr />
+<h1 id="sources">1. Sources</h1>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Ref</th>
+<th>Citation</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B&amp;C</td>
+<td>Brown, J. M. &amp; Carrington, A., <em>Rotational Spectroscopy of
+Diatomic Molecules</em> (Cambridge, 2003). §7.4, §7.8, §10.6.3</td>
+<td>Formal second-order <span class="math inline">\(\gamma\)</span>
+derivation; CH worked example; “twice and opposite” rule</td>
+</tr>
+<tr>
+<td>Veseth</td>
+<td>Veseth, L., <em>J. Mol. Spectrosc.</em> <strong>77</strong>, 195
+(1979)</td>
+<td>Explicit second-order <span
+class="math inline">\(\gamma({}^2\Pi)\)</span> including both <span
+class="math inline">\({}^2\Sigma\)</span> and <span
+class="math inline">\({}^2\Delta\)</span> contributions (Eq. 8)</td>
+</tr>
+<tr>
+<td>A-K</td>
+<td>Athanasakis-Kaklamanakis, M. <em>et al.</em>, <em>Nat. Commun.</em>
+<strong>16</strong>, 2139 (2025)</td>
+<td>RaF excited-state energies, spin-orbit constants, FS-RCC <span
+class="math inline">\(\mathrm{Ra}^+\)</span> orbital compositions</td>
+</tr>
+<tr>
+<td>Conn</td>
+<td>Conn, C. J., Yu, P. <em>et al.</em>, arXiv:2508.08368v1 (2025)</td>
+<td>Measured <span class="math inline">\(\gamma(C\,{}^2\Sigma^+,
+\mathrm{RaF})\)</span>; <span class="math inline">\(3\times 3\)</span>
+deperturbation of <span
+class="math inline">\(A\,{}^2\Pi/C\,{}^2\Sigma^+\)</span> system using
+B&amp;C §8.5.2(d) framework</td>
+</tr>
+<tr>
+<td>NIST</td>
+<td>NIST Atomic Spectra Database, Ra II</td>
+<td>Atomic <span class="math inline">\(\zeta_{7p}(\mathrm{Ra}^+) =
+3239\)</span> cm<span class="math inline">\(^{-1}\)</span>, <span
+class="math inline">\(\zeta_{6d}(\mathrm{Ra}^+) = 663\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="verified-inputs">2. Verified inputs</h1>
+<h2 id="raf-spectroscopic-constants">2.1 RaF spectroscopic
+constants</h2>
+<p>Energies and spin-orbit constants from A-K Tables 1 and 3:</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">\(T_0(A\,{}^2\Pi_{1/2})\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(13{,}284.4\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(T_0(B\,{}^2\Delta_{3/2})\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(14{,}333\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(T_0(C\,{}^2\Sigma^+_{1/2})\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(16{,}612\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(A(A\,{}^2\Pi)_\text{obs}\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(2051(1)\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(A(B\,{}^2\Delta)_\text{obs}\)</span>
+(tentative)</td>
+<td style="text-align: right;"><span
+class="math inline">\(404(1)\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Measured <span class="math inline">\(\gamma\)</span> for the RaF
+<span class="math inline">\(C\,{}^2\Sigma^+\)</span> state (Conn et
+al. Table II):</p>
+<p><span class="math display">\[
+\gamma(C\,{}^2\Sigma^+_{1/2}, \mathrm{RaF}) = -12{,}388(90)\
+\mathrm{MHz} = -0.4132\ \mathrm{cm}^{-1}.
+\]</span></p>
+<h2 id="caltech-3times-3-deperturbation-of-a2pi-c2sigma">2.2 Caltech
+<span class="math inline">\(3\times 3\)</span> deperturbation of <span
+class="math inline">\(A\,{}^2\Pi\)</span> / <span
+class="math inline">\(C\,{}^2\Sigma^+\)</span></h2>
+<p>From Conn et al. Table S2 (RaF, footnote c). The model is the
+parity-conserving Hund’s case (a) basis from B&amp;C §8.5.2(d), with
+off-diagonal matrix elements</p>
+<p><span class="math display">\[
+\langle{}^2\Pi_{1/2}^{(\pm)}|\hat{H}|{}^2\Sigma^+_{1/2,(\pm)}\rangle =
+M_2 \mp M_1\,(-1)^{J-1/2}(J+1/2),
+\]</span></p>
+<p>where <span class="math inline">\(M_1 =
+\langle{}^2\Pi|BL_+|{}^2\Sigma\rangle\)</span> and <span
+class="math inline">\(M_2 = \langle{}^2\Pi|(A/2 +
+B)L_+|{}^2\Sigma\rangle\)</span>.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">\(A_\text{dep}(A\,{}^2\Pi)\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1450\)</span>
+cm<span class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(M_2\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1025\)</span>
+cm<span class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(M_1\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(0.34047(18)\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\(E_\text{dep}(A\,{}^2\Pi)\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(14{,}420\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span
+class="math inline">\(E_\text{dep}(C\,{}^2\Sigma^+)\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(15{,}748.0\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span
+class="math inline">\(B_\text{dep}(C\,{}^2\Sigma^+)\)</span></td>
+<td style="text-align: right;"><span
+class="math inline">\(0.18652(57)\)</span> cm<span
+class="math inline">\(^{-1}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Deperturbed <span class="math inline">\(\Pi\)</span>–<span
+class="math inline">\(\Sigma\)</span> gap: <span
+class="math inline">\(\Delta E_\text{dep} = 1328\)</span> cm<span
+class="math inline">\(^{-1}\)</span> (vs. observed 3328 cm<span
+class="math inline">\(^{-1}\)</span>).</p>
+<h2 id="fs-rcc-orbital-compositions-a-k-table-2">2.3 FS-RCC orbital
+compositions (A-K Table 2)</h2>
+<p>Squared amplitudes only; relative signs not reported.</p>
+<ul>
+<li><span class="math inline">\(A\,{}^2\Pi\)</span>: <span
+class="math inline">\(0.60\,(7p_{1/2}) + 0.20\,(6d_{3/2}) +
+0.10\,(7p_{3/2})\)</span> → <span class="math inline">\(|c_{7p}|^2 =
+0.70\)</span>, <span class="math inline">\(|c_{6d}|^2 =
+0.20\)</span></li>
+<li><span class="math inline">\(C\,{}^2\Sigma^+\)</span>: <span
+class="math inline">\(0.50\,(7p_{3/2}) + 0.30\,(6d_{5/2}) +
+0.10\,(7d_{5/2})\)</span> → <span class="math inline">\(|c_{7p}|^2 =
+0.50\)</span>, <span class="math inline">\(|c_{6d}|^2 =
+0.30\)</span></li>
+<li><span class="math inline">\(B\,{}^2\Delta_{3/2}\)</span>: <span
+class="math inline">\(0.40\,(6d_{3/2}) + 0.30\,(6d_{5/2}) +
+0.20\,(7p_{3/2})\)</span> → <span class="math inline">\(|c_{6d}|^2 =
+0.70\)</span></li>
+</ul>
+<h2 id="atomic-ra-spin-orbit-nist-levels">2.4 Atomic Ra<span
+class="math inline">\(^+\)</span> spin-orbit (NIST levels)</h2>
+<ul>
+<li><span class="math inline">\(7p_{1/2}\leftrightarrow
+7p_{3/2}\)</span> splitting <span class="math inline">\(= 4858\)</span>
+cm<span class="math inline">\(^{-1}\)</span> → <span
+class="math inline">\(\zeta_{7p}(\mathrm{Ra}^+) = (2/3)\cdot 4858 =
+3239\)</span> cm<span class="math inline">\(^{-1}\)</span></li>
+<li><span class="math inline">\(6d_{3/2}\leftrightarrow
+6d_{5/2}\)</span> splitting <span class="math inline">\(= 1659\)</span>
+cm<span class="math inline">\(^{-1}\)</span> → <span
+class="math inline">\(\zeta_{6d}(\mathrm{Ra}^+) = (2/5)\cdot 1659 =
+663\)</span> cm<span class="math inline">\(^{-1}\)</span></li>
+</ul>
+<hr />
+<h1 id="verified-formulas">3. Verified formulas</h1>
+<h2 id="second-order-gamma-for-one-electron-pure-precession">3.1
+Second-order <span class="math inline">\(\gamma\)</span> for
+one-electron pure precession</h2>
+<p>Veseth (1979) Eq. 8 for <span class="math inline">\(\gamma\)</span>
+in a <span class="math inline">\({}^2\Pi\)</span> state, with the matrix
+element <span
+class="math inline">\(\langle{}^2\Pi|AL_+|{}^2\Sigma\rangle\)</span>
+interpreted to include the <span class="math inline">\(1/2\)</span>
+spin-coupling factor from <span class="math inline">\(H_\text{so} =
+\xi(L_z S_z + \frac{1}{2}(L_+ S_- + L_- S_+))\)</span>, gives for <span
+class="math inline">\(l=1\)</span> (<span
+class="math inline">\(\Sigma\leftrightarrow\Pi\)</span>, <span
+class="math inline">\(p\)</span>-orbital):</p>
+<p><span class="math display">\[
+\gamma^{(2)}({}^2\Pi)_\Sigma = -\frac{A\,B}{E_\Pi - E_\Sigma}
+\]</span></p>
+<p>For <span class="math inline">\(l=2\)</span> (<span
+class="math inline">\(\Pi\leftrightarrow\Delta\)</span>, <span
+class="math inline">\(d\)</span>-orbital):</p>
+<p><span class="math display">\[
+\gamma^{(2)}({}^2\Pi)_\Delta = -\frac{2\,\zeta_d\,B}{E_\Pi -
+E_{\Delta_{3/2}}}
+\]</span></p>
+<p>The factor of 2 in the <span class="math inline">\(\Delta\)</span>
+term comes from the <span class="math inline">\(l=2\)</span> matrix
+element <span class="math inline">\(\langle
+l=2,\lambda=+2|L_+|l=2,\lambda=+1\rangle = 2\)</span> (vs. <span
+class="math inline">\(\sqrt{2}\)</span> for <span
+class="math inline">\(l=1\)</span>).</p>
+<p>For a <span class="math inline">\({}^2\Sigma\)</span> host with <span
+class="math inline">\({}^2\Pi\)</span> perturber, summing over the two
+<span class="math inline">\(\Lambda=\pm 1\)</span> components of <span
+class="math inline">\(\Pi\)</span> gives</p>
+<p><span class="math display">\[
+\gamma^{(2)}({}^2\Sigma) = -\frac{2\,A\,B}{E_\Sigma - E_\Pi},
+\]</span></p>
+<p>yielding the <strong>B&amp;C “twice and opposite” rule</strong>:</p>
+<p><span class="math display">\[
+\gamma({}^2\Sigma) = -2\,\gamma({}^2\Pi).
+\]</span></p>
+<h2 id="empirical-verification">3.2 Empirical verification</h2>
+<p><strong>RaF <span
+class="math inline">\(C\,{}^2\Sigma^+\)</span></strong> (using Conn
+deperturbed values):</p>
+<p><span class="math display">\[
+\gamma_\text{calc}(C\,{}^2\Sigma) = -\frac{2 \cdot 1450 \cdot
+0.18652}{1328} = -0.408\ \mathrm{cm}^{-1}\quad\text{vs measured}\
+-0.4132\ \mathrm{cm}^{-1}.
+\]</span></p>
+<p>Agreement to 1.4 %.</p>
+<p><strong>OH <span class="math inline">\(X\,{}^2\Pi\)</span></strong>
+(B&amp;C p. 393, with <span class="math inline">\(A_\text{mol} =
+-139\)</span>, <span class="math inline">\(B = 18.5\)</span>, <span
+class="math inline">\(\Delta E = -32{,}600\)</span>):</p>
+<p><span class="math display">\[
+\gamma_\text{calc}(X\,{}^2\Pi_\text{OH}) = -\frac{(-139)(18.5)}{-32600}
+= -0.079\ \mathrm{cm}^{-1}\quad\text{vs measured}\ -0.119.
+\]</span></p>
+<p>Sign correct; magnitude <span
+class="math inline">\(1.5\times\)</span> under (typical pure-precession
+accuracy).</p>
+<p><strong>OH <span
+class="math inline">\(A\,{}^2\Sigma^+\)</span></strong>:</p>
+<p><span class="math display">\[
+\gamma_\text{calc}(A\,{}^2\Sigma^+_\text{OH}) =
+-\frac{2(-139)(17)}{32600} = +0.145\ \mathrm{cm}^{-1}\quad\text{vs
+measured}\ +0.201.
+\]</span></p>
+<p>Sign correct; magnitude <span
+class="math inline">\(1.4\times\)</span> under.</p>
+<p>The OH ratio <span
+class="math inline">\(|\gamma({}^2\Sigma)|/|\gamma({}^2\Pi)| =
+0.201/0.119 = 1.7\)</span> is close to the predicted 2; deviation
+attributable to non-pure-precession corrections.</p>
+<hr />
+<h1 id="calculations">4. Calculations</h1>
+<h2 id="sigma-channel-well-constrained">4.1 <span
+class="math inline">\(\Sigma\)</span> channel (well-constrained)</h2>
+<p>Anchored to the <em>measured</em> <span
+class="math inline">\(\gamma(C\,{}^2\Sigma^+_\text{RaF})\)</span> via
+the universal <span class="math inline">\(-2\)</span> ratio:</p>
+<p><span class="math display">\[
+\gamma(A\,{}^2\Pi_\text{RaF})_\Sigma =
+-\frac{1}{2}\,\gamma(C\,{}^2\Sigma^+_\text{RaF})_\text{meas} = +0.207\
+\mathrm{cm}^{-1} \approx +6.2\ \mathrm{GHz}.
+\]</span></p>
+<p>This bypasses pure-precession uncertainties since the <span
+class="math inline">\(-2\)</span> ratio is theoretically rigid
+(Λ-counting in second-order PT) and is verified empirically on OH.
+Caltech’s deperturbation already absorbs the dominant Franck–Condon
+factor, so no FCF correction is needed here.</p>
+<h2 id="delta-channel-less-well-constrained">4.2 <span
+class="math inline">\(\Delta\)</span> channel (less
+well-constrained)</h2>
+<p>Pure precession with the <span
+class="math inline">\(d\)</span>-orbital channel only (the <span
+class="math inline">\(7p\)</span> component of <span
+class="math inline">\(A\,{}^2\Pi\)</span> does not couple to a <span
+class="math inline">\(\Lambda=2\)</span> state under PP):</p>
+<p><span class="math display">\[
+\gamma(A\,{}^2\Pi)_\Delta =
+-\frac{2\,\zeta_{6d,\text{eff}}\,B\,c_d^2(A\,{}^2\Pi)\,c_d^2(B\,{}^2\Delta_{3/2})}{E_\Pi
+- E_\Delta}\cdot \text{FCF}_{00}
+\]</span></p>
+<p>with <span class="math inline">\(\zeta_{6d,\text{eff}} \approx
+A(B\,{}^2\Delta)_\text{obs}/c_d^2(B\,{}^2\Delta) = 404/0.70 =
+577\)</span> cm<span class="math inline">\(^{-1}\)</span>, <span
+class="math inline">\(c_d^2(A\,{}^2\Pi) = 0.20\)</span>, <span
+class="math inline">\(c_d^2(B\,{}^2\Delta_{3/2}) = 0.70\)</span>, <span
+class="math inline">\(B = 0.19\)</span> cm<span
+class="math inline">\(^{-1}\)</span>, <span class="math inline">\(E_\Pi
+- E_\Delta = -1049\)</span> cm<span
+class="math inline">\(^{-1}\)</span>:</p>
+<p><span class="math display">\[
+\gamma(A\,{}^2\Pi)_\Delta \approx +0.029\ \mathrm{cm}^{-1} \cdot
+\text{FCF}_{00} \approx +0.85\text{ to }+0.95\ \mathrm{GHz}.
+\]</span></p>
+<p>The <span class="math inline">\(\text{FCF}_{00}(A\,{}^2\Pi
+\leftrightarrow B\,{}^2\Delta)\)</span> is estimated <span
+class="math inline">\(\sim 0.85\)</span>–<span
+class="math inline">\(0.95\)</span> from the near-equal effective
+principal quantum numbers <span class="math inline">\(n^*(A) =
+2.06\)</span> and <span class="math inline">\(n^*(B\,{}^2\Delta) =
+2.08\)</span> (A-K Table 3), but lacks direct measurement.</p>
+<p>Higher <span class="math inline">\({}^2\Delta\)</span> states (<span
+class="math inline">\(I\,{}^2\Delta\)</span> at <span
+class="math inline">\(29{,}693\)</span> cm<span
+class="math inline">\(^{-1}\)</span>): negligible contribution (<span
+class="math inline">\(\lesssim +0.05\)</span> GHz).</p>
+<h2 id="total">4.3 Total</h2>
+<p><span class="math display">\[
+\gamma(A\,{}^2\Pi_{1/2}, \mathrm{RaF}) \approx +6.2 + 0.9 \approx +7.0\
+\mathrm{GHz},\ \text{positive}.
+\]</span></p>
+<hr />
+<h1 id="bottom-line-range">5. Bottom-line range</h1>
+<p>Plausible range under different scenarios:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th style="text-align: right;"><span
+class="math inline">\(\gamma(A\,{}^2\Pi_{1/2})\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">\(\Sigma\)</span> only (anchored to
+Conn)</td>
+<td style="text-align: right;"><span class="math inline">\(+6.2\)</span>
+GHz</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\Sigma + \Delta\)</span>, FCF <span
+class="math inline">\(= 0.95\)</span>, constructive</td>
+<td style="text-align: right;"><span class="math inline">\(+7.0\)</span>
+GHz</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\Sigma + \Delta\)</span>, FCF <span
+class="math inline">\(= 0.85\)</span>, constructive</td>
+<td style="text-align: right;"><span class="math inline">\(+6.9\)</span>
+GHz</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\Sigma + \Delta\)</span>, FCF <span
+class="math inline">\(= 0.50\)</span>, constructive</td>
+<td style="text-align: right;"><span class="math inline">\(+6.6\)</span>
+GHz</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\Sigma + \Delta\)</span>, sign flip on
+<span class="math inline">\(d\)</span>-channel</td>
+<td style="text-align: right;"><span class="math inline">\(+5.3\)</span>
+GHz</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Range: <span class="math inline">\(+5\)</span> to <span
+class="math inline">\(+8\)</span> GHz, most likely <span
+class="math inline">\(+7\)</span> GHz, positive.</strong></p>
+<hr />
+<h1 id="caveats-not-eliminated">6. Caveats not eliminated</h1>
+<ol type="1">
+<li><strong>Pure precession overestimates matrix elements</strong> at
+the <span class="math inline">\(\sim 30\%\)</span> level (cf. OH calc
+vs. measured).</li>
+<li><strong><span class="math inline">\(\text{FCF}_{00}(A\,{}^2\Pi
+\leftrightarrow B\,{}^2\Delta)\)</span> is not measured.</strong> <span
+class="math inline">\(B_0(B\,{}^2\Delta_\text{RaF})\)</span> is not in
+the literature; the FCF is estimated from <span
+class="math inline">\(n^*\)</span> similarity, but the orbital character
+differs (<span class="math inline">\(7p\)</span> Rydberg vs. <span
+class="math inline">\(6d\)</span> Rydberg).</li>
+<li><strong>Configuration phases of the <span
+class="math inline">\(d\)</span>-channel admixture in <span
+class="math inline">\(A\,{}^2\Pi\)</span> and <span
+class="math inline">\(B\,{}^2\Delta\)</span></strong> are not measured.
+A-K reports <span class="math inline">\(|c|^2\)</span> only. The
+empirical <span class="math inline">\(M_2 &gt; 0\)</span> from the
+Caltech fit fixes the sign for the dominant <span
+class="math inline">\(7p\)</span> channel between <span
+class="math inline">\(A\,{}^2\Pi\)</span> and <span
+class="math inline">\(C\,{}^2\Sigma^+\)</span>; no analogous constraint
+exists for the <span class="math inline">\(d\)</span>-channel between
+<span class="math inline">\(A\,{}^2\Pi\)</span> and <span
+class="math inline">\(B\,{}^2\Delta\)</span>.</li>
+<li><strong><span
+class="math inline">\(A(B\,{}^2\Delta_\text{RaF})\)</span> is reported
+as tentative</strong> in A-K Table 3 (bracketed value).</li>
+<li><strong>Higher <span class="math inline">\(\Sigma\)</span>
+states</strong> (E, F, H <span class="math inline">\({}^2\Sigma\)</span>
+at 25–30 kcm<span class="math inline">\(^{-1}\)</span>) contribute <span
+class="math inline">\(\lesssim +0.2\)</span> GHz; safely within other
+uncertainties.</li>
+</ol>
+<hr />
+<h1 id="test-of-the-prediction">7. Test of the prediction</h1>
+<p>A direct rotational measurement of the <span
+class="math inline">\(A\,{}^2\Pi_{1/2}\)</span> state of RaF (e.g., via
+spin-rotation splitting of the lowest rotational levels) would be the
+cleanest test. The predicted positive sign is opposite to the (negative)
+<span class="math inline">\(\gamma\)</span> of the <span
+class="math inline">\(C\,{}^2\Sigma^+\)</span> state, by the Λ-counting
+twice-and-opposite rule.</p>
+</body>
+</html>

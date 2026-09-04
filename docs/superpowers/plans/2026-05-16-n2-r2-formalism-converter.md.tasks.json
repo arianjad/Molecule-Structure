@@ -1,0 +1,77 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-16-n2-r2-formalism-converter.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: Module scaffold + core dispatch",
+      "status": "completed",
+      "description": "**Goal:** Source Code/formalism.py exists with convert_params_to_engine_R2 handling R2 pass-through, unknown-formalism ValueError, N2-without-Lambda ValueError, bookkeeping strip, no caller mutation. Plain-assert test harness Source Code/test_formalism.py.\n\n**Files:** Create Source Code/formalism.py; Create Source Code/test_formalism.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism.py\" -> OK: 5 passed\n\n```json:metadata\n{\"files\": [\"Source Code/formalism.py\", \"Source Code/test_formalism.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism.py\\\"\", \"acceptanceCriteria\": [\"R2/absent -> stripped shallow copy\", \"unknown formalism -> ValueError\", \"N2 w/o Lambda -> ValueError\", \"caller dict not mutated\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Rotational + generic-X conversion",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Be/D row (Be=Be-2L2*D), universal X+=L2*X_D over CENTRIFUGAL_PARTNERS, D/X_D identity, no-partner passthrough, Sigma (L=0) identity, sextic-key ValueError, orphan X_D warns.\n\n**Files:** Modify Source Code/formalism.py; Test Source Code/test_formalism.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism.py\" -> OK: 11 passed\n\n```json:metadata\n{\"files\": [\"Source Code/formalism.py\", \"Source Code/test_formalism.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism.py\\\"\", \"acceptanceCriteria\": [\"Be=Be-2L2D; D & X_D unchanged\", \"X+=L2*X_D for each partner pair present\", \"no-partner param identity\", \"Sigma identity\", \"sextic key -> ValueError\", \"orphan X_D -> warn\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: G-row / Origin conversion (1/c unit factor)",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Origin(R2)=Origin(N2)+L2*Be(N2)/c - L2^2*D(N2)/c using snapshotted N2 Be/D and explicit c_cm. Sigma/no-Be -> unchanged; custom c_cm honored.\n\n**Files:** Modify Source Code/formalism.py; Test Source Code/test_formalism.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism.py\" -> OK: 16 passed\n\n```json:metadata\n{\"files\": [\"Source Code/formalism.py\", \"Source Code/test_formalism.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism.py\\\"\", \"acceptanceCriteria\": [\"Origin+=L2*Be/c - L2^2*D/c\", \"Lambda powers correct (L2, L2^2)\", \"Sigma Origin unchanged\", \"Origin w/o Be unchanged\", \"custom c_cm honored\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Wire two call sites + back-compat sweep",
+      "status": "completed",
+      "blockedBy": [
+        1,
+        2
+      ],
+      "description": "**Goal:** get_molecule_params returns convert_params_to_engine_R2(merged, c_cm=c) (module-global c, hazard #1); MoleculeLevels.__init__ converts ONLY the user-dict else-branch (hazard #3). Back-compat sweep: all existing entries value-equal through converter.\n\n**Files:** Modify Source Code/molecule_parameters.py:391 + imports; Modify Source Code/Energy_Levels.py after line 70 + imports; Test Source Code/test_formalism.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism.py\" -> OK: 17 passed (swept N entries)\n\n```json:metadata\n{\"files\": [\"Source Code/molecule_parameters.py\", \"Source Code/Energy_Levels.py\", \"Source Code/test_formalism.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism.py\\\"\", \"acceptanceCriteria\": [\"get_molecule_params converts with c_cm=module c\", \"MoleculeLevels converts only user-dict branch (no double convert)\", \"all current entries unchanged through converter\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Migrate RaF A0 boson+fermion to raw-N2; regression oracle",
+      "status": "completed",
+      "blockedBy": [
+        3
+      ],
+      "description": "**Goal:** Replace hand arithmetic in both RaF A0 dicts with raw N2 + formalism:'N2'+Lambda:1; Origin = physical band origin 13284.427 (NO hand +B/c). Oracle: converted Be/p+2q byte-equal old committed; Origin corrected (differs from buggy by (Be_X-Be_A)/c = -11.6 MHz boson / -26.5 MHz fermion).\n\n**Files:** Modify Source Code/molecule_parameters.py RaF/boson/A0 (50-69) + RaF/fermion/A0 (86-105); Test Source Code/test_formalism.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism.py\" -> all pass incl raf_a0_regression_oracle\n\n```json:metadata\n{\"files\": [\"Source Code/molecule_parameters.py\", \"Source Code/test_formalism.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism.py\\\"\", \"acceptanceCriteria\": [\"boson Be==5743.96-2*1.4e-7*c; p+2q==-0.41071*c+1.9e-7*c\", \"fermion Be==5729.03-2*1.4e-7*c; p+2q==-0.4109*c+1.9e-7*c\", \"boson Origin==13284.427+5743.96/c-1.4e-7 (differs from buggy by -11.6MHz)\", \"fermion Origin differs from buggy by -26.5MHz\", \"sweep skips migrated entries\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Physics regression - eigenvalue spacings vs pre-migration R2",
+      "status": "pending",
+      "blockedBy": [
+        4
+      ],
+      "description": "**Goal:** RaF A2Pi via MoleculeLevels with migrated entry yields within-manifold eigenvalue spacings == explicit pre-migration post-ef06b86 R2 dict to <=1e-8 MHz, boson+fermion. Discrimination check: perturb baseline -> FAIL, revert.\n\n**Files:** Create Source Code/test_formalism_physics.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism_physics.py\" -> OK physics, both spins max|delta|<1e-8\n\n```json:metadata\n{\"files\": [\"Source Code/test_formalism_physics.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism_physics.py\\\"\", \"acceptanceCriteria\": [\"boson spacings match pre-migration R2 <=1e-8 MHz\", \"fermion spacings match <=1e-8 MHz\", \"perturbation makes it FAIL (discriminating)\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: External validation vs Nat. Phys. 2024 RaF N2 constants",
+      "status": "pending",
+      "blockedBy": [
+        4
+      ],
+      "description": "**Goal:** Read Udrescu/Garcia Ruiz et al. Nat. Phys. 2024 (DOI 10.1038/s41567-023-02296-w) + Supplementary Information; transcribe RaF X/A PGopher-N2 constants + an N=1 X-A line into an oracle markdown with citations; assert migrated RaF A0 (back-converted to N2) matches paper within stated precision. Do NOT loosen TOL to force green.\n\n**Files:** Create docs/superpowers/plans/2026-05-16-n2-r2-formalism-converter-natphys-oracle.md; Create Source Code/test_formalism_natphys.py\n\n**Verify:** conda run -n Structure python \"Source Code/test_formalism_natphys.py\" -> OK natphys\n\n```json:metadata\n{\"files\": [\"docs/superpowers/plans/2026-05-16-n2-r2-formalism-converter-natphys-oracle.md\", \"Source Code/test_formalism_natphys.py\"], \"verifyCommand\": \"conda run -n Structure python \\\"Source Code/test_formalism_natphys.py\\\"\", \"acceptanceCriteria\": [\"paper+SI read; constants+N=1 line transcribed with citations\", \"converter Be/p+2q(N2) match paper within tol\", \"physical band origin matches paper Te within rounding\", \"disagreement reported, not silenced\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: Completion gate - tutorial notebook fresh kernel",
+      "status": "pending",
+      "blockedBy": [
+        5,
+        6
+      ],
+      "description": "**Goal:** Full suite green (test_formalism.py, test_formalism_physics.py, test_formalism_natphys.py) AND Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb executes end-to-end on a fresh kernel with NO --allow-errors (memory: feedback_no_allow_errors).\n\n**Files:** none (verification only)\n\n**Verify:** conda run -n Structure jupyter execute \"Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb\" -> exit 0\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"conda run -n Structure jupyter execute \\\"Jupyter Notebooks/RaF_Calcs_Tutorial.ipynb\\\"\", \"acceptanceCriteria\": [\"all three test scripts exit 0\", \"tutorial notebook fresh-kernel exit 0, no --allow-errors\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-16T22:40:30Z"
+}
