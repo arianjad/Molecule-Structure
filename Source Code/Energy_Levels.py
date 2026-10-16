@@ -64,9 +64,18 @@ class MoleculeLevels(object):
         if len(elec_state)>1:
             raise ValueError('Electronic state name must be a single letter, e.g. X, A, B, C')   
         
+        # Odd-Yb parameter tables carry the isotope in their state key.
+        # Keep the legacy backend default (171) when no isotope is requested.
+        parameter_state = elec_state
+        if molecule_name == 'YbOH' and fermion_or_boson == 'fermion':
+            isotope_label = '171' if isotope is None else str(isotope)
+            if isotope_label not in ('171', '173'):
+                raise ValueError('Fermionic YbOH isotope must be 171 or 173')
+            parameter_state = isotope_label + elec_state
+
         # Get parameters from molecule_parameters.py if not provided
         if params is None:
-            params = get_molecule_params(molecule_name,elec_state,vib_state,fermion_or_boson)
+            params = get_molecule_params(molecule_name,parameter_state,vib_state,fermion_or_boson)
             # already converted inside get_molecule_params (hazard #3)
         elif not isinstance(params,dict):
             raise ValueError('Params must be a dictionary of molecular parameters, see molecule_parameters.py for examples')
@@ -120,8 +129,8 @@ class MoleculeLevels(object):
             else: 
                 self.iso_state = '174' + self.electronic_state + '000'
         elif self.spin_statistics == 'fermion':
-            if self.metadata['isotope'] in [171,173]:
-                self.iso_state = self.metadata['isotope'] + self.vibronic_state
+            if str(self.metadata['isotope']) in ('171', '173'):
+                self.iso_state = str(self.metadata['isotope']) + self.vibronic_state
             else:
                 # Default to 171 in backend
                 if len(self.vibronic_state)>2:

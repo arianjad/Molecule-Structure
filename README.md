@@ -54,6 +54,12 @@ evals, evecs = X0.eigensystem(0, 0)
 X0.StarkMap(Ez_array, plot=True)
 ```
 
+For odd YbOH, `fermion_or_boson='fermion'` selects isotope-prefixed parameter
+tables. Pass `isotope=171` or `173` (integer or string); omitting it retains
+the legacy 171 default. Supply the nuclear spins explicitly, for example
+`I_nuclei=[1/2, 1/2]` for 171YbOH. The selected table is used for both `000`
+and `010`; successful initialization does not validate its spectroscopic inputs.
+
 ## Conventions
 
 ### Units
@@ -71,7 +77,10 @@ Quantum-number arrays exposed via `MoleculeLevels.q_numbers` use this notation.
 
 ### Hund's cases
 
-Three cases are implemented: `bBJ`, `bBS` (used when the metal nucleus has `I ≥ 1`, e.g. ¹⁷¹Yb, ²²⁵Ra), and `aBJ`. The case is selected automatically per `(molecule, isotope, electronic state)` via the `Molecule_Library.cases` dispatch table. Matrix elements live in `matrix_elements.py` keyed by case.
+Three cases are implemented: `bBJ`, `bBS`, and `aBJ`. The case is selected by
+the `Molecule_Library.cases` dispatch table, not by an `I ≥ 1` threshold:
+both 171YbOH (`I_Yb=1/2`) and 173YbOH (`I_Yb=5/2`) use `bBS` for their X
+states. Matrix elements live in `matrix_elements.py` keyed by case.
 
 ### Sign conventions
 
