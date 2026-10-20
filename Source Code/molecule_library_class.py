@@ -427,10 +427,14 @@ class Molecule_Library(object):
         return NSDPV_builders
 
     def collect_change_basis(self,I_spins):
+        # bBS_bBJ takes the spin q_numbers_bBS couples to S in G: I_M, or the ligand when I_M = 0
+        # (quantum_numbers.py q_numbers_bBS). The ligand (F1 I_L) F is then a spectator (me.bBS_2_bBJ_matrix);
+        # max(I_spins) picked the ligand when I_L > I_M > 0 and broke the 6j.
+        I_G = I_spins[0] if I_spins[0] != 0 else I_spins[-1]
         all_change_basis = {
             'a_bBJ': ham.convert_abBJ,
             'b_decoupled': partial(ham.decouple_b,I=max(I_spins)), #WiLL NOT WORK for case bBS
-            'bBS_bBJ': partial(ham.convert_bbBS,I=max(I_spins)),
+            'bBS_bBJ': partial(ham.convert_bbBS,I=I_G),
             'recouple_J': partial(ham.recouple_J,I=max(I_spins)),
             'b_I_decoupled': partial(ham.decouple_b_I,I=max(I_spins)),
             # 'A000_B010': partial(ham.build_operator,matrix_element = me.HRTSO_A000_B010),

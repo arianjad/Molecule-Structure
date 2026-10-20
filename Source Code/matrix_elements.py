@@ -61,12 +61,18 @@ def decouple_b_I_even(dcpl,b,S=1/2,I=1/2):
             return (-1)**(I-dcpl['J']+b['M'])*np.sqrt(2*b['F']+1)*wigner_3j(b['J'],I,b['F'],dcpl['M_J'],dcpl['M_I'],-b['M'])
 
 def recouple_J_even(dcpl_a,dcpl_b,S=1/2,I=1/2): #This function "recouples" M_N and M_S (ie dcpl_b) to form J, M_J (ie dcpl_a)
-    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']):
+    # <N M_N S M_S|J M_J> x delta(nuclear projections): CS CG (-1)^(N-S+M_J)[J]^1/2 (N S J; M_N M_S -M_J),
+    # B&C 5.87 / thesis A.6 (heff linear-elements.md sec. 1, 5.3). The phase takes M_J, not M_F (M_F - M_J is
+    # half-integer for half-integer I), so any I works; one spin (M_I) or two (M_IM, M_iH).
+    nuc = [q for q in ('M_I','M_IM','M_iH') if q in dcpl_a and q in dcpl_b]
+    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']) or any(dcpl_a[q]!=dcpl_b[q] for q in nuc):
         return 0
-    else:
-        return (-1)**(S-dcpl_b['N']+dcpl_b['M_F'])*np.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
+    return (-1)**(dcpl_b['N']-S+dcpl_a['M_J'])*np.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
 
 def bBS_2_bBJ_matrix(bBS, bBJ, S=1/2, I = 5/2):
+    # <(N,(S,I)G)F1|((N,S)J,I)F1> = (-1)^(N+S+I+F1)([J][G])^1/2 {N S J; I F1 G}, B&C 5.89-5.90 (heff
+    # linear-elements.md sec. 5.2). I is the spin coupled to S in G (the metal; the ligand when I_M = 0, as in
+    # q_numbers_bBS). A second spin coupled last, (F1 I_L) F, is a spectator: diagonal in F1, F, M.
     if 'F1' in bBJ.keys():
         F = bBJ['F1']
         if not kronecker(bBS['F1'],bBJ['F1'])*kronecker(bBS['M'],bBJ['M'])*kronecker(bBS['N'],bBJ['N'])*kronecker(bBS['F'],bBJ['F'])*kronecker(bBS['K'],bBJ['K']):

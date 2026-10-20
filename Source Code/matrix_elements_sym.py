@@ -45,10 +45,11 @@ def decouple_b_even(dcpl,b,S=1/2,I=1/2): #dcpl = decoupled
                 wigner_3j(b['J'],I,b['F'],M_J,dcpl['M_I'],-dcpl['M_F'])*wigner_3j(b['N'],S,b['J'],dcpl['M_N'],dcpl['M_S'],-M_J)
 
 def recouple_J_even(dcpl_a,dcpl_b,S=1/2,I=1/2): #This function "recouples" M_N and M_S (ie dcpl_b) to form J, M_J (ie dcpl_a)
-    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']):
+    # Same as matrix_elements.recouple_J_even: CS CG <N M_N S M_S|J M_J>, B&C 5.87 / thesis A.6; phase takes M_J.
+    nuc = [q for q in ('M_I','M_IM','M_iH') if q in dcpl_a and q in dcpl_b]
+    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']) or any(dcpl_a[q]!=dcpl_b[q] for q in nuc):
         return 0
-    else:
-        return (-1)^(S-dcpl_b['N']+dcpl_b['M_F'])*sy.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
+    return (-1)**(dcpl_b['N']-S+dcpl_a['M_J'])*sy.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
 
 def bBS_2_bBJ_matrix(bBS, bBJ, S=1/2, I = 5/2):
     if 'F1' in bBJ.keys():
