@@ -193,11 +193,13 @@ def SR_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)
 
 def NzSz_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1):
+    # Complete N_z S_z = K C^1.S, Delta N = 0, +-1; derivation and citations at matrix_elements.NzSz_bBS
+    # (B&C 5.173, 5.148, 5.174; thesis A.41, A.47, A.39; A.48 as printed truncates to Delta N = 0).
+    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1):
         return 0
-    else:
-        return K0*(-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G1+S+I+1)*sy.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
-            wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)*wigner_3j(N0,1,N1,-K0,0,K1)*sy.sqrt(S*(S+1)*(2*S+1))
+    C1 = (-1)**(N0-K0)*sy.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,1,N1,-K0,0,K0)
+    G_S = (-1)**(G1+S+I+1)*sy.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)
+    return K0*(-1)**(N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,1)*C1*G_S
 
 def ISM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1)*kronecker(G0,G1):

@@ -371,11 +371,17 @@ def SR_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)
 
 def NzSz_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1):
+    # N_z S_z = (n.N)(n.S) = K C^1.S on K-diagonal kets (thesis 4.5; heff linear-elements.md sec. 4.3), complete:
+    # Delta N = 0, +-1 (the latter for K != 0). Thesis A.48 as printed carries delta_NN', a truncation.
+    #   C^1 (on N) . S (inside G) on F1 = (N G): B&C 5.173 / thesis A.41 -> (-1)^(N'+G+F1) {N' G' F1; G N 1}
+    #   <N K||C^1||N' K> = (-1)^(N-K)([N][N'])^1/2 (N 1 N'; -K 0 K): B&C 5.148 / thesis A.47
+    #   <(S I)G||S||(S I)G'> = (-1)^(G'+S+I+1)([G][G'])^1/2 {S G' I; G S 1}[S(S+1)(2S+1)]^1/2: B&C 5.174 / thesis A.39
+    # Scalar on F1, so diagonal in F1, F, M (I_H spectator, B&C 5.174).
+    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1):
         return 0
-    else:
-        return K0*(-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G1+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
-            wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(S*(S+1)*(2*S+1))
+    C1 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,1,N1,-K0,0,K0)
+    G_S = (-1)**(G1+S+I+1)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)
+    return K0*(-1)**(N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,1)*C1*G_S
 
 def ISM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1)*kronecker(G0,G1):
