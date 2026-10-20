@@ -204,6 +204,10 @@ def H_odd_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all
     H0 = np.zeros((size,size)).tolist()
     V_B = np.zeros((size,size)).tolist()
     V_E = np.zeros((size,size)).tolist()
+    # eQq0/(4I(2I-1)) (3I_z^2 - I^2) = eQq0 sqrt6/(4I(2I-1)) C^2.T^2(I,I) (B&C 5.116, 11.44; heff linear-elements.md
+    # sec. 4.5), I = the metal spin wired into the element partials (molecule_library_class); was hard-coded I = 5/2.
+    IM = matrix_elements['T2_0(IM^2)'].keywords['I']
+    eQq_pref = np.sqrt(6)/(4*IM*(2*IM-1)) if IM >= 1 else 0   # T2QM_bBS is 0 for I < 1
     for i in range(size):
         for j in range(size):
             state_out = {q+'0':q_numbers[q][i] for q in q_str}
@@ -221,7 +225,7 @@ def H_odd_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all
             if params.get('p_lD') is not None:   # p_G l doubling (Takahashi PRL 131 183003, Suppl. Eq. 5j)
                 H0[i][j] += params['p_lD']*elements['l doubling p']
             if params['e2Qq0'] !=0:
-                H0[i][j]+= np.sqrt(6)/(4*5/2*(2*5/2-1))*params['e2Qq0']*elements['T2_0(IM^2)']
+                H0[i][j]+= eQq_pref*params['e2Qq0']*elements['T2_0(IM^2)']
             # H[i][j] = round(H[i][j],precision)
     H_symbolic = sy.Matrix(H0)+Ez*sy.Matrix(V_E)+Bz*sy.Matrix(V_B)
     H0_num = np.array(H0).astype(np.float64)
