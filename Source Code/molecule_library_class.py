@@ -165,6 +165,7 @@ class Molecule_Library(object):
         'N^2': me.Rot_bBS,                 # N^2 Rotation
         'N.S': me.SR_bBS,                  # N.S Spin Rotation
         'l-doubling': me.lD_bBS,           # Effective l doubling
+        'l doubling p': me.p_lD_bBS,       # p-type (spin) l doubling, Takahashi p_G
         'NzSz': me.NzSz_bBS,               # NzSz for bending mode
 
         # Yb Hyperfine

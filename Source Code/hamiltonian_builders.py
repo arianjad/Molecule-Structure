@@ -218,6 +218,8 @@ def H_odd_X(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all
                 V_E[i][j]+= - params['muE']*elements['StarkZ']
             if params.get('q_lD') is not None:
                 H0[i][j] += params['q_lD']/2*elements['l-doubling'] - params['Gamma_SR']*elements['NzSz']+params['Gamma_Prime']*elements['NzSz']
+            if params.get('p_lD') is not None:   # p_G l doubling (Takahashi PRL 131 183003, Suppl. Eq. 5j)
+                H0[i][j] += params['p_lD']*elements['l doubling p']
             if params['e2Qq0'] !=0:
                 H0[i][j]+= np.sqrt(6)/(4*5/2*(2*5/2-1))*params['e2Qq0']*elements['T2_0(IM^2)']
             # H[i][j] = round(H[i][j],precision)

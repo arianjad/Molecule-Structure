@@ -236,6 +236,7 @@ molecules['YbOH']['fermion']['173X010'] = {
     'cH': 2.46,
     'e2Qq0': -3318.7,
     'q_lD': -14.752,
+    'p_lD': -13, # p_G, 173YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -13(5) MHz. Other constants in this dict are NOT from that fit.
     'muE': 2.12*0.503412 #Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['173A000'] = {
@@ -270,6 +271,7 @@ molecules['YbOH']['fermion']['171X010'] = {
     'cH': 2.46,
     'e2Qq0': 0,
     'q_lD': -14.752,
+    'p_lD': -11, # p_G, 171YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -11(3) MHz. Other constants in this dict are NOT from that fit.
     'muE': 1.09*0.503412 #Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['171A000'] = {

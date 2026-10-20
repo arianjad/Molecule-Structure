@@ -227,7 +227,8 @@ def ISH_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(F0,F1)*kronecker(N0, N1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
     else:
-        return (-1)**(2*F0-2*M0+iH+F0+F10+F11+N0+G0+1+G1+I+S+1)*\
+        # (S I)G phase (-1)^(G'+S+1+I) (Takahashi Suppl. Eq. 9 pattern), not Eq. 13's (I S)G (-1)^(G+I+1+S)
+        return (-1)**(2*F0-2*M0+iH+F0+F11 + F10+N0+1+G1 + G1+S+1+I)*\
         sy.sqrt(iH*(iH+1)*(2*iH+1)*(2*F10+1)*(2*F11+1)*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*\
         wigner_6j(iH,F11,F0,F10,iH,1)*wigner_6j(G1,F11,N0,F10,G0,1)*wigner_6j(S,G1,I,G0,S,1)
 
@@ -262,6 +263,16 @@ def lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     else:
         delta_L = K0-K1
         return N0*(N0+1)*(kronecker(delta_L,-2)*(-1)**(-abs(K0)) + kronecker(delta_L,2)*(-1)**(abs(K0)))
+
+def p_lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # twin of matrix_elements.p_lD_bBS: Takahashi Suppl. Eq. 17 times (-1)^(N-N'); H = +p_lD * this
+    if not kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)*(not kronecker(K0,K1)):
+        return 0
+    else:
+        return (-1)**(N0-N1)*(-1)**(N1+F11+G0)*wigner_6j(G1,N1,F11,N0,G0,1)*\
+            (-1)**(G1+S+1+I)*sy.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)*\
+            sy.sqrt(5)*wigner_6j(1,1,2,N0,N1,N1)*sy.sqrt(N1*(N1+1)*(2*N1+1))*sy.sqrt((2*N0+1)*(2*N1+1))*\
+            sum([(-1)**(N0-K0)*wigner_3j(N0,2,N1,-K0,2*q,K1) for q in [-1,1]])
 
 def Parity_l_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(N0,N1)*kronecker(M0,M1)*kronecker(G0,G1)*kronecker(F10,F11)*kronecker(F0,F1)*kronecker(K0,-K1):

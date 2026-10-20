@@ -402,7 +402,10 @@ def ISH_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(F0,F1)*kronecker(N0, N1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
     else:
-        return (-1)**(2*F0-2*M0+iH+F0+F10+F11+N0+G0+1+G1+I+S+1)*\
+        # G-reduction phase (-1)^(G'+S+1+I): the (S I)G order used by every other *_bBS term
+        # (Takahashi PRL 131 183003 Suppl. Eq. 9 pattern). Takahashi Eq. 13's (-1)^(G+I+1+S) is the (I S)G
+        # form and gave a spurious (-1)^(G-G') here; verified element-wise vs a literal product-basis I_H.S.
+        return (-1)**(2*F0-2*M0+iH+F0+F11 + F10+N0+1+G1 + G1+S+1+I)*\
         np.sqrt(iH*(iH+1)*(2*iH+1)*(2*F10+1)*(2*F11+1)*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*\
         wigner_6j(iH,F11,F0,F10,iH,1)*wigner_6j(G1,F11,N0,F10,G0,1)*wigner_6j(S,G1,I,G0,S,1)
 
@@ -440,6 +443,19 @@ def lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     else:
         delta_L = K0-K1
         return N0*(N0+1)*(kronecker(delta_L,-2)*(-1)**(-abs(K0)) + kronecker(delta_L,2)*(-1)**(abs(K0)))
+
+def p_lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # p-type l-doubling sum_{q=+-1} e^{-2iq phi} T^2_{2q}(N,S) = (1/2)(N+S+ e^{-2i phi} + N-S- e^{2i phi});
+    # H = +p_lD * this, p_lD = Takahashi's p_G (PRL 131 183003, Suppl. Eqs. 5j/6j).
+    # Takahashi Suppl. Eq. 17 times (-1)^(N-N'): as printed, Eq. 17 is the literal operator with K -> -K,
+    # wrong sign on Delta N = +-1. This form equals a literal product-basis construction element-wise.
+    if not kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)*(not kronecker(K0,K1)):
+        return 0
+    else:
+        return (-1)**(N0-N1)*(-1)**(N1+F11+G0)*wigner_6j(G1,N1,F11,N0,G0,1)*\
+            (-1)**(G1+S+1+I)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)*\
+            np.sqrt(5)*wigner_6j(1,1,2,N0,N1,N1)*np.sqrt(N1*(N1+1)*(2*N1+1))*np.sqrt((2*N0+1)*(2*N1+1))*\
+            sum([(-1)**(N0-K0)*wigner_3j(N0,2,N1,-K0,2*q,K1) for q in [-1,1]])
 
 def Parity_l_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(N0,N1)*kronecker(M0,M1)*kronecker(G0,G1)*kronecker(F10,F11)*kronecker(F0,F1)*kronecker(K0,-K1):
