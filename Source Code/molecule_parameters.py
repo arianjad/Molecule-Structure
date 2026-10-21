@@ -181,21 +181,23 @@ molecules['YbOH']['boson']['X000'] = {
     'Gamma_D': 0.00476,
     'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
     }
+# 174YbOH X(010): Jadbabaie thesis (Springer 2025) Table 4.1 = NJP 25 073014 (2023) Table 1 = Takahashi arXiv:2508.06787 Table S1 'previous work'.
+# Takahashi 2025's 'adjusted in this work' column is tuned to its Ramsey data; use it only to reproduce that paper.
 molecules['YbOH']['boson']['X010'] = {
-    'Be': 7328.644,
-    'Gamma_SR': -88.660,
-    'Gamma_Prime': 17.38, #optical 15.61,detuned raman 17.38
-    'bF': 4.08, #4.07 splitting fit, 4.08 combined fit
-    'c': 3.41, #3.49 splitting fit, 3.41 combined fit
-    'b': bF_2_b(4.08,3.41),
-    'q_lD': -12.03, #Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
-    'p_lD': -11.30, #optical -10.73, detuned raman -11.30
+    'Be': 7328.64,       # 7328.64(15) MHz, thesis Table 4.1
+    'Gamma_SR': -88.7,   # -88.7(9) MHz, thesis Table 4.1
+    'Gamma_Prime': 16,   # gamma_G 16(2) MHz, thesis Table 4.1
+    'bF': 4.07,          # b_F(H) 4.07(18) MHz (2 sigma), thesis Sec. 5.6.5; Takahashi 2025 Table S1
+    'c': 3.49,           # c(H) 3.49(38) MHz (2 sigma), thesis Sec. 5.6.5; Takahashi 2025 Table S1
+    'b': bF_2_b(4.07,3.49),
+    'q_lD': -12.0,       # q_G -12.0(2) MHz, thesis Table 4.1. Should be minus if neg parity lower and parity is (-1)^(J-l-S), but for modeling I treat this as positive for now....
+    'p_lD': -11,         # p_G -11(1) MHz, thesis Table 4.1
     'D': 0.006952,
     'Gamma_D': 0.00476,
-    'muE': 2.15*0.503412,
-    'Origin': 319.90901,
+    'muE': 2.16*0.503412, # 2.16(1) D, NJP 2023; Takahashi 2025 Table S1
+    'Origin': 319.90901, # T0 319.90901(6) cm^-1, thesis Table 4.1
     'g_l': 0.0,
-    'g_S':2.07,
+    'g_S':2.07,          # 2.07(2), Takahashi 2025 Table S1
     }
 molecules['YbOH']['boson']['A000'] = {
     'Be': 7590.30,
@@ -232,12 +234,12 @@ molecules['YbOH']['fermion']['173X010'] = {
     'Gamma_Prime':0,
     'bFYb': -1883.21,
     'cYb': -81.84,
-    'bFH': 4.80,
-    'cH': 2.46,
+    'bFH': 4.07,   # b_F(H) 4.07(18) MHz, 174YbOH X(010), thesis Sec. 5.6.5; same H for all isotopologues (Arian, 2026-10-21)
+    'cH': 3.49,    # c(H) 3.49(38) MHz, 174YbOH X(010), thesis Sec. 5.6.5
     'e2Qq0': -3318.7,
     'q_lD': -14.752,
     'p_lD': -13, # p_G, 173YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -13(5) MHz. Other constants in this dict are NOT from that fit.
-    'muE': 2.12*0.503412 #Debye in MHz/(V/cm)
+    'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['173A000'] = {
     'Be': 7590.30,
@@ -267,12 +269,12 @@ molecules['YbOH']['fermion']['171X010'] = {
     'Gamma_Prime':0,
     'bFYb': 6823.58,
     'cYb': 233.84,
-    'bFH': 4.80,
-    'cH': 2.46,
+    'bFH': 4.07,   # b_F(H) 4.07(18) MHz, 174YbOH X(010), thesis Sec. 5.6.5; same H for all isotopologues (Arian, 2026-10-21)
+    'cH': 3.49,    # c(H) 3.49(38) MHz, 174YbOH X(010), thesis Sec. 5.6.5
     'e2Qq0': 0,
     'q_lD': -14.752,
     'p_lD': -11, # p_G, 171YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -11(3) MHz. Other constants in this dict are NOT from that fit.
-    'muE': 1.09*0.503412 #Debye in MHz/(V/cm)
+    'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['171A000'] = {
     'Be': 7597.79,
