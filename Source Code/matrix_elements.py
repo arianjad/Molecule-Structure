@@ -146,12 +146,14 @@ def T2IS_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
     return -np.sqrt(5/3)*(-1)**(J1+I+F0)*wigner_6j(J1,I,F0,I,J0,1)*np.sqrt(I*(I+1)*(2*I+1))*J_C2S
 
 def T2ISq2_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # -sum_{q=+-2} D^2*_{.q}.[I x S]^2: T2IS_bBJ with C^2 -> the molecule-frame q = +-2 components and the opposite
+    # overall sign (kept, so N = N' elements and the fitted d are unchanged). Was off by (-1)^(N-N') (bra-J phase,
+    # permuted 9j), the T2IS_bBJ slip.
     if not kronecker(F0,F1)*kronecker(M0,M1):
         return 0
-    else:
-        return (-1)*-np.sqrt(5/3)*(-1)**(3*F0-2*M0+I+J0)*np.sqrt((2*I+1)*(I+1)*I)*\
-            np.sqrt((2*J0+1)*(2*J1+1)*3*(2*S+1)*(S+1)*S)*wigner_6j(I,J1,F0,J0,I,1)*\
-            wigner_9j(S,N1,J1,1,2,1,S,N0,J0)*np.sqrt((2*N0+1)*(2*N1+1))*sum([(-1)**(N0-K0)*wigner_3j(N0,2,N1,-K0,q,K1) for q in [-2,2]])
+    C2q2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*sum([wigner_3j(N0,2,N1,-K0,q,K1) for q in [-2,2]])
+    J_C2S = np.sqrt(3*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*wigner_9j(J0,J1,1,N0,N1,2,S,S,1)*C2q2
+    return np.sqrt(5/3)*(-1)**(J1+I+F0)*wigner_6j(J1,I,F0,I,J0,1)*np.sqrt(I*(I+1)*(2*I+1))*J_C2S
 
 def Iz_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
     # n.I = C^1.I: T4 on F = (J I) (B&C 5.173 / thesis A.41); C^1 inside J = (N S) by T2 (B&C 5.174 / thesis
