@@ -290,8 +290,9 @@ def build_PTV_bBS(q_numbers,EDM_or_MQM,IM=5/2,iH=1/2):
     if EDM_or_MQM not in ('EDM','MQM','NSM'):
         raise ValueError(f"EDM_or_MQM must be 'EDM', 'MQM' or 'NSM', got {EDM_or_MQM!r}")
     H_PTV = np.zeros((size,size))
-    # 1/(2I(2I-1)) at the metal spin IM (was hard-coded I = 5/2); the MQM operator vanishes for IM < 1.
-    MQM_pref = 1/(2*IM*(2*IM-1))*np.sqrt(5/3) if IM >= 1 else 0
+    # MQM = -S.T.n/(2I(2I-1)) per unit W_M M, Flambaum-DeMille-Kozlov PRL 113, 103003 (2014) Eq. 1
+    # (was half that); T_ij = I_iI_j + I_jI_i - (2/3)delta_ij I(I+1). Vanishes for IM < 1.
+    MQM_pref = 2*np.sqrt(5/3)/(2*IM*(2*IM-1)) if IM >= 1 else 0
     for i in range(size):
         for j in range(size):
             state_out = {q+'0':q_numbers[q][i] for q in q_str}
