@@ -228,17 +228,21 @@ molecules['YbOH']['fermion']['173X000'] = {
     'e2Qq0': -3318.70,
     'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
     }
+# 171/173YbOH X(010): Takahashi PRL 131, 183003 (2023), Suppl. Table II (the only measurement of these states),
+# except H hyperfine and the dipole moment. Signs as printed; the MS keys reproduce their model (Laser-Cooling-Sims
+# research/odd-isotope-structure-2026-10-19/phase-audit-takahashi/check_ms_elements_fix.py anchor).
 molecules['YbOH']['fermion']['173X010'] = {
-    'Be': 7351.2,
-    'Gamma_SR': -93.593,
-    'Gamma_Prime':0,
-    'bFYb': -1883.21,
-    'cYb': -81.84,
+    'Be': 7334.1,        # B 7334.1(4) MHz, Takahashi 2023 Suppl. Table II
+    'Gamma_SR': -87,     # gamma -87(3) MHz, Takahashi 2023 Suppl. Table II
+    'Gamma_Prime': 14,   # gamma_G 14(4) MHz, Takahashi 2023 Suppl. Table II
+    'bFYb': -1881.0,     # b_F(Yb) -1881.0(8) MHz, Takahashi 2023 Suppl. Table II
+    'cYb': -92,          # c(Yb) -92(10) MHz, Takahashi 2023 Suppl. Table II
     'bFH': 4.07,   # b_F(H) 4.07(18) MHz, 174YbOH X(010), thesis Sec. 5.6.5; same H for all isotopologues (Arian, 2026-10-21)
     'cH': 3.49,    # c(H) 3.49(38) MHz, 174YbOH X(010), thesis Sec. 5.6.5
-    'e2Qq0': -3318.7,
-    'q_lD': -14.752,
-    'p_lD': -13, # p_G, 173YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -13(5) MHz. Other constants in this dict are NOT from that fit.
+    'e2Qq0': -3322,      # e^2Qq0 -3322(27) MHz, Takahashi 2023 Suppl. Table II
+    'q_lD': -12.5,       # q_G -12.5(5) MHz, Takahashi 2023 Suppl. Table II
+    'p_lD': -13,         # p_G -13(5) MHz, Takahashi 2023 Suppl. Table II
+    'Origin': 319.90932, # T0 319.90932(6) cm^-1, Takahashi 2023 Suppl. Table II
     'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['173A000'] = {
@@ -264,16 +268,17 @@ molecules['YbOH']['fermion']['171X000'] = {
     'muE': 1.9*0.503412 #Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['171X010'] = {
-    'Be': 7359.81,
-    'Gamma_SR': -93.593,
-    'Gamma_Prime':0,
-    'bFYb': 6823.58,
-    'cYb': 233.84,
+    'Be': 7340.9,        # B 7340.9(3) MHz, Takahashi 2023 Suppl. Table II
+    'Gamma_SR': -90,     # gamma -90(2) MHz, Takahashi 2023 Suppl. Table II
+    'Gamma_Prime': 12,   # gamma_G 12(6) MHz, Takahashi 2023 Suppl. Table II
+    'bFYb': 6795,        # b_F(Yb) 6795(3) MHz, Takahashi 2023 Suppl. Table II
+    'cYb': 281,          # c(Yb) 281(21) MHz, Takahashi 2023 Suppl. Table II
     'bFH': 4.07,   # b_F(H) 4.07(18) MHz, 174YbOH X(010), thesis Sec. 5.6.5; same H for all isotopologues (Arian, 2026-10-21)
     'cH': 3.49,    # c(H) 3.49(38) MHz, 174YbOH X(010), thesis Sec. 5.6.5
-    'e2Qq0': 0,
-    'q_lD': -14.752,
-    'p_lD': -11, # p_G, 171YbOH X(010), Takahashi PRL 131 183003 (2023) Suppl. Table II, -11(3) MHz. Other constants in this dict are NOT from that fit.
+    'e2Qq0': 0,          # I = 1/2: no quadrupole
+    'q_lD': -12.6,       # q_G -12.6(3) MHz, Takahashi 2023 Suppl. Table II
+    'p_lD': -11,         # p_G -11(3) MHz, Takahashi 2023 Suppl. Table II
+    'Origin': 319.90861, # T0 319.90861(6) cm^-1, Takahashi 2023 Suppl. Table II
     'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
 molecules['YbOH']['fermion']['171A000'] = {
