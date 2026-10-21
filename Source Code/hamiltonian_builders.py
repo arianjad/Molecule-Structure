@@ -290,6 +290,8 @@ def build_PTV_bBS(q_numbers,EDM_or_MQM,IM=5/2,iH=1/2):
     H_PTV = np.zeros((size,size))
     EDM = {False: 0, True: 1}[EDM_or_MQM=='EDM']
     Mzz = {False: 0, True: 1}[EDM_or_MQM=='MQM']
+    # 1/(2I(2I-1)) at the metal spin IM (was hard-coded I = 5/2); the MQM operator vanishes for IM < 1.
+    MQM_pref = Mzz/(2*IM*(2*IM-1))*np.sqrt(5/3) if IM >= 1 else 0
     for i in range(size):
         for j in range(size):
             state_out = {q+'0':q_numbers[q][i] for q in q_str}
@@ -298,11 +300,11 @@ def build_PTV_bBS(q_numbers,EDM_or_MQM,IM=5/2,iH=1/2):
             if EDM_or_MQM == 'EDM':
                 H_PTV[i,j] = -EDM*EDM_bBS(**q_args,I=IM,iH=iH)
             elif EDM_or_MQM == 'MQM':
-                H_PTV[i,j] = Mzz/(2*5/2*(2*5/2-1))*(np.sqrt(5/3))*MQM_bBS(**q_args,I=IM,iH=iH)
+                H_PTV[i,j] = MQM_pref*MQM_bBS(**q_args,I=IM,iH=iH)
             elif EDM_or_MQM == 'NSM':
                 H_PTV[i,j] = NSM_bBS(**q_args,I=IM,iH=iH)
             else:
-                H_PTV[i,j] = Mzz/(2*5/2*(2*5/2-1))*(np.sqrt(5/3))*MQM_bBS(**q_args,I=IM,iH=iH) -EDM*EDM_bBS(**q_args,I=IM,iH=iH)
+                H_PTV[i,j] = MQM_pref*MQM_bBS(**q_args,I=IM,iH=iH) -EDM*EDM_bBS(**q_args,I=IM,iH=iH)
     #         elif H_MQM==2:
     #             H1[i,j] = -Mzz/(2*5/2*(2*5/2-1))*2/3*np.sqrt(6)*T2QM_bBS(**q_args)
     #             H2[i,j] = EDM_bBS(**q_args)

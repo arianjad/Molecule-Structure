@@ -508,12 +508,16 @@ def MQM_bBS_old(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             wigner_3j(N0,1,N1,-K0,0,K1)
 
 def MQM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # C^1.[S x T^2(I,I)]^1, [S x T^2]^1 inside G = (S I) (B&C 5.169), as T2ISM_bBS. The 9j rows were (G; I; S),
+    # the G = (I S) recoupling: off by (-1)^(G-G'). T^2(I,I) = 0 for I < 1.
+    if abs(I)<1:
+        return 0
     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1):
         return 0
     else:
         return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,1)*\
             (-1)**(N0-K0)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt((2*N0+1)*(2*N1+1))*\
-            np.sqrt((2*G0+1)*(2*G1+1)*3)*wigner_9j(G0,G1,1,I,I,2,S,S,1)*\
+            np.sqrt((2*G0+1)*(2*G1+1)*3)*wigner_9j(G0,G1,1,S,S,1,I,I,2)*\
             np.sqrt((2*S+1)*(S+1)*S)*1/(2*np.sqrt(6))*np.sqrt((2*I-1)*(2*I)*(2*I+1)*(2*I+2)*(2*I+3))
             # *I*(2*I-1)/np.sqrt(6)/wigner_3j(I,2,I,-I,0,I)
 #Using Sz(3Iz-I2) format
