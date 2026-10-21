@@ -127,12 +127,11 @@ def test_backcompat_all_entries_unchanged():
             for st, d in states.items():
                 if not isinstance(d, dict):
                     continue
-                if (mol, spin, st) in {('RaF','boson','A0'),
-                                       ('RaF','fermion','A0')}:
-                    continue   # migrated to N2 — covered by oracle test
+                if d.get('formalism') == 'N2':
+                    continue   # raw-paper N2 entries (RaF A0, BaF X0/A0) are meant to convert
                 before = dict(d)
                 after = convert_formalism(dict(d), c_cm=mp.c)
-                # all current entries are default-R2 ⇒ identical
+                # every R2 / untagged entry must pass through unchanged
                 assert after == before, (mol, spin, st,
                     set(before) ^ set(after))
                 n += 1
