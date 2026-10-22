@@ -1,0 +1,36 @@
+# Conda environment for Molecule-Structure (laser-coolable molecule energy levels).
+# Captured from the live `Structure` env on 2026-05-16. major.minor pins for
+# cross-platform reproducibility; no OS-locked build strings, no machine prefix.
+# Recreate:  conda env create -f environment.yml  &&  conda activate Structure
+name: Structure
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy=1.26
+  - scipy=1.14
+  - sympy=1.12
+  - matplotlib=3.9
+  - pandas
+  - numba
+  - scikit-learn
+  - seaborn
+  - h5py
+  - zarr
+  - joblib
+  - tabulate
+  - jupyter
+  - ipython
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pip
+  - pip:
+      - brokenaxes==0.6.2
+      - lap==0.5.13
+      - tqdm==4.67.3
+      - ipympl==0.9.4
+      # - qutip>=5   # required by Source Code/CPT_Sims.py but NOT in the current
+      #              # `Structure` env (import qutip fails). Reconcile before CPT sims.

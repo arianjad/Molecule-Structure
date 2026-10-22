@@ -1,7 +1,6 @@
 import matrix_elements as me
 import quantum_numbers as qn
 import hamiltonian_builders as ham
-from molecule_parameters import all_params
 from functools import partial
 
 class Molecule_Library(object):
@@ -29,9 +28,6 @@ class Molecule_Library(object):
     the eigenvalues of each basis vector.
     For example, {'J': [0,1,1,1], 'M': [0,-1,0,1]}
 
-    parameters: dictionary of the Hamiltonian constants associated with each
-    state and isotope.
-
     Lambda: projection of angular momentum on the internuclear axis, excluding
     electron spin.
     '''
@@ -41,19 +37,21 @@ class Molecule_Library(object):
         self.M_values=M_values
         self.P_values=P_values
         self.trap = trap
-        self.molecule = molecule
-        self.parameters = all_params[self.molecule]
-        if len(P_values)==1:
-            self.parameters['ASO'] = 0
+        if molecule=='CaOH':
+            self.molecule_backend=molecule
+        else:
+            self.molecule_backend='YbOH'
         self.matrix_elements = self.collect_all_matrix_elements(I_spins,M_values)
         self.cases = self.collect_all_cases()
         self.H_builders = self.collect_all_H_builders()
         self.PTV_builders = self.collect_all_PTV_builders()
+        self.NSDPV_builders = self.collect_all_NSDPV_builders()
         self.q_number_builders = self.collect_all_q_number_builders(I_spins, P_values)
         self.K = self.collect_all_K()
         self.basis_changers = self.collect_change_basis(I_spins)
         self.TDM_builders = self.collect_TDM()
         self.alt_q_number_builders = self.collect_alt_q(I_spins,P_values)
+        self.alt_q_str = self.collect_alt_q_str()
         self.TDM_p_builders = self.collect_p_TDM()
         self.all_parity = self.collect_parity()
         self.TDM_p_forbidden_builders = self.collect_p_TDM_forbidden()
@@ -61,7 +59,7 @@ class Molecule_Library(object):
 
 
     def collect_all_cases(self):
-        if self.molecule=='YbOH':
+        if self.molecule_backend=='YbOH':
             all_cases={
             '174X000': 'bBJ',
             '174X010': 'bBJ',
@@ -73,7 +71,7 @@ class Molecule_Library(object):
             '173A000': 'aBJ',
             '171A000': 'aBJ'
             }
-        if self.molecule=='CaOH':
+        if self.molecule_backend=='CaOH':
             all_cases={
             '40X000':'bBJ',
             '40X010':'bBJ',
@@ -84,7 +82,7 @@ class Molecule_Library(object):
         return all_cases
 
     def collect_all_K(self):
-        if self.molecule == 'YbOH':
+        if self.molecule_backend == 'YbOH':
             all_K={
             '174X000': 0,
             '174X010': 1,
@@ -96,7 +94,7 @@ class Molecule_Library(object):
             '173A000': 1,
             '171A000': 1
             }
-        if self.molecule == 'CaOH':
+        if self.molecule_backend == 'CaOH':
             all_K ={
             '40X000': 0,
             '40X010': 1,
@@ -134,6 +132,8 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanZ': me.ZeemanZ_bBJ,         # Zeeman interaction with lab z magnetic field
             'StarkZ': me.StarkZ_bBJ,            # Stark interaction with lab z electric field
+            'StarkX': me.StarkX_bBJ,            # Stark interaction with lab x (transverse, p=+-1) electric field
+            'ZeemanX': me.ZeemanX_bBJ,          # Zeeman interaction with lab x (transverse, p=+-1) magnetic field
             'ZeemanLZ': me.ZeemanLZ_bBJ,         # Including coupling to internuclear axis
             'ZeemanIZ': me.ZeemanIZ_bBJ,        #Nuclear spin coupling
             }
@@ -165,6 +165,7 @@ class Molecule_Library(object):
         'N^2': me.Rot_bBS,                 # N^2 Rotation
         'N.S': me.SR_bBS,                  # N.S Spin Rotation
         'l-doubling': me.lD_bBS,           # Effective l doubling
+        'l doubling p': me.p_lD_bBS,       # p-type (spin) l doubling, Takahashi p_G
         'NzSz': me.NzSz_bBS,               # NzSz for bending mode
 
         # Yb Hyperfine
@@ -236,6 +237,7 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanLZ': me.ZeemanLZ_even_aBJ,
             'ZeemanSZ': me.ZeemanSZ_even_aBJ,
+            'ZeemanPerpZ': me.ZeemanPerpZ_even_aBJ,  # B&C g_l anisotropic spin-Zeeman correction
             'ZeemanParityZ': me.ZeemanParityZ_even_aBJ,
             'StarkZ': me.StarkZ_even_aBJ,            # Stark interaction with lab z electric field
             }
@@ -258,6 +260,8 @@ class Molecule_Library(object):
 
 
         # Hydrogen Hyperfine
+        'IzLz_H': me.IHL_odd_aBJ,                   # I.S Fermi Contact Interaction
+        'T2_2(IS)_H': me.T2q2_IHS_odd_aBJ,
         # 'IS_H': ,                   # I.S Fermi Contact Interaction
         # 'Iz_H': ,                   # I.n projection of I on internuclear axis n
         # 'Sz_H': ,                   # S.n projection of S on internuclear axis n
@@ -268,6 +272,7 @@ class Molecule_Library(object):
             # External Fields
             'ZeemanLZ': me.ZeemanLZ_odd_aBJ,
             'ZeemanSZ': me.ZeemanSZ_odd_aBJ,
+            'ZeemanPerpZ': me.ZeemanPerpZ_odd_aBJ,  # B&C g_l anisotropic spin-Zeeman correction
             'ZeemanParityZ': me.ZeemanParityZ_odd_aBJ,
             'StarkZ': me.StarkZ_odd_aBJ,            # Stark interaction with lab z electric field
             }
@@ -306,7 +311,7 @@ class Molecule_Library(object):
         # for term, element in aBJ_odd_A_matrix_elements.items():      #substitue nuclear spin values
         #      aBJ_odd_A_matrix_elements[term] = partial(element,iH=iH,I=IM)
 
-        if self.molecule=='YbOH':
+        if self.molecule_backend=='YbOH':
             all_matrix_elements={
             '174X000': bBJ_even_X_matrix_elements,
             '174X010': bBJ_even_X_matrix_elements,
@@ -318,7 +323,7 @@ class Molecule_Library(object):
             '171X000': bBS_odd_X_matrix_elements,
             '171X010': bBS_odd_X_matrix_elements
             }
-        if self.molecule=='CaOH':
+        if self.molecule_backend=='CaOH':
             all_matrix_elements = {
             '40X000': bBJ_even_X_matrix_elements,
             '40X010': bBJ_even_X_matrix_elements,
@@ -330,7 +335,7 @@ class Molecule_Library(object):
         return all_matrix_elements
 
     def collect_all_H_builders(self):
-        if self.molecule == 'YbOH':
+        if self.molecule_backend == 'YbOH':
             H_builders = {
                 '174X000': ham.H_even_X,
                 '174X010': ham.H_even_X,
@@ -342,7 +347,7 @@ class Molecule_Library(object):
                 '171X000': ham.H_odd_X,
                 '171X010': ham.H_odd_X
                 }
-        if self.molecule == 'CaOH':
+        if self.molecule_backend == 'CaOH':
             H_builders = {
                 '40X000': ham.H_even_X,
                 '40X010': partial(ham.H_even_X,trap=self.trap),
@@ -355,7 +360,7 @@ class Molecule_Library(object):
         return H_builders
 
     def collect_all_q_number_builders(self,I_spins,P_values):
-        if self.molecule == 'YbOH':
+        if self.molecule_backend == 'YbOH':
             q_number_builders = {
                 '174X000': partial(qn.q_numbers_even_bBJ, K_mag=0),
                 '174X010': partial(qn.q_numbers_even_bBJ, K_mag=1),
@@ -369,7 +374,7 @@ class Molecule_Library(object):
                 # '174aBJ': qn.q_numbers_174_aBJ,
                 # '174bBJ': qn.q_numbers_bBJ,
                 }
-        if self.molecule=='CaOH':
+        if self.molecule_backend=='CaOH':
             q_number_builders = {
                 '40X000': partial(qn.q_numbers_even_bBJ, K_mag=0),
                 '40X010': partial(qn.q_numbers_even_bBJ,K_mag=1),
@@ -385,26 +390,51 @@ class Molecule_Library(object):
         IM = self.I_spins[0]
         iH = self.I_spins[-1]
 
-        if self.molecule == 'YbOH':
+        if self.molecule_backend == 'YbOH':
             PTV_builders = {
                 '174X000': ham.build_PTV_bBJ,
                 '174X010': ham.build_PTV_bBJ,
-                '173X000': ham.build_PTV_bBS,
+                '173X000': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
+                '171X000': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
                 '173X010': partial(ham.build_PTV_bBS,IM=IM,iH=iH),
                 '171X010': partial(ham.build_PTV_bBS,IM=IM,iH=iH)
             }
-        if self.molecule == 'CaOH':
+        if self.molecule_backend == 'CaOH':
             PTV_builders = {
                 '40X000': ham.build_PTV_bBJ,
                 '40X010': ham.build_PTV_bBJ,
             }
         return PTV_builders
 
+    def collect_all_NSDPV_builders(self):
+        # NSD-PV anapole operator C = (n_hat x S).I/I, case b(beta-J). Registered SEPARATELY
+        # from PTV_builders (which carries the EDM operator on the same '174X000' key) so the
+        # imaginary NSD-PV operator does not collide with / overwrite the real EDM path.
+        # SiO+ routes through the YbOH backend with iso_state '174X000' (boson, X state); that
+        # is the bBJ path build_PTV_NSDPV (complex dtype) is wired onto. Consumed by
+        # MoleculeLevels.NSDPV_operator() -> self.H_NSDPV (Energy_Levels.py).
+        NSDPV_builders = {}
+        if self.molecule_backend == 'YbOH':
+            NSDPV_builders = {
+                '174X000': ham.build_PTV_NSDPV,
+                '174X010': ham.build_PTV_NSDPV,
+            }
+        if self.molecule_backend == 'CaOH':
+            NSDPV_builders = {
+                '40X000': ham.build_PTV_NSDPV,
+                '40X010': ham.build_PTV_NSDPV,
+            }
+        return NSDPV_builders
+
     def collect_change_basis(self,I_spins):
+        # bBS_bBJ takes the spin q_numbers_bBS couples to S in G: I_M, or the ligand when I_M = 0
+        # (quantum_numbers.py q_numbers_bBS). The ligand (F1 I_L) F is then a spectator (me.bBS_2_bBJ_matrix);
+        # max(I_spins) picked the ligand when I_L > I_M > 0 and broke the 6j.
+        I_G = I_spins[0] if I_spins[0] != 0 else I_spins[-1]
         all_change_basis = {
             'a_bBJ': ham.convert_abBJ,
             'b_decoupled': partial(ham.decouple_b,I=max(I_spins)), #WiLL NOT WORK for case bBS
-            'bBS_bBJ': partial(ham.convert_bbBS,I=max(I_spins)),
+            'bBS_bBJ': partial(ham.convert_bbBS,I=I_G),
             'recouple_J': partial(ham.recouple_J,I=max(I_spins)),
             'b_I_decoupled': partial(ham.decouple_b_I,I=max(I_spins)),
             # 'A000_B010': partial(ham.build_operator,matrix_element = me.HRTSO_A000_B010),
@@ -419,14 +449,14 @@ class Molecule_Library(object):
         IM = self.I_spins[0]
         iH = self.I_spins[-1]
         if self.M_values != 'none':
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 p_TDM = {
                     '174A000': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_even_aBJ,I=iH)),
                     '174X010': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_even_aBJ,I=iH)),
                     '173A000': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_odd_aBJ,iH=iH,I=IM)),
                     '171A000': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_odd_aBJ,iH=iH,I=IM))
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 p_TDM = {
                     '40A000': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_even_aBJ,I=iH)),
                     '40B000': partial(ham.build_p_TDM_aBJ,TDM_matrix_element=partial(me.TDM_p_even_aBJ,I=iH)),
@@ -441,64 +471,35 @@ class Molecule_Library(object):
         IM = self.I_spins[0]
         iH = self.I_spins[-1]
         if self.M_values != 'none':
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 p_TDM = {
                     '174A000': partial(ham.build_TDM_aBJ_forbidden,TDM_matrix_element=partial(me.TDM_p_vibronic_aBJ,I=iH)),
                     'uA010': partial(ham.build_TDM_aBJ_forbidden,TDM_matrix_element=partial(me.TDM_p_uA010_aBJ,I=iH)),
                     'kA010': partial(ham.build_TDM_aBJ_forbidden,TDM_matrix_element=partial(me.TDM_p_kA010_aBJ,I=iH)),
                     'B010': partial(ham.build_TDM_aBJ_forbidden,TDM_matrix_element=partial(me.TDM_p_B010_aBJ,I=iH)),
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 p_TDM = {}
             return p_TDM
         else:
             return None
 
-    def collect_TDM(self):
-        IM = self.I_spins[0]
-        iH = self.I_spins[-1]
-        if self.M_values != 'none':
-            if self.molecule == 'YbOH':
-                all_TDM = {
-                    '174A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
-                    '173A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ,iH=iH,I=IM)),
-                    '171A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ,iH=iH,I=IM))
-                }
-            if self.molecule == 'CaOH':
-                all_TDM = {
-                    '40A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
-                    '40B000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
-                }
-        else:
-            if self.molecule == 'YbOH':
-                all_TDM = {
-                    '174A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
-                    '173A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ_noM,iH=iH,I=IM)),
-                    '171A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ_noM,iH=iH,I=IM))
-                }
-            if self.molecule == 'CaOH':
-                all_TDM = {
-                    '40A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
-                    '40B000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
-                    }
-        return all_TDM
-
     def collect_TDM_forbidden(self):
         IM = self.I_spins[0]
         iH = self.I_spins[-1]
         if self.M_values != 'none':
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 all_TDM = {
                     '174A000': partial(ham.build_operator,matrix_element=partial(me.TransitionDipole_even_aBJ_vibronic,I=iH)),
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 all_TDM = {}
         else:
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 all_TDM = {
                     '174A000': partial(ham.build_TDM_aBJ_forbidden,TDM_matrix_element=partial(me.TransitionDipole_aBJ_vibronic_noM,I=iH)),
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 all_TDM = {
                     }
         return all_TDM
@@ -507,25 +508,25 @@ class Molecule_Library(object):
         iH = self.I_spins[-1]
         IM = self.I_spins[0]
         if self.M_values != 'none':
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 all_TDM = {
                     '174A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
                     '173A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ,iH=iH,I=IM)),
                     '171A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ,iH=iH,I=IM))
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 all_TDM = {
                     '40A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
                     '40B000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ,I=iH)),
                 }
         else:
-            if self.molecule == 'YbOH':
+            if self.molecule_backend == 'YbOH':
                 all_TDM = {
                     '174A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
                     '173A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ_noM,iH=iH,I=IM)),
                     '171A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_odd_aBJ_noM,iH=iH,I=IM))
                 }
-            if self.molecule == 'CaOH':
+            if self.molecule_backend == 'CaOH':
                 all_TDM = {
                     '40A000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
                     '40B000': partial(ham.build_TDM_aBJ,TDM_matrix_element=partial(me.TransitionDipole_even_aBJ_noM,I=iH)),
@@ -535,7 +536,7 @@ class Molecule_Library(object):
     def collect_parity(self):
         iH = self.I_spins[-1]
         IM = self.I_spins[0]
-        if self.molecule=='YbOH':
+        if self.molecule_backend=='YbOH':
             all_parity = {
                 '174X000': partial(ham.build_operator,matrix_element=partial(me.Parity_L_bBJ,I=iH)),
                 '174X010': partial(ham.build_operator,matrix_element=partial(me.Parity_l_bBJ,I=iH)),
@@ -547,7 +548,7 @@ class Molecule_Library(object):
                 '173A000': partial(ham.build_operator,matrix_element=partial(me.Parity_odd_L_aBJ,I=IM,iH=iH)),
                 '171A000': partial(ham.build_operator,matrix_element=partial(me.Parity_odd_L_aBJ,I=IM,iH=iH)),
             }
-        if self.molecule == 'CaOH':
+        if self.molecule_backend == 'CaOH':
             all_parity = {
                 '40X000': partial(ham.build_operator,matrix_element=partial(me.Parity_L_bBJ,I=iH)),
                 '40X010': partial(ham.build_operator,matrix_element=partial(me.Parity_l_bBJ,I=iH)),
@@ -558,12 +559,14 @@ class Molecule_Library(object):
         return all_parity
 
     def collect_alt_q(self,I_spins,P_values):
-        if self.molecule=='YbOH':
+        if self.molecule_backend=='YbOH':
             alt_q_builders = {
                 '174X000': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=0,I_list = I_spins,P_values=[1/2]),
                     'decoupled': partial(qn.q_numbers_decoupled, K_mag=0,I_list = I_spins),
                     'bBS': partial(qn.q_numbers_bBS, K_mag=0,I_list = I_spins),
+                    'recouple_J': partial(qn.q_numbers_decoupled_mJ, K_mag=0,I_list = I_spins),
+                    'decouple_I': partial(qn.q_numbers_decoupled_mJ, K_mag=0,I_list = I_spins),
                     },
                 '174X010': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=1,P_values=[1/2,3/2],I_list = I_spins),
@@ -613,7 +616,7 @@ class Molecule_Library(object):
                     'decoupled': partial(qn.q_numbers_decoupled, K_mag=1,I_list = I_spins)
                     }
                 }
-        if self.molecule == 'CaOH':
+        if self.molecule_backend == 'CaOH':
             alt_q_builders = {
                 '40X000': {
                     'aBJ': partial(qn.q_numbers_even_aBJ, K_mag=0,I_list = I_spins,P_values=[1/2]),
@@ -637,3 +640,14 @@ class Molecule_Library(object):
                     },
                 }
         return alt_q_builders
+
+    def collect_alt_q_str(self):
+        alt_q_str = {'aBJ': ['K','Sigma','P','J','F','M'],
+                     'bBJ': ['K','N','J','F','M'],
+                    'decoupled': ['K','N','M_N','M_S','M_I','M_F'],
+                    'recouple_J': ['K','N','J','M_J','M_I','M_F'],
+                    'decouple_I': ['K','N','J','M_J','M_I','M_F'],
+                    'bBS': ['K','N','G','F1','F','M'],
+                    'vibronic': ['l','L','K','Sigma','Omega','P','J','F','M'],
+                    }
+        return alt_q_str

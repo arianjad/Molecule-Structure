@@ -61,12 +61,18 @@ def decouple_b_I_even(dcpl,b,S=1/2,I=1/2):
             return (-1)**(I-dcpl['J']+b['M'])*np.sqrt(2*b['F']+1)*wigner_3j(b['J'],I,b['F'],dcpl['M_J'],dcpl['M_I'],-b['M'])
 
 def recouple_J_even(dcpl_a,dcpl_b,S=1/2,I=1/2): #This function "recouples" M_N and M_S (ie dcpl_b) to form J, M_J (ie dcpl_a)
-    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']):
+    # <N M_N S M_S|J M_J> x delta(nuclear projections): CS CG (-1)^(N-S+M_J)[J]^1/2 (N S J; M_N M_S -M_J),
+    # B&C 5.87 / thesis A.6 (heff linear-elements.md sec. 1, 5.3). The phase takes M_J, not M_F (M_F - M_J is
+    # half-integer for half-integer I), so any I works; one spin (M_I) or two (M_IM, M_iH).
+    nuc = [q for q in ('M_I','M_IM','M_iH') if q in dcpl_a and q in dcpl_b]
+    if not kronecker(dcpl_a['M_F'],dcpl_b['M_F'])*kronecker(dcpl_a['K'],dcpl_b['K'])*kronecker(dcpl_a['N'],dcpl_b['N']) or any(dcpl_a[q]!=dcpl_b[q] for q in nuc):
         return 0
-    else:
-        return (-1)**(S-dcpl_b['N']+dcpl_b['M_F'])*np.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
+    return (-1)**(dcpl_b['N']-S+dcpl_a['M_J'])*np.sqrt(2*dcpl_a['J']+1)*wigner_3j(dcpl_b['N'],S,dcpl_a['J'],dcpl_b['M_N'],dcpl_b['M_S'],-dcpl_a['M_J'])
 
 def bBS_2_bBJ_matrix(bBS, bBJ, S=1/2, I = 5/2):
+    # <(N,(S,I)G)F1|((N,S)J,I)F1> = (-1)^(N+S+I+F1)([J][G])^1/2 {N S J; I F1 G}, B&C 5.89-5.90 (heff
+    # linear-elements.md sec. 5.2). I is the spin coupled to S in G (the metal; the ligand when I_M = 0, as in
+    # q_numbers_bBS). A second spin coupled last, (F1 I_L) F, is a spectator: diagonal in F1, F, M.
     if 'F1' in bBJ.keys():
         F = bBJ['F1']
         if not kronecker(bBS['F1'],bBJ['F1'])*kronecker(bBS['M'],bBJ['M'])*kronecker(bBS['N'],bBJ['N'])*kronecker(bBS['F'],bBJ['F'])*kronecker(bBS['K'],bBJ['K']):
@@ -129,27 +135,66 @@ def IS_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
             np.sqrt(S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))
 
 def T2IS_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # C^2.[I x S]^2 (builder multiplies by c sqrt6/3: c(I_zS_z - I.S/3), B&C 5.116; heff linear-elements.md sec. 4.5).
+    # By T8 (thesis A.43; B&C 8.459) C^2.[I x S]^2 = -(5/3)^1/2 I.[C^2 x S]^1; T4 on F = (J I) (B&C 5.173 / thesis
+    # A.41) with the ket J phase (-1)^(J'+I+F); [C^2 x S]^1 inside J = (N S) by T5 (B&C 5.169 / thesis A.38);
+    # <N K||C^2||N' K> (B&C 5.148 / thesis A.47). Was off by (-1)^(N-N') (bra-J phase, permuted 9j) at K != 0.
     if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return -np.sqrt(5/3)*(-1)**(3*F0-2*M0+I+J0+N0-K0)*np.sqrt((2*I+1)*(I+1)*I)*\
-            np.sqrt((2*J0+1)*(2*J1+1)*3*(2*S+1)*(S+1)*S)*wigner_6j(I,J1,F0,J0,I,1)*\
-            wigner_9j(S,N1,J1,1,2,1,S,N0,J0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,2,N1,-K0,0,K1)
+    C2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,2,N1,-K0,0,K0)
+    J_C2S = np.sqrt(3*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*wigner_9j(J0,J1,1,N0,N1,2,S,S,1)*C2
+    return -np.sqrt(5/3)*(-1)**(J1+I+F0)*wigner_6j(J1,I,F0,I,J0,1)*np.sqrt(I*(I+1)*(2*I+1))*J_C2S
 
 def T2ISq2_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # -sum_{q=+-2} D^2*_{.q}.[I x S]^2: T2IS_bBJ with C^2 -> the molecule-frame q = +-2 components and the opposite
+    # overall sign (kept, so N = N' elements and the fitted d are unchanged). Was off by (-1)^(N-N') (bra-J phase,
+    # permuted 9j), the T2IS_bBJ slip.
     if not kronecker(F0,F1)*kronecker(M0,M1):
         return 0
-    else:
-        return (-1)*-np.sqrt(5/3)*(-1)**(3*F0-2*M0+I+J0)*np.sqrt((2*I+1)*(I+1)*I)*\
-            np.sqrt((2*J0+1)*(2*J1+1)*3*(2*S+1)*(S+1)*S)*wigner_6j(I,J1,F0,J0,I,1)*\
-            wigner_9j(S,N1,J1,1,2,1,S,N0,J0)*np.sqrt((2*N0+1)*(2*N1+1))*sum([(-1)**(N0-K0)*wigner_3j(N0,2,N1,-K0,q,K1) for q in [-2,2]])
+    C2q2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*sum([wigner_3j(N0,2,N1,-K0,q,K1) for q in [-2,2]])
+    J_C2S = np.sqrt(3*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*wigner_9j(J0,J1,1,N0,N1,2,S,S,1)*C2q2
+    return np.sqrt(5/3)*(-1)**(J1+I+F0)*wigner_6j(J1,I,F0,I,J0,1)*np.sqrt(I*(I+1)*(2*I+1))*J_C2S
 
 def Iz_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
-    if not kronecker(F0,F1)*kronecker(M0,M1):
+    # n.I = C^1.I: T4 on F = (J I) (B&C 5.173 / thesis A.41); C^1 inside J = (N S) by T2 (B&C 5.174 / thesis
+    # A.39); <N K||C^1||N' K> (B&C 5.148 / thesis A.47). heff linear-elements.md sec. 2-3. Was -(n.I).
+    if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return (-1)**(I+F0+S-K0+1)*np.sqrt((2*J1+1)*(2*J0+1)*(2*N0+1)*(2*N1+1)*I*(I+1)*(2*I+1))*\
-            wigner_6j(J1,I,F0,I,J0,1)*wigner_6j(N1,J1,S,J0,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
+    C1 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,1,N1,-K0,0,K0)
+    J_C1 = (-1)**(J1+N0+S+1)*np.sqrt((2*J0+1)*(2*J1+1))*wigner_6j(N1,J1,S,J0,N0,1)*C1
+    return (-1)**(J1+I+F0)*wigner_6j(J1,I,F0,I,J0,1)*np.sqrt(I*(I+1)*(2*I+1))*J_C1
+
+
+def NSDPV_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # NSD-PV anapole operator C = (n_hat x S).I / I  (case b(beta-J), index 1 = ket = primed).
+    # Returns the REAL coefficient  Im< bra | (n_hat x S) . I | ket >; the operator C itself is
+    #     < bra | C | ket > = (i / I) * NSDPV_bBJ(bra, ket)
+    # (the builder build_PTV_NSDPV carries the explicit  i  and the literal  /I , I=1/2 => x2).
+    # C is a rank-0 pseudoscalar: dK=0, dF=0, dM=0 (kronecker guards below); dN=+-1 is enforced
+    # by the molecule-frame 3j (N0,1,N1,-K0,0,K1), the parity-odd (P=(-1)^N) channel.
+    #
+    # Canonical K-general form, every factor B&C-cited (PDF page = book page + 32), per
+    # docs/sio-derivation note sio-nsdpv-derivation.md section 3:
+    #   - (-1)^{J1+I+F0} * 6j{J0 I F0; I J1 1} * sqrt(I(I+1)(2I+1))  : scalar-product F-reduction
+    #         phase Eq. (5.140) (PDF p.198), realized as Eq. (8.220) (PDF p.472, = IS_bBJ).
+    #   - sqrt(3 (2J0+1)(2J1+1)) * 9j{N0 S J0; N1 S J1; 1 1 1}       : compound rank-1 reduced
+    #         m.e. Eq. (5.139) (PDF p.198), NO phase factor (sqrt3 = sqrt(2k+1), k=1).
+    #   - (-1)^{N0-K0} sqrt((2N0+1)(2N1+1)) 3j(N0,1,N1,-K0,0,K1)     : direction-cosine reduced
+    #         m.e. phase Eq. (5.148) (PDF p.199); letter-for-letter Sz_bBJ/StarkZ_bBJ/T2IS_bBJ.
+    #   - sqrt(S(S+1)(2S+1))                                          : electron-spin reduced m.e.
+    #   - global -sqrt(2)                                            : real factor of the cross-
+    #         product compound-tensor constant -i*sqrt2 (Eqs. 5.113-5.118); the i goes to builder.
+    # Antisymmetric: NSDPV_bBJ(a,b) = -NSDPV_bBJ(b,a), so (i/I)*NSDPV is imaginary-Hermitian
+    # (the iW / -iW pattern of Karthein Eq. (B1)). Verified vs first-principles decoupled
+    # construction to 2e-16 over the N<=2 basis (note section 4, 46 nonzero MEs).
+    if not (kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)):
+        return 0
+    return -np.sqrt(2) \
+        * (-1)**(J1 + I + F0) * wigner_6j(J0, I, F0, I, J1, 1) \
+        * np.sqrt(I*(I+1)*(2*I+1)) \
+        * np.sqrt(3*(2*J0+1)*(2*J1+1)) * wigner_9j(N0, S, J0, N1, S, J1, 1, 1, 1) \
+        * (-1)**(N0-K0) * np.sqrt((2*N0+1)*(2*N1+1)) * wigner_3j(N0, 1, N1, -K0, 0, K1) \
+        * np.sqrt(S*(S+1)*(2*S+1))
 
 
 def Sz_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
@@ -174,7 +219,12 @@ def ZeemanZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
             wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(S,J1,N0,J0,S,1)*wigner_3j(F0,1,F1,-M0,0,M1)
 
 def ZeemanIZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
-    if not kronecker(K0,K1)*kronecker(M0,M1)*kronecker(J0,J1):
+    # delta_NN' required: T1(I) acts on nuclear-spin space only, so it is rigorously
+    # diagonal in N (and K, J). Without it, S=1/2 states with the same J from different N
+    # (e.g. N=0,J=1/2 vs N=1,J=1/2) pick up spurious OPPOSITE-PARITY couplings ~|g_N| mu_N B
+    # (~13 MHz at 1.5 T) -- a fake parity-violating Zeeman term. Found by B&C audit 2026-06-11
+    # (B&C Eq. 9.70 term (v), p. 620).
+    if not kronecker(K0,K1)*kronecker(M0,M1)*kronecker(J0,J1)*kronecker(N0,N1):
         return 0
     else:
         return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*(-1)**(F0+J0+1+I)*np.sqrt((2*F0+1)*(2*F1+1))*\
@@ -219,6 +269,28 @@ def StarkZ_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
     else:
         return (-1)**(F0-M0+J0+I+F1+1+N0+S+J1+1+N0-K0)*np.sqrt((2*F0+1)*(2*F1+1)*(2*J0+1)*(2*J1+1)*(2*N0+1)*(2*N1+1))*\
             wigner_3j(F0,1,F1,-M0,0,M1)*wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(N1,J1,S,J0,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
+
+def StarkX_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
+    # Lab-frame TRANSVERSE (x) electric-dipole element for case b(beta-J).
+    # Built from StarkZ_bBJ (the p=0 axial element, verified-in-use by the 3.33 kHz
+    # crossing-drive oracle) by the SAME axial->transverse transform the codebase uses
+    # for the Zeeman channel (ZeemanZ_bBJ -> ZeemanX_bBJ, matrix_elements.py:169/196):
+    #   - selection rule M0=M1 (Delta M=0)  ->  |M0-M1|=1 (Delta M=+-1);
+    #   - the single lab Wigner factor wigner_3j(F0,1,F1,-M0,0,M1)  is replaced by the
+    #     real combination (1/sqrt2)*sum_{p=-1,+1} (-1)**(p/2+1/2) wigner_3j(F0,1,F1,-M0,p,M1),
+    #     i.e. d_x = (T^1_{p=-1}(d) - T^1_{p=+1}(d))/sqrt2  (the same p-combination and
+    #     (-1)**(p/2+1/2) phase as ZeemanX_bBJ: +T^1_{-1} for p=-1, -T^1_{+1} for p=+1).
+    # Every p-INDEPENDENT factor (overall phase (-1)**(...), the J and N reduced-matrix
+    # parts, and the molecule-frame q=0 direction cosine wigner_3j(N0,1,N1,-K0,0,K1)) is
+    # carried over UNCHANGED from StarkZ_bBJ -- only the lab F,M projection differs.
+    # Phase convention follows the codebase's existing Zeeman transverse operator exactly;
+    # gates depend only on |element|^2, Hermiticity, and parity structure (overall sign-free).
+    if not kronecker(abs(M0-M1),1)*kronecker(K0,K1):
+        return 0
+    else:
+        return (1/np.sqrt(2))*(-1)**(F0-M0+J0+I+F1+1+N0+S+J1+1+N0-K0)*np.sqrt((2*F0+1)*(2*F1+1)*(2*J0+1)*(2*J1+1)*(2*N0+1)*(2*N1+1))*\
+            sum([(-1)**(p/2+1/2)*wigner_3j(F0,1,F1,-M0,p,M1) for p in [-1,1]])*\
+            wigner_6j(J1,F1,I,F0,J0,1)*wigner_6j(N1,J1,S,J0,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
 
 #Check sign on -np.sqrt
 def p_lD_bBJ(K0,N0,J0,F0,M0,K1,N1,J1,F1,M1,S=1/2,I=1/2):
@@ -306,11 +378,17 @@ def SR_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)
 
 def NzSz_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1):
+    # N_z S_z = (n.N)(n.S) = K C^1.S on K-diagonal kets (thesis 4.5; heff linear-elements.md sec. 4.3), complete:
+    # Delta N = 0, +-1 (the latter for K != 0). Thesis A.48 as printed carries delta_NN', a truncation.
+    #   C^1 (on N) . S (inside G) on F1 = (N G): B&C 5.173 / thesis A.41 -> (-1)^(N'+G+F1) {N' G' F1; G N 1}
+    #   <N K||C^1||N' K> = (-1)^(N-K)([N][N'])^1/2 (N 1 N'; -K 0 K): B&C 5.148 / thesis A.47
+    #   <(S I)G||S||(S I)G'> = (-1)^(G'+S+I+1)([G][G'])^1/2 {S G' I; G S 1}[S(S+1)(2S+1)]^1/2: B&C 5.174 / thesis A.39
+    # Scalar on F1, so diagonal in F1, F, M (I_H spectator, B&C 5.174).
+    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1):
         return 0
-    else:
-        return K0*(-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G1+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
-            wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(S*(S+1)*(2*S+1))
+    C1 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,1,N1,-K0,0,K0)
+    G_S = (-1)**(G1+S+I+1)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)
+    return K0*(-1)**(N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,1)*C1*G_S
 
 def ISM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(N0,N1)*kronecker(G0,G1):
@@ -321,41 +399,52 @@ def ISM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
 
 #check. Yuiki had N0 and G1 swapped in exponent
 def T2ISM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # C^2.[I x S]^2 = C^2.[S x I]^2 (exchange phase +1), builder x c sqrt6/3 (heff linear-elements.md sec. 4.5).
+    # T4 on F1 = (N G) (B&C 5.173 / thesis A.41), ket N phase (-1)^(N'+G+F1); <N K||C^2||N' K> (B&C 5.148 /
+    # thesis A.47); [S x I]^2 inside G = (S I) by T5 (B&C 5.169 / thesis A.38). Scalar on F1.
+    # Was off by (-1)^(N-N') at K != 0 (N0+N0 where N'+N belongs).
     if not kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return (-1)**(-2*M0+2*iH+3*F10+N0+G1+N0-K0)*wigner_9j(G0,G1,2,I,I,1,S,S,1)*\
-            np.sqrt((2*N0+1)*(2*N1+1)*5*(2*G0+1)*(2*G1+1)*I*(I+1)*(2*I+1)*S*(S+1)*(2*S+1))*\
-            wigner_6j(N1,G1,F10,G0,N0,2)*wigner_3j(N0,2,N1,-K0,0,K1)
+    C2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,2,N1,-K0,0,K0)
+    G_SI2 = np.sqrt(5*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*wigner_9j(G0,G1,2,S,S,1,I,I,1)
+    return (-1)**(N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,2)*C2*G_SI2
 
-#check phase factor
 def T2QM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # C^2.T^2(I,I), with 3I_z^2 - I^2 = sqrt6 C^2.T^2(I,I) (B&C 5.116); builder x eQq0 sqrt6/(4I(2I-1)).
+    # T4 on F1 = (N G) (B&C 5.173 / thesis A.41); <N K||C^2||N' K> (B&C 5.148 / thesis A.47); T^2(I) inside
+    # G = (S I) by T3 (B&C 5.175 / thesis A.40); <I||T^2(I,I)||I> by B&C 5.142 (heff linear-elements.md L3, 4.5).
+    # Was off by (-1)^(N-N') at K != 0.
     if abs(I)<1:
         return 0
     if not kronecker(F0,F1)*kronecker(F10, F11)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return (-1)**(-2*M0+2*iH+3*F10+N0+G1+N0-K0+G1+I+S+2)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
-            I*(2*I-1)/np.sqrt(6)/wigner_3j(I,2,I,-I,0,I)*wigner_3j(N0,2,N1,-K0,0,K1)*\
-            wigner_6j(N1,G1,F10,G0,N0,2)*wigner_6j(I,G1,S,G0,I,2)
+    C2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,2,N1,-K0,0,K0)
+    T2I = np.sqrt((2*I-1)*(2*I)*(2*I+1)*(2*I+2)*(2*I+3))/(2*np.sqrt(6))
+    G_Q = (-1)**(G0+S+I)*np.sqrt((2*G0+1)*(2*G1+1))*wigner_6j(I,G1,S,G0,I,2)*T2I
+    return (-1)**(N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,2)*C2*G_Q
 
 def ISH_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(F0,F1)*kronecker(N0, N1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
     else:
-        return (-1)**(2*F0-2*M0+iH+F0+F10+F11+N0+G0+1+G1+I+S+1)*\
+        # G-reduction phase (-1)^(G'+S+1+I): the (S I)G order used by every other *_bBS term
+        # (Takahashi PRL 131 183003 Suppl. Eq. 9 pattern). Takahashi Eq. 13's (-1)^(G+I+1+S) is the (I S)G
+        # form and gave a spurious (-1)^(G-G') here; verified element-wise vs a literal product-basis I_H.S.
+        return (-1)**(2*F0-2*M0+iH+F0+F11 + F10+N0+1+G1 + G1+S+1+I)*\
         np.sqrt(iH*(iH+1)*(2*iH+1)*(2*F10+1)*(2*F11+1)*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*\
         wigner_6j(iH,F11,F0,F10,iH,1)*wigner_6j(G1,F11,N0,F10,G0,1)*wigner_6j(S,G1,I,G0,S,1)
 
-#check. Yuiki has G' and F1 swapped with primes
 def T2ISH_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # I_H.[C^2 x S]^1; builder x (-sqrt10/3) c_H gives c_H(I_zS_z - I.S/3) (T8: thesis A.43, B&C 8.459;
+    # heff linear-elements.md sec. 4.6). T4 on F = (F1 I_H) (B&C 5.173 / thesis A.41); [C^2 x S]^1 inside
+    # F1 = (N G) by T5 (B&C 5.169 / thesis A.38); <N K||C^2||N' K> (B&C 5.148 / thesis A.47); S inside G = (S I)
+    # by T2 (B&C 5.174 / thesis A.39). Was off by (-1)^(F1-F1')/sqrt((2N+1)(2N'+1)).
     if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return (-1)**(3*F0-2*M0+iH+F10+N0-K0+G1+S+I+1)*\
-            np.sqrt(iH*(iH+1)*(2*iH+1)*(2*F10+1)*(2*F11+1)*3*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*\
-            wigner_6j(iH,F11,F0,F10,iH,1)*wigner_9j(F10,F11,1,N0,N1,2,G0,G1,1)*\
-            wigner_3j(N0,2,N1,-K0,0,K1)*wigner_6j(S,G1,I,G0,S,1)
+    C2 = (-1)**(N0-K0)*np.sqrt((2*N0+1)*(2*N1+1))*wigner_3j(N0,2,N1,-K0,0,K0)
+    G_S = (-1)**(G1+S+I+1)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)
+    F1_C2S = np.sqrt(3*(2*F10+1)*(2*F11+1))*wigner_9j(F10,F11,1,N0,N1,2,G0,G1,1)*C2*G_S
+    return (-1)**(F11+iH+F0)*wigner_6j(F11,iH,F0,iH,F10,1)*np.sqrt(iH*(iH+1)*(2*iH+1))*F1_C2S
 
 def StarkZ_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(G0,G1)*kronecker(M0,M1)*kronecker(K0,K1):
@@ -365,14 +454,16 @@ def StarkZ_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             np.sqrt((2*F0+1)*(2*F1+1)*(2*F10+1)*(2*F11+1)*(2*N0+1)*(2*N1+1))*\
             wigner_6j(F11,F1,iH,F0,F10,1)*wigner_6j(N1,F11,G0,F10,N0,1)*wigner_3j(N0,1,N1,-K0,0,K1)
 
-#check exponential phase
 def ZeemanZ_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # Lab S_Z (builder x g_S mu_B; B&C 7.232): T1 (B&C 5.172 / thesis A.35), then S down the chain as the part-1
+    # operator inside F = (F1 I_H) (T2: B&C 5.174 / thesis A.39), part 2 inside F1 = (N G) (T3: B&C 5.175 /
+    # thesis A.40), part 1 inside G = (S I) (T2). heff linear-elements.md sec. 3.2, 4.8. Was off by (-1)^(F1-F1').
     if not kronecker(N0,N1)*kronecker(M0,M1)*kronecker(K0,K1):
         return 0
-    else:
-        return (-1)**(F0-M0+F1+F10+iH+1+F11+N0+G0+1+G0+I+S+1)*wigner_3j(F0,1,F1,-M0,0,M1)*\
-            np.sqrt((2*F0+1)*(2*F1+1)*(2*F10+1)*(2*F11+1)*(2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*\
-            wigner_6j(F11,F1,iH,F0,F10,1)*wigner_6j(G1,F11,N0,F10,G0,1)*wigner_6j(S,G1,I,G0,S,1)
+    G_S = (-1)**(G1+S+I+1)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)
+    F1_S = (-1)**(F10+N0+G1+1)*np.sqrt((2*F10+1)*(2*F11+1))*wigner_6j(G1,F11,N0,F10,G0,1)*G_S
+    F_S = (-1)**(F1+F10+iH+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(F11,F1,iH,F0,F10,1)*F1_S
+    return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M0)*F_S
 
 
 def lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
@@ -381,6 +472,19 @@ def lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     else:
         delta_L = K0-K1
         return N0*(N0+1)*(kronecker(delta_L,-2)*(-1)**(-abs(K0)) + kronecker(delta_L,2)*(-1)**(abs(K0)))
+
+def p_lD_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # p-type l-doubling sum_{q=+-1} e^{-2iq phi} T^2_{2q}(N,S) = (1/2)(N+S+ e^{-2i phi} + N-S- e^{2i phi});
+    # H = +p_lD * this, p_lD = Takahashi's p_G (PRL 131 183003, Suppl. Eqs. 5j/6j).
+    # Takahashi Suppl. Eq. 17 times (-1)^(N-N'): as printed, Eq. 17 is the literal operator with K -> -K,
+    # wrong sign on Delta N = +-1. This form equals a literal product-basis construction element-wise.
+    if not kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)*(not kronecker(K0,K1)):
+        return 0
+    else:
+        return (-1)**(N0-N1)*(-1)**(N1+F11+G0)*wigner_6j(G1,N1,F11,N0,G0,1)*\
+            (-1)**(G1+S+1+I)*np.sqrt((2*G0+1)*(2*G1+1)*S*(S+1)*(2*S+1))*wigner_6j(S,G1,I,G0,S,1)*\
+            np.sqrt(5)*wigner_6j(1,1,2,N0,N1,N1)*np.sqrt(N1*(N1+1)*(2*N1+1))*np.sqrt((2*N0+1)*(2*N1+1))*\
+            sum([(-1)**(N0-K0)*wigner_3j(N0,2,N1,-K0,2*q,K1) for q in [-1,1]])
 
 def Parity_l_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(N0,N1)*kronecker(M0,M1)*kronecker(G0,G1)*kronecker(F10,F11)*kronecker(F0,F1)*kronecker(K0,-K1):
@@ -406,12 +510,16 @@ def MQM_bBS_old(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
             wigner_3j(N0,1,N1,-K0,0,K1)
 
 def MQM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    # C^1.[S x T^2(I,I)]^1, [S x T^2]^1 inside G = (S I) (B&C 5.169), as T2ISM_bBS. The 9j rows were (G; I; S),
+    # the G = (I S) recoupling: off by (-1)^(G-G'). T^2(I,I) = 0 for I < 1.
+    if abs(I)<1:
+        return 0
     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1):
         return 0
     else:
         return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10)*wigner_6j(N1,G1,F10,G0,N0,1)*\
             (-1)**(N0-K0)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt((2*N0+1)*(2*N1+1))*\
-            np.sqrt((2*G0+1)*(2*G1+1)*3)*wigner_9j(G0,G1,1,I,I,2,S,S,1)*\
+            np.sqrt((2*G0+1)*(2*G1+1)*3)*wigner_9j(G0,G1,1,S,S,1,I,I,2)*\
             np.sqrt((2*S+1)*(S+1)*S)*1/(2*np.sqrt(6))*np.sqrt((2*I-1)*(2*I)*(2*I+1)*(2*I+2)*(2*I+3))
             # *I*(2*I-1)/np.sqrt(6)/wigner_3j(I,2,I,-I,0,I)
 #Using Sz(3Iz-I2) format
@@ -425,7 +533,12 @@ def EDM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
         return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G1+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
             wigner_6j(N1,G1,F10,G0,N0,1)*wigner_6j(S,G1,I,G0,S,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(S*(S+1)*(2*S+1))
 
-
+def NSM_bBS(K0,N0,G0,F10,F0,M0,K1,N1,G1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1):
+        return 0
+    else:
+        return (-1)**(-2*M0+2*iH+2*F10+N1+G0+F10+N0-K0+G0+S+I+1)*np.sqrt((2*N0+1)*(2*N1+1)*(2*G0+1)*(2*G1+1))*\
+            wigner_6j(G1,N1,F10,N0,G0,1)*wigner_6j(I,G1,S,G0,I,1)*wigner_3j(N0,1,N1,-K0,0,K1)*np.sqrt(I*(I+1)*(2*I+1))
 
 
 ######### Vibronic aBJ ##############
@@ -534,6 +647,23 @@ def ZeemanSZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
             (-1)**(F1+J0+I+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(J1,F1,I,F0,J0,1)*\
             (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+
+# Anisotropic spin-Zeeman correction (Brown & Carrington eq. 7.221, parameter g_l):
+#   H_l = g_l mu_B B_Z * sum_{q=+-1} D^(1)*_{0,q}(omega) T^1_q(S)
+# Same matrix element form as ZeemanSZ but with q=0 dropped — operator reduces to
+# (Sx Bx + Sy By) in the molecule frame. Coupling rules: DK=0, DSigma=+-1, DOmega=+-1.
+# Coefficient adds to isotropic g_S as: g_perp = g_S + g_l, g_parallel = g_S.
+# IMPORTANT: in a 2Pi state, this couples Pi_{1/2}<->Pi_{3/2} only. Diagonalizing
+# with P_values=[1/2] alone makes the entire matrix vanish — both spin-orbit components
+# must be in the basis (e.g. P_values=[1/2, 3/2]) for g_l to have any effect.
+def ZeemanPerpZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
+    if not kronecker(K0,K1)*kronecker(M0,M1):
+        return 0
+    else:
+        return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*\
+            (-1)**(F1+J0+I+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(J1,F1,I,F0,J0,1)*\
+            (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
+            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
 
 def ZeemanParityZ_even_aBJ(K0,Sigma0,P0,J0,F0,M0,K1,Sigma1,P1,J1,F1,M1,S=1/2,I=1/2):
     if kronecker(K0,K1)*(not kronecker(M0,M1)):
@@ -774,22 +904,56 @@ def Rot_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,
             2*(-1)**(J0-(P0)+S-Sigma0)*np.sqrt((2*J0+1)*J0*(J0+1)*(2*S+1)*S*(S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
 
-def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1):
+def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                K1,Sigma1,P1,J1,F11,F1,M1,
+                S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(K0,K1)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1)*
+            kronecker(F10,F11)*kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    else:
-        return K0*(-1)**(J1+I+F10)*wigner_6j(J1,I,F10,I,J0,1)*\
-            (-1)**(J0-P0)*wigner_3j(J0,1,J1,-P0,0,P1)*\
-            np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*(I+1)*I)
+    phase = (-1)**(J1 + I + F10 + J0 - P0)
+    return (K0 * phase
+            * wigner_6j(J1, I, F10, I, J0, 1)
+            * wigner_3j(J0, 1, J1, -P0, 0, P1)
+            * np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*I*(I+1)))
+
+# def ILM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1):
+#         return 0
+#     else:
+#         return K0*(-1)**(J1+I+F10)*wigner_6j(J1,I,F10,I,J0,1)*\
+#             (-1)**(J0-P0)*wigner_3j(J0,1,J1,-P0,0,P1)*\
+#             np.sqrt((2*J0+1)*(2*J1+1)*(2*I+1)*(I+1)*I)
+
+def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                     K1,Sigma1,P1,J1,F11,F1,M1,
+                     S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
+        return 0
+    phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + I + F10 + J0 - P0 + S - Sigma0)
+    pref  = (phase
+             * wigner_6j(J1, I, F10, I, J0, 1)
+             * np.sqrt(5*(2*J0+1)*(2*J1+1)
+                       * S*(S+1)*(2*S+1)
+                       * I*(I+1)*(2*I+1)))
+    return pref * sum([
+        sum([
+            kronecker(K0, -K1) *
+            wigner_3j(1, 1, 2, q1, q2 - q1, -q2) *
+            wigner_3j(S, 1, S, -Sigma0, -q1, Sigma1) *
+            wigner_3j(J0, 1, J1, -P0, (q2 - q1), P1)
+            for q1 in (-1, 0, 1)
+        ])
+        for q2 in (-2, 2)
+    ])
 
 #Check derivation
-def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11):
-        return 0
-    else:
-        return (-1)**(J1+I+F10+J0-P0+S-Sigma0)*\
-            wigner_6j(J1,I,F10,I,J0,1)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
-            sum([(-1)**(q)*kronecker(K0,-K1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1)*wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,1]])
+# def T2q2_ISM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(F0,F1)*kronecker(M0,M1)*kronecker(F10,F11):
+#         return 0
+#     else:
+#         return (-1)*(-1)**(J1+I+F10+J0-P0+S-Sigma0)*\
+#             wigner_6j(J1,I,F10,I,J0,1)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
+#             sum([(-1)**(q)*kronecker(K0,-K1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1)*wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,1]])
 
 #Check derivation
 def T2q0_IM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
@@ -802,23 +966,59 @@ def T2q0_IM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=
             wigner_3j(J0,2,J1,-P0,0,P1)*np.sqrt((2*J0+1)*(2*J1+1))/\
             wigner_3j(I,2,I,-I,0,I)
 
-# Check derivation
-def iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+def IHL_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                K1,Sigma1,P1,J1,F11,F1,M1,
+                S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(K0,K1)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1)*
+            kronecker(F10,F11)*kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    else:
-        return (-1)**(2*F0-2*M0+F11+iH+F0+J11+I+F10+S-Sigma0+J0-P0)*wigner_6j(J1,I,F0,I,J0,1)*\
-            wigner_6j(J1,I,F0,I,J0,1)*np.sqrt((2*S+1)*(S+1)*S*(2*J0+1)*(2*J1+1)*I*(I+1)*(2*I+1))*\
-            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+    phase = (-1)**(F10 + iH + F0 + J0 - P0)
+    return (K0 * phase
+            * wigner_6j(F10, iH, F0, iH, F10, 1)
+            * wigner_3j(J0, 1, J1, -P0, 0, P1)
+            * np.sqrt((2*J0+1)*(2*J1+1)*(2*iH+1)*iH*(iH+1)))
 
-def T2iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
-    if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+# T^2(I_H,S)_{q=±2}  (Frosch–Foley d term)
+def T2q2_IHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
+                     K1,Sigma1,P1,J1,F11,F1,M1,
+                     S=1/2, I=5/2, iH=1/2):
+    if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
         return 0
-    else:
-        return (-1)**(2*F0-2*M0+J1+I+F0+J0-P0+S-Sigma0)*wigner_6j(J1,I,F0,I,J0,1)*\
-            np.sqrt(5*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
-            sum([(-1)**(q)*wigner_3j(1,1,2,q,-q,0)*wigner_3j(S,1,S,-Sigma0,-q,Sigma1)*\
-            wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,0,1]])
+    phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + iH + F10 + J0 - P0 + S - Sigma0)
+    pref  = (phase
+             * wigner_6j(F10, iH, F0, iH, F10, 1)
+             * np.sqrt(5*(2*J0+1)*(2*J1+1)
+                       * S*(S+1)*(2*S+1)
+                       * iH*(iH+1)*(2*iH+1)))
+    return pref * sum([
+        sum([
+            kronecker(K0, -K1) *
+            wigner_3j(1, 1, 2, q1, q2 - q1, -q2) *
+            wigner_3j(S, 1, S, -Sigma0, -q1, Sigma1) *
+            wigner_3j(J0, 1, J1, -P0, (q2 - q1), P1)
+            for q1 in (-1, 0, 1)
+        ])
+        for q2 in (-2, 2)
+    ])
+
+
+# Check derivation
+# def iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**(2*F0-2*M0+F11+iH+F0+J1+I+F10+S-Sigma0+J0-P0)*wigner_6j(J1,I,F0,I,J0,1)*\
+#             wigner_6j(J1,I,F0,I,J0,1)*np.sqrt((2*S+1)*(S+1)*S*(2*J0+1)*(2*J1+1)*I*(I+1)*(2*I+1))*\
+#             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
+
+# def T2iHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+#     if not kronecker(K0,K1)*kronecker(F0,F1)*kronecker(M0,M1):
+#         return 0
+#     else:
+#         return (-1)**(2*F0-2*M0+J1+I+F0+J0-P0+S-Sigma0)*wigner_6j(J1,I,F0,I,J0,1)*\
+#             np.sqrt(5*(2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1)*I*(I+1)*(2*I+1))*\
+#             sum([(-1)**(q)*wigner_3j(1,1,2,q,-q,0)*wigner_3j(S,1,S,-Sigma0,-q,Sigma1)*\
+#             wigner_3j(J0,1,J1,-P0,-q,P1) for q in [-1,0,1]])
 
 #Check derivation
 def LambdaDoubling_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
@@ -848,6 +1048,17 @@ def ZeemanSZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I
             (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
             sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,0,1]])
 
+# Anisotropic spin-Zeeman correction (B&C eq. 7.221, parameter g_l), odd-isotopologue version.
+def ZeemanPerpZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
+    if not kronecker(K0,K1):
+        return 0
+    else:
+        return (-1)**(F0-M0)*wigner_3j(F0,1,F1,-M0,0,M1)*\
+            (-1)**(F1+F10+iH+1)*np.sqrt((2*F0+1)*(2*F1+1))*wigner_6j(F11,F1,iH,F0,F10,1)*\
+            (-1)**(F11+J0+I+1)*np.sqrt((2*F10+1)*(2*F11+1))*wigner_6j(J1,F11,I,F10,J0,1)*\
+            (-1)**(J0-P0+S-Sigma0)*np.sqrt((2*J0+1)*(2*J1+1)*S*(S+1)*(2*S+1))*\
+            sum([wigner_3j(J0,1,J1,-P0,q,P1)*wigner_3j(S,1,S,-Sigma0,q,Sigma1) for q in [-1,1]])
+
 def ZeemanParityZ_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if kronecker(K0,K1):
         return 0
@@ -876,6 +1087,7 @@ def TDM_p_odd_aBJ(p,K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=
                 wigner_6j(F11,F1,iH,F0,F10,1)*(-1)**(F11+J0+I+1)*np.sqrt((2*F10+1)*(2*F11+1))*\
                 wigner_6j(J1,F11,I,F10,J0,1)*(-1)**(J0-P0)*np.sqrt((2*J0+1)*(2*J1+1))*wigner_3j(J0,1,J1,-P0,q,P1)
                 for q in range(-1,2)]) # If L is changing, can only get q=+-1 transitions
+        return TDM_p
 
 def TransitionDipole_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=5/2,iH=1/2):
     if not kronecker(Sigma0,Sigma1):
