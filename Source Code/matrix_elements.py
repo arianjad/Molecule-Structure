@@ -982,6 +982,8 @@ def IHL_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
 def T2q2_IHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
                      K1,Sigma1,P1,J1,F11,F1,M1,
                      S=1/2, I=5/2, iH=1/2):
+    if iH == 0:  # sqrt(iH(iH+1)(2iH+1)) = 0, while the phase below is a half-integer power (NaN)
+        return 0
     if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
         return 0
     phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + iH + F10 + J0 - P0 + S - Sigma0)

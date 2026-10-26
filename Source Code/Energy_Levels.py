@@ -593,7 +593,7 @@ class MoleculeLevels(object):
         if self.spin_statistics=='boson':
             self.PTV_type = 'EDM'
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers)
-        elif self.spin_states=='fermion':
+        elif self.spin_statistics=='fermion':
             self.PTV_type = EDM_or_MQM
             H_PTV = self.library.PTV_builders[self.iso_state](self.q_numbers, EDM_or_MQM)
         self.H_PTV = H_PTV
