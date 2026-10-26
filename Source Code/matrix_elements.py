@@ -968,32 +968,41 @@ def T2q0_IM_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,K1,Sigma1,P1,J1,F11,F1,M1,S=1/2,I=
             wigner_3j(J0,2,J1,-P0,0,P1)*np.sqrt((2*J0+1)*(2*J1+1))/\
             wigner_3j(I,2,I,-I,0,I)
 
+# Second-nucleus (iH) factor of X^1(J-space).T^1(I_H) in |(J I)F1, iH; F M>, coupled F1 = J + I (I = metal spin), then
+# F = F1 + iH (q_numbers_odd_aBJ). B&C Eq. 5.173 (F1 + iH -> F), Eq. 5.174 (J + I -> F1), Eq. 5.179 (<iH||I||iH>):
+#   (-1)^(F1'+F+iH) {iH F1' F; F1 iH 1} (-1)^(F1'+J+1+I) [(2F1+1)(2F1'+1)]^1/2 {J' F1' I; F1 J 1} [iH(iH+1)(2iH+1)]^1/2
+# times <J||X^1||J'>, the J-space factor of the metal elements ILM_odd_aBJ / T2q2_ISM_odd_aBJ. Connects ΔF1 = 0, ±1.
+# At I = 0 it reduces to the even-path IzLz_even_aBJ / T2IS2_even_aBJ on iH. Checked element by element against a
+# Clebsch-Gordan product-basis construction (Laser-Cooling-Sims phase-audit-takahashi/p2-h-element-notes.md).
+def IH_recouple_odd_aBJ(J0,F10,F0,J1,F11,I,iH):
+    return ((-1)**(F11 + F0 + iH) * wigner_6j(iH, F11, F0, F10, iH, 1)
+            * (-1)**(F11 + J0 + 1 + I) * np.sqrt((2*F10+1)*(2*F11+1)) * wigner_6j(J1, F11, I, F10, J0, 1)
+            * np.sqrt(iH*(iH+1)*(2*iH+1)))
+
 def IHL_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
                 K1,Sigma1,P1,J1,F11,F1,M1,
                 S=1/2, I=5/2, iH=1/2):
     if not (kronecker(K0,K1)*kronecker(Sigma0,Sigma1)*kronecker(P0,P1)*
-            kronecker(F10,F11)*kronecker(F0,F1)*kronecker(M0,M1)):
+            kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    phase = (-1)**(F10 + iH + F0 + J0 - P0)
-    return (K0 * phase
-            * wigner_6j(F10, iH, F0, iH, F10, 1)
+    return (K0 * (-1)**(J0 - P0)
             * wigner_3j(J0, 1, J1, -P0, 0, P1)
-            * np.sqrt((2*J0+1)*(2*J1+1)*(2*iH+1)*iH*(iH+1)))
+            * np.sqrt((2*J0+1)*(2*J1+1))
+            * IH_recouple_odd_aBJ(J0, F10, F0, J1, F11, I, iH))
 
 # T^2(I_H,S)_{q=±2}  (Frosch–Foley d term)
 def T2q2_IHS_odd_aBJ(K0,Sigma0,P0,J0,F10,F0,M0,
                      K1,Sigma1,P1,J1,F11,F1,M1,
                      S=1/2, I=5/2, iH=1/2):
-    if iH == 0:  # sqrt(iH(iH+1)(2iH+1)) = 0, while the phase below is a half-integer power (NaN)
+    if iH == 0:  # no second nuclear spin: the element vanishes
         return 0
-    if not (kronecker(F0,F1)*kronecker(F10,F11)*kronecker(M0,M1)):
+    if not (kronecker(F0,F1)*kronecker(M0,M1)):
         return 0
-    phase = -1 * (-1)**(2*F0 - 2*M0 + J1 + iH + F10 + J0 - P0 + S - Sigma0)
+    phase = -1 * (-1)**(J0 - P0 + S - Sigma0)
     pref  = (phase
-             * wigner_6j(F10, iH, F0, iH, F10, 1)
+             * IH_recouple_odd_aBJ(J0, F10, F0, J1, F11, I, iH)
              * np.sqrt(5*(2*J0+1)*(2*J1+1)
-                       * S*(S+1)*(2*S+1)
-                       * iH*(iH+1)*(2*iH+1)))
+                       * S*(S+1)*(2*S+1)))
     return pref * sum([
         sum([
             kronecker(K0, -K1) *
