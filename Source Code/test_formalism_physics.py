@@ -11,11 +11,11 @@ def _old_r2(spin):
          if spin == 'boson' else -0.4109*c + 1.9e-7*c, 'q': 0,
          'D': 1.4e-7*c, 'p2q_D': 1.9e-7*c, 'muE': 1*0.503412, 'g_S': 2.0023}
     if spin == 'boson':
-        d.update({'h1/2': 0, 'a': 19/2, 'bF': 0, 'c': 0, 'd': -9,
+        d.update({'h1/2': 0, 'a': 19/2, 'bF': 0, 'c': 0, 'd': 9,
                   'g_lp': -0.41071/(2*0.191015), 'g_l': -6000/(2*0.191015*c)})
     else:
-        d.update({'h1/2Yb': -2852/2, 'dYb': -1*-0.076*c, 'h1/2H': 19/2,
-                  'aH': 19/2, 'bFH': 0, 'cH': 0, 'dH': -9, 'e2Qq0': 0,
+        d.update({'h1/2Yb': -2852/2, 'dYb': -0.076*c, 'h1/2H': 19/2,
+                  'aH': 19/2, 'bFH': 0, 'cH': 0, 'dH': 9, 'e2Qq0': 0,
                   'g_lp': -0.4109/(2*0.191100)})
     md = dict(params_general); md.update(d)
     return md

@@ -60,7 +60,7 @@ molecules['RaF']['boson']['A0'] = {
     'a':19/2,
     'bF': 0,
     'c': 0,
-    'd': -9,             # Silviu; PGopher convention, B+C needs minus sign
+    'd': 9,              # Silviu (PGOPHER), as published; B&C form
     'p+2q': -0.41071*c,  # X(N²) paper value
     'q':0,
     'D': 1.4e-7*c,
@@ -92,7 +92,7 @@ molecules['BaF']['boson']['A0'] = {
     'a': 26.55 - 0.5*(-5.54),  # =29.32; arXiv:2511.06986 Eq.(4)/B&C p.845 h1/2=a-(b+c)/2; Denis2022 [39]. Gated on Table II 21.8 MHz (plan Task 2)
     'bF': 0,
     'c': 0,
-    'd': -3.58,             # Denis2022 [39]; pgopher->B+C needs minus (RaF A0 precedent)
+    'd': 3.58,              # Denis2022 [39]; Mooij 2025 Table 3 +0.000119 cm^-1, B&C form (their Eq. 4)
     'p+2q': -7713.96 + 2*(-2.52),  # =-7719.00 (spec/§4 wrote -7718.99: hand-add slip, -7713.96-5.04=-7719.00; 0.01 MHz, immaterial); Effantin1990 [18] combined p+2q (op-grounded hamiltonian_builders.py:147; Steimle (p+2q)=-7721 cross-check)
     'q': -2.52,             # Effantin1990 [18]; -8.40e-5 cm^-1
     'p2q_D': -0.00699,      # Effantin1990 [18] p_D; -2.332e-7 cm^-1
@@ -126,12 +126,12 @@ molecules['RaF']['fermion']['A0'] = {
     'Be': 5729.03,       # B(N²) paper value
     'ASO': 1350*c,
     'h1/2Yb': -2852/2,   # From Skripnikov theory
-    'dYb': -1*-0.076*c,  # Wilkins expt; pgopher convention → add - sign
+    'dYb': -0.076*c,     # Wilkins expt, as published; B&C form
     'h1/2H': 19/2,
     'aH':19/2,
     'bFH': 0,
     'cH': 0,
-    'dH': -9,
+    'dH': 9,             # Silviu (PGOPHER), as published; B&C form
     'p+2q': -0.4109*c,   # X(N²) paper value
     'q':0,
     'e2Qq0': 0,
@@ -187,7 +187,7 @@ molecules['YbOH']['boson']['X010'] = {
     'g_S':2.07,          # 2.07(2), Takahashi 2025 Table S1
     }
 molecules['YbOH']['boson']['A000'] = {
-    'Be': 7590.30,
+    'Be': 7586.3,        # B 7586.3 MHz, Pilgram 2021 Table S3
     'ASO': 4.04719818*10**7, #Actually 4.047*10**7,
     'h1/2': 0,         # proton; A-state proton hyperfine fixed to zero (Pilgram et al., JCP 154, 244309 (2021),
     'd': 0,            # Sec. IV and Table S3); were the 173Yb A-state values -126.51 / -261.72
@@ -242,7 +242,7 @@ molecules['YbOH']['fermion']['173A000'] = {
     'h1/2H': 0,          # A-state proton hyperfine unresolved; fixed to zero in the Pilgram 2021 fit
     'dH': 0,             # same
     'e2Qq0': -1924.66,   # e2Qq0(Yb) -0.0642(17) cm^-1
-    'p+2q': -13141.63,   # Table I gives -0.438457(64) cm^-1 = -13144.6 MHz (open, P4)
+    'p+2q': -13144.61,   # -0.438457(64) cm^-1
     'muE': 0.43*0.503412 # 0.43 D, 174YbOH A state (Steimle et al., PRA 100, 052509 (2019))
     }
 
@@ -522,7 +522,7 @@ def get_molecule_params(molecule_name, elec_state,vib_state, fermion_or_boson=No
 # # 'a':19/2,
 # # 'bF': 0,     #
 # # 'c': 0,     #
-# # 'd': -9, #Calc relayed from Silviu. They use PGopher convention, we use B+C, so need minus sign
+# # 'd': 9, #Calc relayed from Silviu (PGOPHER), as published; B&C form
 # # 'p+2q': -0.41071*c+1.9e-7*c, #R^2 form
 # # 'q':0,
 # # 'D': 1.4e-7*c,

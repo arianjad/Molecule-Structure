@@ -148,7 +148,9 @@ def H_even_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='al
                     params['a']*elements['IzLz']+\
                     params['p+2q']*elements['Lambda Doubling p+2q'] - params['q']*elements['Lambda Doubling q']
                 if params.get('d') is not None:
-                    H0[i][j]+= params['d']*elements['T2_2(I,S)']
+                    # d term in B&C Eq. 8.507 form, +(1/2)d{e^{2i phi}I-S- + e^{-2i phi}I+S+}: the T2_2 elements are -1 x B&C Eq. 9.48 (d part),
+                    # so the builder uses -d. Stored d values are as published (B&C form; PGOPHER's d has the same sign, Mooij et al. 2025 Eq. 4).
+                    H0[i][j]+= -params['d']*elements['T2_2(I,S)']
                 if params.get('h1/2') is not None:
                     H0[i][j]+= params['h1/2']*elements['Iz']
                 if M_values!='none':
@@ -248,9 +250,11 @@ def H_odd_A(q_numbers,params,matrix_elements,symbolic=True,E=0,B=0,M_values='all
                 state_in = {q+'1':q_numbers[q][j] for q in q_str}
                 q_args = {**state_out,**state_in}
                 elements = {term: element(**q_args) for term, element in matrix_elements.items()}
+                # d term in B&C Eq. 8.507 form, +(1/2)d{e^{2i phi}I-S- + e^{-2i phi}I+S+}: the T2_2 elements are -1 x B&C Eq. 9.48 (d part),
+                # so the builder uses -d. Stored d values are as published (B&C form; PGOPHER's d has the same sign, Mooij et al. 2025 Eq. 4).
                 H0[i][j] = params['Be']*elements['N^2'] + params['ASO']*elements['SO']+\
-                    params['h1/2Yb']*elements['IzLz_M'] + params['dYb']*elements['T2_2(IS)_M']+\
-                    params['p+2q']*elements['Lambda-Doubling']+ params['h1/2H']*elements['IzLz_H'] + params['dH']*elements['T2_2(IS)_H']
+                    params['h1/2Yb']*elements['IzLz_M'] - params['dYb']*elements['T2_2(IS)_M']+\
+                    params['p+2q']*elements['Lambda-Doubling']+ params['h1/2H']*elements['IzLz_H'] - params['dH']*elements['T2_2(IS)_H']
                 if params['e2Qq0'] !=0:
                     H0[i][j]+= params['e2Qq0']*elements['T2_0(II)_M']
                 # if M_values!='none':

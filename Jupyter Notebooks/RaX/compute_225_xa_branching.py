@@ -99,7 +99,8 @@ def run(param_set):
     if param_set == 'experimental':
         A.update_params({'dYb': -A.parameters['dYb'], 'h1/2Yb': 0}, recompute=True)
     elif param_set == 'physical':
-        # flip d to negative (225Ra mu<0), KEEP real Skripnikov h1/2Yb=-1426
+        # flip the stored dYb (Wilkins -0.076c) to +0.076c in the B&C-form builder: the set chosen for 225Ra mu<0
+        # (same energies as -0.076c under the earlier -(B&C) builder). KEEP real Skripnikov h1/2Yb=-1426
         A.update_params({'dYb': -A.parameters['dYb']}, recompute=True)
     BR = branching_ratios(X, A, 0, 1e-8)   # also sets evals0/evecs0/parities
     gtab = ground_table(X)
