@@ -143,19 +143,6 @@ molecules['RaF']['fermion']['A0'] = {
     'Origin': 13284.427, # PHYSICAL band origin (N²); converter adds R² G-row
     }
 
-molecules['YbOH']['fermion']['171A000'] = {
-    'Be': 7597.79,
-    'ASO': 0, #Actually 4.047*10**7,
-    'h1/2Yb': 443.69,
-    'dYb': 959.04,
-    'bFH': 48.8, #0.07,     # extrapolated from YbF
-    'cH': 24.46, #-0.18,     # extrapolated from YbF
-    'e2Qq0': 0,
-    'p+2q': -13150.91,
-    'muE': 0.43*0.503412,
-    'g_S': 2.0023
-    }
-
 molecules['RaOH']['fermion']['X010'] = {
     'Be': 5814.3, # X000 value
     'Gamma_SR': 151, # X000 value
@@ -245,16 +232,18 @@ molecules['YbOH']['fermion']['173X010'] = {
     'Origin': 319.90932, # T0 319.90932(6) cm^-1, Takahashi 2023 Suppl. Table II
     'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
+# Odd-YbOH A000: 'Yb' keys act on the metal nucleus, 'H' keys on the ligand proton.
+# Values in MHz from Pilgram et al., JCP 154, 244309 (2021), Table I (cm^-1 x 29979.2458); d in B&C convention.
 molecules['YbOH']['fermion']['173A000'] = {
-    'Be': 7590.30,
+    'Be': 7590.30,       # B 0.253185(16) cm^-1
     'ASO': 0, #Actually 4.047*10**7,
-    'h1/2Yb': -126.51,
-    'dYb': -261.72,
-    'bFH': 0.07,     # extrapolated from YbF
-    'cH': -0.18,     # extrapolated from YbF
-    'e2Qq0': -1924.66,
-    'p+2q': -13141.63,
-    'muE': 0.43*0.503412
+    'h1/2Yb': -126.51,   # a(Yb) -0.00422(20) cm^-1
+    'dYb': -261.72,      # d(Yb) -0.00873(13) cm^-1
+    'h1/2H': 0,          # A-state proton hyperfine unresolved; fixed to zero in the Pilgram 2021 fit
+    'dH': 0,             # same
+    'e2Qq0': -1924.66,   # e2Qq0(Yb) -0.0642(17) cm^-1
+    'p+2q': -13141.63,   # Table I gives -0.438457(64) cm^-1 = -13144.6 MHz (open, P4)
+    'muE': 0.43*0.503412 # 0.43 D, 174YbOH A state (Steimle et al., PRA 100, 052509 (2019))
     }
 
 molecules['YbOH']['fermion']['171X000'] = {
@@ -281,16 +270,16 @@ molecules['YbOH']['fermion']['171X010'] = {
     'Origin': 319.90861, # T0 319.90861(6) cm^-1, Takahashi 2023 Suppl. Table II
     'muE': 2.16*0.503412 # 2.16(1) D, 174YbOH X(010) (NJP 2023), the value Takahashi PRL 131 183003 fixed for 171/173; Debye in MHz/(V/cm)
     }
-molecules['YbOH']['fermion']['171A000'] = {
-    'Be': 7597.79,
+molecules['YbOH']['fermion']['171A000'] = {  # Pilgram 2021 Table I, as 173A000 above
+    'Be': 7597.79,       # B 0.253435(24) cm^-1
     'ASO': 0, #Actually 4.047*10**7,
-    'h1/2Yb': 443.69,
-    'dYb': 959.04,
-    'bFH': 48.8, #0.07,     # extrapolated from YbF
-    'cH': 24.46, #-0.18,     # extrapolated from YbF
-    'e2Qq0': 0,
-    'p+2q': -13150.91,
-    'muE': 0.43*0.503412,
+    'h1/2Yb': 443.69,    # a(Yb) 0.0148(15) cm^-1
+    'dYb': 959.04,       # d(Yb) 0.03199(58) cm^-1
+    'h1/2H': 0,          # A-state proton hyperfine unresolved; fixed to zero in the Pilgram 2021 fit
+    'dH': 0,             # same
+    'e2Qq0': 0,          # I = 1/2: no quadrupole
+    'p+2q': -13150.91,   # -0.438667(82) cm^-1
+    'muE': 0.43*0.503412,# 0.43 D, 174YbOH A state (Steimle et al., PRA 100, 052509 (2019))
     'g_S': 2.0023
     }
 
