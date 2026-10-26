@@ -189,8 +189,8 @@ molecules['YbOH']['boson']['X010'] = {
 molecules['YbOH']['boson']['A000'] = {
     'Be': 7590.30,
     'ASO': 4.04719818*10**7, #Actually 4.047*10**7,
-    'h1/2': -126.51,
-    'd': -261.72,
+    'h1/2': 0,         # proton; A-state proton hyperfine fixed to zero (Pilgram et al., JCP 154, 244309 (2021),
+    'd': 0,            # Sec. IV and Table S3); were the 173Yb A-state values -126.51 / -261.72
     'a': 0.01,         # extrapolated from YbF
     'bF': 0.06985,     # extrapolated from YbF
     'c': 0.1799,     # extrapolated from YbF
